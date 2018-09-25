@@ -6,5 +6,5 @@
 
 void bb_show_credits(Rect &r)
 {
-    ggprint16(&r, 16, 0x00ff0000, "Brandon Burdick");
+    ggprint16(&r, 32, 0x00fff000, "Brandon Burdick");
 }

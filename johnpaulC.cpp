@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include "fonts.h"
 
-void jc_show_credits(Rect r)
+void jc_show_credits(Rect &r)
 {
-    ggprint16(&r, 16, 0x00ff0000, "John Paul Cailing");	 
+    ggprint16(&r, 32, 0x00fff000, "John Paul Cailing");	 
 }
 

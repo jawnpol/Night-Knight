@@ -54,16 +54,22 @@ const double OOBILLION = 1.0 / 1e9;
 extern struct timespec timeStart, timeCurrent;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
+extern void zw_show_credits(Rect &r);
+extern void zk_show_credits(Rect &r);
+extern void bb_show_credits(Rect &r);
+extern void jc_show_credits(Rect &r);
 //-----------------------------------------------------------------------------
 
 class Global {
 public:
 	int xres, yres;
 	char keys[65536];
+    bool credits;
 	Global() {
 		xres = 1250;
 		yres = 900;
 		memset(keys, 0, 65536);
+        credits = false;
 	}
 } gl;
 
@@ -465,6 +471,9 @@ int check_keys(XEvent *e)
 			return 1;
 		case XK_f:
 			break;
+		case XK_c:
+            gl.credits = !gl.credits;
+			break;
 		case XK_s:
 			break;
 		case XK_Down:
@@ -737,6 +746,19 @@ void physics()
 void render()
 {
 	Rect r;
+	glClear(GL_COLOR_BUFFER_BIT);
+    if(gl.credits) {
+        Rect n;
+	    n.bot = gl.yres/2;
+	    n.left = gl.xres/2;
+	    n.center = gl.xres/2;
+        zw_show_credits(n);
+        zk_show_credits(n);
+        bb_show_credits(n);
+        jc_show_credits(n);
+	    ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+        return;
+    }
 	glClear(GL_COLOR_BUFFER_BIT);
 	//
 	r.bot = gl.yres - 20;

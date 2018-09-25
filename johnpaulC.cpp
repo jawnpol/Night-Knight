@@ -6,6 +6,6 @@
 
 void jc_show_Credit(Rect r)
 {
-    ggprint16b(&r, 16, 0x00ff0000, "John Paul Cailing");	 
+    ggprint16(&r, 16, 0x00ff0000, "John Paul Cailing");	 
 }
 

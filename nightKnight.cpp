@@ -1,4 +1,4 @@
-//
+//EDITED BY ZAKARY WORMAN
 //
 //
 //
@@ -278,6 +278,11 @@ class X11_wrapper {
         }*/
 } x11;
 
+//To track the mouse position
+struct Aim {
+    double x, y;
+} m;
+
 //function prototypes
 void init_opengl();
 void check_mouse(XEvent *e);
@@ -293,7 +298,7 @@ int main()
     logOpen();
     init_opengl();
     srand(time(NULL));
-    x11.set_mouse_position(100, 100);
+    x11.set_mouse_position(300, 300);
     int done=0;
     while (!done) {
         while (x11.getXPending()) {
@@ -395,11 +400,10 @@ void check_mouse(XEvent *e)
             //Right button is down
         }
     }
-    //if (e->type == MotionNotify) {
-        double xdiff = e->xbutton.x - (g.ship.pos[0] + g.ship.vel[0]);
-        double ydiff = e->xbutton.y - (g.ship.pos[1] + g.ship.vel[1]);
-        float angle = atan2(ydiff,xdiff)*180/3.14159265;
-        g.ship.angle = -angle - 90.0f;
+    if (e->type == MotionNotify) {
+        m.x = e->xbutton.x;
+        m.y = gl.yres - e->xbutton.y;
+        //g.ship.angle = -angle - 90.0f;
         /*if (savex != e->xbutton.x || savey != e->xbutton.y) {
             //Mouse moved
             int xdiff = savex - e->xbutton.x;
@@ -443,7 +447,7 @@ void check_mouse(XEvent *e)
             //x11.set_mouse_position(0, 0);
             //savex = savey = 100;
         }*/
-    //}
+    }
 }
 
 int check_keys(XEvent *e)
@@ -675,7 +679,7 @@ void physics()
     }*/
     //---------------------------------------------------
     //check keys pressed now
-    if (gl.keys[XK_a]) {
+    /*if (gl.keys[XK_a]) {
         g.ship.angle += 4.0;
         if (g.ship.angle >= 360.0f)
             g.ship.angle -= 360.0f;
@@ -684,7 +688,7 @@ void physics()
         g.ship.angle -= 4.0;
         if (g.ship.angle < 0.0f)
             g.ship.angle += 360.0f;
-    }
+    }*/
     if (gl.keys[XK_w]) {
         //apply thrust
         //convert ship angle to radians
@@ -739,6 +743,10 @@ void physics()
             }
         }
     }
+    double xdiff = g.ship.pos[0] - m.x;
+    double ydiff = g.ship.pos[1] - m.y;
+    float angle = atan2(ydiff,xdiff)*180/PI + 90.0f;
+    g.ship.angle = angle;
     /*if (g.mouseThrustOn) {
         //should thrust be turned off
         struct timespec mtt;

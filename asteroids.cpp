@@ -17,15 +17,12 @@
 using namespace std;
 #include <unistd.h>
 #include <X11/Xlib.h>
-<<<<<<< HEAD
 //#include <X11/Xutil.h>
 //#include <GL/gl.h>
 //#include <GL/glu.h>
-=======
 #include <X11/Xutil.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include "log.h"
@@ -60,31 +57,22 @@ const double OOBILLION = 1.0 / 1e9;
 extern struct timespec timeStart, timeCurrent;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
-<<<<<<< HEAD
-=======
 extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 //-----------------------------------------------------------------------------
 
 class Global {
 public:
 	int xres, yres;
 	char keys[65536];
-<<<<<<< HEAD
-=======
     bool credits;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 	Global() {
 		xres = 1250;
 		yres = 900;
 		memset(keys, 0, 65536);
-<<<<<<< HEAD
-=======
         credits = false;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 	}
 } gl;
 
@@ -486,12 +474,9 @@ int check_keys(XEvent *e)
 			return 1;
 		case XK_f:
 			break;
-<<<<<<< HEAD
-=======
 		case XK_c:
             gl.credits = !gl.credits;
 			break;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 		case XK_s:
 			break;
 		case XK_Down:
@@ -765,8 +750,6 @@ void render()
 {
 	Rect r;
 	glClear(GL_COLOR_BUFFER_BIT);
-<<<<<<< HEAD
-=======
     if(gl.credits) {
         Rect n;
 	    n.bot = gl.yres/2;
@@ -780,7 +763,6 @@ void render()
         return;
     }
 	glClear(GL_COLOR_BUFFER_BIT);
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 	//
 	r.bot = gl.yres - 20;
 	r.left = 10;

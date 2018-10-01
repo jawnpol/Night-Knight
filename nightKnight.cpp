@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 //EDITED BY ZAKARY WORMAN
-=======
 //
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 //
 //
 //
@@ -65,13 +62,10 @@ class Global {
         int xres, yres;
         char keys[65536];
         Global() {
-<<<<<<< HEAD
             xres = 1920;
             yres = 1080;
-=======
             xres = 1250;
             yres = 900;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
             memset(keys, 0, 65536);
         }
 } gl;
@@ -287,14 +281,11 @@ class X11_wrapper {
         }*/
 } x11;
 
-<<<<<<< HEAD
 //To track the mouse position
 struct Aim {
     double x, y;
 } m;
 
-=======
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 //function prototypes
 void init_opengl();
 void check_mouse(XEvent *e);
@@ -310,11 +301,8 @@ int main()
     logOpen();
     init_opengl();
     srand(time(NULL));
-<<<<<<< HEAD
     x11.set_mouse_position(300, 300);
-=======
     x11.set_mouse_position(100, 100);
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
     int done=0;
     while (!done) {
         while (x11.getXPending()) {
@@ -386,11 +374,8 @@ void check_mouse(XEvent *e)
             struct timespec bt;
             clock_gettime(CLOCK_REALTIME, &bt);
             double ts = timeDiff(&g.bulletTimer, &bt);
-<<<<<<< HEAD
             if (ts > 0.3) {
-=======
             if (ts > 0.1) {
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
                 timeCopy(&g.bulletTimer, &bt);
                 //shoot a bullet...
                 if (g.nbullets < MAX_BULLETS) {
@@ -407,13 +392,10 @@ void check_mouse(XEvent *e)
                     Flt ydir = sin(rad);
                     b->pos[0] += xdir*20.0f;
                     b->pos[1] += ydir*20.0f;
-<<<<<<< HEAD
                     b->vel[0] += xdir*5.1f + rnd()*0.5;
                     b->vel[1] += ydir*5.1f + rnd()*0.5;
-=======
                     b->vel[0] += xdir*6.0f + rnd()*0.1;
                     b->vel[1] += ydir*6.0f + rnd()*0.1;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
                     b->color[0] = 1.0f;
                     b->color[1] = 1.0f;
                     b->color[2] = 1.0f;
@@ -423,7 +405,6 @@ void check_mouse(XEvent *e)
         }
         if (e->xbutton.button==3) {
             //Right button is down
-<<<<<<< HEAD
 	    struct timespec bt;
             clock_gettime(CLOCK_REALTIME, &bt);
             double ts = timeDiff(&g.bulletTimer, &bt);
@@ -459,7 +440,6 @@ void check_mouse(XEvent *e)
         m.x = e->xbutton.x;
         m.y = gl.yres - e->xbutton.y;
         //g.ship.angle = -angle - 90.0f;
-=======
         }
     }
     //if (e->type == MotionNotify) {
@@ -467,7 +447,6 @@ void check_mouse(XEvent *e)
         double ydiff = e->xbutton.y - (g.ship.pos[1] + g.ship.vel[1]);
         float angle = atan2(ydiff,xdiff)*180/3.14159265;
         g.ship.angle = -angle - 90.0f;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
         /*if (savex != e->xbutton.x || savey != e->xbutton.y) {
             //Mouse moved
             int xdiff = savex - e->xbutton.x;
@@ -511,11 +490,8 @@ void check_mouse(XEvent *e)
             //x11.set_mouse_position(0, 0);
             //savex = savey = 100;
         }*/
-<<<<<<< HEAD
     }
-=======
     //}
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 }
 
 int check_keys(XEvent *e)
@@ -620,7 +596,6 @@ void physics()
     g.ship.pos[1] += g.ship.vel[1];
     //Check for collision with window edges
     if (g.ship.pos[0] < 0.0) {
-<<<<<<< HEAD
         g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[0] > (float)gl.xres) {
@@ -631,7 +606,6 @@ void physics()
     }
     else if (g.ship.pos[1] > (float)gl.yres) {
         g.ship.pos[1] = (float)gl.yres;
-=======
         g.ship.pos[0] += (float)gl.xres;
     }
     else if (g.ship.pos[0] > (float)gl.xres) {
@@ -642,7 +616,6 @@ void physics()
     }
     else if (g.ship.pos[1] > (float)gl.yres) {
         g.ship.pos[1] -= (float)gl.yres;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
     }
     //
     //Update bullet positions
@@ -651,16 +624,13 @@ void physics()
     int i=0;
     while (i < g.nbullets) {
         Bullet *b = &g.barr[i];
-<<<<<<< HEAD
 	Flt bspeed = sqrt(b->vel[0]*b->vel[0]+b->vel[1]*b->vel[1]);
         //How long has bullet been alive?
         double ts = timeDiff(&b->time, &bt);
         if (ts > bspeed/5) {
-=======
         //How long has bullet been alive?
         double ts = timeDiff(&b->time, &bt);
         if (ts > 2.5) {
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
             //time to delete the bullet.
             memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
@@ -673,7 +643,6 @@ void physics()
         b->pos[1] += b->vel[1];
         //Check for collision with window edges
         if (b->pos[0] < 0.0) {
-<<<<<<< HEAD
 	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
 		    sizeof(Bullet));
             g.nbullets--;
@@ -692,7 +661,6 @@ void physics()
 	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
 		    sizeof(Bullet));
             g.nbullets--;
-=======
             b->pos[0] += (float)gl.xres;
         }
         else if (b->pos[0] > (float)gl.xres) {
@@ -703,7 +671,6 @@ void physics()
         }
         else if (b->pos[1] > (float)gl.yres) {
             b->pos[1] -= (float)gl.yres;
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
         }
         i++;
     }
@@ -788,11 +755,8 @@ void physics()
     }*/
     //---------------------------------------------------
     //check keys pressed now
-<<<<<<< HEAD
     /*if (gl.keys[XK_a]) {
-=======
     if (gl.keys[XK_a]) {
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
         g.ship.angle += 4.0;
         if (g.ship.angle >= 360.0f)
             g.ship.angle -= 360.0f;
@@ -801,11 +765,8 @@ void physics()
         g.ship.angle -= 4.0;
         if (g.ship.angle < 0.0f)
             g.ship.angle += 360.0f;
-<<<<<<< HEAD
     }*/
-=======
     }
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
     if (gl.keys[XK_w]) {
         //apply thrust
         //convert ship angle to radians
@@ -860,13 +821,10 @@ void physics()
             }
         }
     }
-<<<<<<< HEAD
     double xdiff = g.ship.pos[0] - m.x;
     double ydiff = g.ship.pos[1] - m.y;
     float angle = atan2(ydiff,xdiff)*180/PI + 90.0f;
     g.ship.angle = angle;
-=======
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
     /*if (g.mouseThrustOn) {
         //should thrust be turned off
         struct timespec mtt;
@@ -959,11 +917,8 @@ void render()
     Bullet *b = &g.barr[0];
     for (int i=0; i<g.nbullets; i++) {
         //Log("draw bullet...\n");
-<<<<<<< HEAD
         glColor3f(0.3, 0.1, 0.4);
-=======
         glColor3f(1.0, 1.0, 1.0);
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
         glBegin(GL_POINTS);
         glVertex2f(b->pos[0],      b->pos[1]);
         glVertex2f(b->pos[0]-1.0f, b->pos[1]);

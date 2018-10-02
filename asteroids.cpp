@@ -54,17 +54,75 @@ const double OOBILLION = 1.0 / 1e9;
 extern struct timespec timeStart, timeCurrent;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
-extern void zw_show_credits(Rect &r);
-extern void zk_show_credits(Rect &r);
-extern void bb_show_credits(Rect &r);
-extern void jc_show_credits(Rect &r);
+extern void zw_show_credits(Rect &r, GLuint texid);
+extern void zk_show_credits(Rect &r, GLuint texid);
+extern void bb_show_credits(Rect &r, GLuint texid);
+extern void jc_show_credits(Rect &r, GLuint texid);
 //-----------------------------------------------------------------------------
+class Image {
+public:
+    int width, height;
+    unsigned char *data;
+    ~Image() { delete [] data; }
+    Image(const char *fname) {
+        if (fname[0] == '\0')
+            return;
+        //printf("fname **%s**\n", fname);
+        int ppmFlag = 0;
+        char name[40];
+        strcpy(name, fname);
+        int slen = strlen(name);
+        char ppmname[80];
+        if (strncmp(name+(slen-4), ".ppm", 4) == 0)
+            ppmFlag = 1;
+        if (ppmFlag) {
+            strcpy(ppmname, name);
+        } else {
+            name[slen-4] = '\0';
+            //printf("name **%s**\n", name);
+            sprintf(ppmname,"%s.ppm", name);
+            //printf("ppmname **%s**\n", ppmname);
+            char ts[100];
+            //system("convert eball.jpg eball.ppm");
+            sprintf(ts, "convert %s %s", fname, ppmname);
+            system(ts);
+        }
+        //sprintf(ts, "%s", name);
+        FILE *fpi = fopen(ppmname, "r");
+        if (fpi) {
+            char line[200];
+            fgets(line, 200, fpi);
+            fgets(line, 200, fpi);
+            //skip comments and blank lines
+            while (line[0] == '#' || strlen(line) < 2)
+                fgets(line, 200, fpi);
+            sscanf(line, "%i %i", &width, &height);
+            fgets(line, 200, fpi);
+            //get pixel data
+            int n = width * height * 3;
+            data = new unsigned char[n];
+            for (int i=0; i<n; i++)
+                data[i] = fgetc(fpi);
+            fclose(fpi);
+        } else {
+            printf("ERROR opening image: %s\n",ppmname);
+            exit(0);
+        }
+        if (!ppmFlag)
+            unlink(ppmname);
+    }
+};
+Image img[4] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg"};
 
 class Global {
 public:
 	int xres, yres;
 	char keys[65536];
-    bool credits;
+    	bool credits;
+	GLuint seahorseTexture;
+	GLuint chowderTexture;
+	GLuint duckTexture;
+	GLuint jpcTexture;
 	Global() {
 		xres = 1250;
 		yres = 900;
@@ -320,6 +378,59 @@ int main()
 void init_opengl()
 {
 	//OpenGL initialization
+	glGenTextures(1, &gl.seahorseTexture);
+    	//-------------------------------------------------------------------------
+    	//seahorse
+    	//
+    	int w = img[0].width;
+    	int h = img[0].height;
+    	//
+    	glBindTexture(GL_TEXTURE_2D, gl.seahorseTexture);
+    	//
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        	GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
+    	//-------------------------------------------------------------------------
+    	//-------------------------------------------------------------------------
+    	//duck
+    	//
+    	w = img[1].width;
+    	h = img[1].height;
+    	//
+    	glBindTexture(GL_TEXTURE_2D, gl.duckTexture);
+    	//
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        	GL_RGB, GL_UNSIGNED_BYTE, img[1].data);
+    	//-------------------------------------------------------------------------
+    	//-------------------------------------------------------------------------
+    	//chowder
+    	//
+    	w = img[2].width;
+    	h = img[2].height;
+    	//
+    	glBindTexture(GL_TEXTURE_2D, gl.chowderTexture);
+    	//
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        	GL_RGB, GL_UNSIGNED_BYTE, img[2].data);
+    	//-------------------------------------------------------------------------
+    	//-------------------------------------------------------------------------
+    	//jpc
+    	//
+    	w = img[3].width;
+    	h = img[3].height;
+    	//
+    	glBindTexture(GL_TEXTURE_2D, gl.seahorseTexture);
+    	//
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        	GL_RGB, GL_UNSIGNED_BYTE, img[3].data);
+    	//-------------------------------------------------------------------------
 	glViewport(0, 0, gl.xres, gl.yres);
 	//Initialize matrices
 	glMatrixMode(GL_PROJECTION); glLoadIdentity();
@@ -745,118 +856,112 @@ void physics()
 
 void render()
 {
-	Rect r;
-	glClear(GL_COLOR_BUFFER_BIT);
+    Rect r;
+    glClear(GL_COLOR_BUFFER_BIT);
     if(gl.credits) {
-        Rect n;
-	    n.bot = gl.yres/2;
-	    n.left = gl.xres/2;
-	    n.center = gl.xres/2;
-        zw_show_credits(n);
-        zk_show_credits(n);
-        bb_show_credits(n);
-        jc_show_credits(n);
-	    ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-        return;
+	Rect n;
+	n.bot = gl.yres - gl.yres/5;
+	n.left = gl.xres/2;
+	n.center = gl.xres/3;
+	zw_show_credits(n, gl.seahorseTexture);
+	zk_show_credits(n, gl.duckTexture);
+	bb_show_credits(n, gl.chowderTexture);
+	jc_show_credits(n, gl.jpcTexture);
+	ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+	return;
     }
-	glClear(GL_COLOR_BUFFER_BIT);
-	//
-	r.bot = gl.yres - 20;
-	r.left = 10;
-	r.center = 0;
-	ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
-	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
-	ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
-	//
-	//-------------
-	//Draw the ship
-	glColor3fv(g.ship.color);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
-		glVertex2f(-12.0f, -10.0f);
-		glVertex2f(  0.0f, 20.0f);
-		glVertex2f(  0.0f, -6.0f);
-		glVertex2f(  0.0f, -6.0f);
-		glVertex2f(  0.0f, 20.0f);
-		glVertex2f( 12.0f, -10.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    //
+    r.bot = gl.yres - 20;
+    r.left = 10;
+    r.center = 0;
+    ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
+    ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
+    ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
+    ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
+    //
+    //-------------
+    //Draw the ship
+    glColor3fv(g.ship.color);
+    glPushMatrix();
+    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(-12.0f, -10.0f);
+    glVertex2f(  0.0f, 20.0f);
+    glVertex2f(  0.0f, -6.0f);
+    glVertex2f(  0.0f, -6.0f);
+    glVertex2f(  0.0f, 20.0f);
+    glVertex2f( 12.0f, -10.0f);
+    glEnd();
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glBegin(GL_POINTS);
+    glVertex2f(0.0f, 0.0f);
+    glEnd();
+    glPopMatrix();
+    if (gl.keys[XK_Up] || g.mouseThrustOn) {
+	int i;
+	//draw thrust
+	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+	//convert angle to a vector
+	Flt xdir = cos(rad);
+	Flt ydir = sin(rad);
+	Flt xs,ys,xe,ye,r;
+	glBegin(GL_LINES);
+	for (i=0; i<16; i++) {
+	    xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+	    ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+	    r = rnd()*40.0+40.0;
+	    xe = -xdir * r + rnd() * 18.0 - 9.0;
+	    ye = -ydir * r + rnd() * 18.0 - 9.0;
+	    glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+	    glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
+	    glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+	}
 	glEnd();
-	glColor3f(1.0f, 0.0f, 0.0f);
+    }
+    //------------------
+    //Draw the asteroids
+    {
+	Asteroid *a = g.ahead;
+	while (a) {
+	    //Log("draw asteroid...\n");
+	    glColor3fv(a->color);
+	    glPushMatrix();
+	    glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
+	    glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
+	    glBegin(GL_LINE_LOOP);
+	    //Log("%i verts\n",a->nverts);
+	    for (int j=0; j<a->nverts; j++) {
+		glVertex2f(a->vert[j][0], a->vert[j][1]);
+	    }
+	    glEnd();
+	    glPopMatrix();
+	    glColor3f(1.0f, 0.0f, 0.0f);
+	    glBegin(GL_POINTS);
+	    glVertex2f(a->pos[0], a->pos[1]);
+	    glEnd();
+	    a = a->next;
+	}
+    }
+    //----------------
+    //Draw the bullets
+    Bullet *b = &g.barr[0];
+    for (int i=0; i<g.nbullets; i++) {
+	//Log("draw bullet...\n");
+	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_POINTS);
-		glVertex2f(0.0f, 0.0f);
+	glVertex2f(b->pos[0],      b->pos[1]);
+	glVertex2f(b->pos[0]-1.0f, b->pos[1]);
+	glVertex2f(b->pos[0]+1.0f, b->pos[1]);
+	glVertex2f(b->pos[0],      b->pos[1]-1.0f);
+	glVertex2f(b->pos[0],      b->pos[1]+1.0f);
+	glColor3f(0.8, 0.8, 0.8);
+	glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
+	glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
+	glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
+	glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
 	glEnd();
-	glPopMatrix();
-	if (gl.keys[XK_Up] || g.mouseThrustOn) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-			for (i=0; i<16; i++) {
-				xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-				ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-				r = rnd()*40.0+40.0;
-				xe = -xdir * r + rnd() * 18.0 - 9.0;
-				ye = -ydir * r + rnd() * 18.0 - 9.0;
-				glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-				glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-				glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-			}
-		glEnd();
-	}
-	//------------------
-	//Draw the asteroids
-	{
-		Asteroid *a = g.ahead;
-		while (a) {
-			//Log("draw asteroid...\n");
-			glColor3fv(a->color);
-			glPushMatrix();
-			glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
-			glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
-			glBegin(GL_LINE_LOOP);
-				//Log("%i verts\n",a->nverts);
-				for (int j=0; j<a->nverts; j++) {
-					glVertex2f(a->vert[j][0], a->vert[j][1]);
-				}
-			glEnd();
-			glPopMatrix();
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glBegin(GL_POINTS);
-				glVertex2f(a->pos[0], a->pos[1]);
-			glEnd();
-			a = a->next;
-		}
-	}
-	//----------------
-	//Draw the bullets
-	Bullet *b = &g.barr[0];
-	for (int i=0; i<g.nbullets; i++) {
-		//Log("draw bullet...\n");
-		glColor3f(1.0, 1.0, 1.0);
-		glBegin(GL_POINTS);
-			glVertex2f(b->pos[0],      b->pos[1]);
-			glVertex2f(b->pos[0]-1.0f, b->pos[1]);
-			glVertex2f(b->pos[0]+1.0f, b->pos[1]);
-			glVertex2f(b->pos[0],      b->pos[1]-1.0f);
-			glVertex2f(b->pos[0],      b->pos[1]+1.0f);
-			glColor3f(0.8, 0.8, 0.8);
-			glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
-			glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
-			glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
-			glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
-		glEnd();
-		++b;
-	}
+	++b;
+    }
 }
-
-
-
-
-
-

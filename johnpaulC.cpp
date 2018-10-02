@@ -7,12 +7,12 @@
 #include "math.h"
 void jc_show_credits(Rect &r, GLuint texid)
 {
-    ggprint16(&r, 320, 0x00fff000, "John Paul Cailing");
+    ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
     glColor3ub(255,255,255);
-    int wid = 64;
+    //int wid = 125;
 
     static float angle = 0.0f;
-    float fx = (float) ((r.center + r.left) / 2);
+    float fx = (float) ((r.center + r.left/4));
     float fy = (float) (r.center* 1/2);
 
     fx += sin(angle) * 10.0f;
@@ -22,10 +22,10 @@ void jc_show_credits(Rect &r, GLuint texid)
     glTranslatef(fx,fy,0);
     glBindTexture(GL_TEXTURE_2D, texid);
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(0,0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, 125);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(125, 125);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(125, 0);
     glEnd();
     glPopMatrix();   
 }

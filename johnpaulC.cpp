@@ -15,7 +15,8 @@ void jc_show_credits(Rect &r, GLuint texid)
     float fx = (float) ((r.center + r.left/4));
     float fy = (float) (r.center* 1/2);
 
-    fx += sin(angle) * 10.0f;
+    fy += cos(angle) * 10.0f;
+    fx += sin(angle) * 20.0f;
     angle += 0.2f;
     //glColor3f(1.0, 1.0, 1.0);
     glPushMatrix();

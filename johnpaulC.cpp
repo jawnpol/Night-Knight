@@ -12,7 +12,7 @@ void jc_show_credits(Rect &r, GLuint texid)
     //int wid = 125;
 
     static float angle = 0.0f;
-    float fx = (float) ((r.center + r.left/4));
+    float fx = (float) ((r.center + r.left/2));
     float fy = (float) (r.center* 1/2);
 
     fx += sin(angle) * 10.0f;

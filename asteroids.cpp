@@ -378,10 +378,10 @@ int main()
 void init_opengl()
 {
 	//OpenGL initialization
-	glGenTextures(1, &gl.seahorseTexture);
     	//-------------------------------------------------------------------------
     	//seahorse
     	//
+	glGenTextures(1, &gl.seahorseTexture);
     	int w = img[0].width;
     	int h = img[0].height;
     	//
@@ -395,6 +395,7 @@ void init_opengl()
     	//-------------------------------------------------------------------------
     	//duck
     	//
+	glGenTextures(1, &gl.duckTexture);
     	w = img[1].width;
     	h = img[1].height;
     	//
@@ -408,6 +409,7 @@ void init_opengl()
     	//-------------------------------------------------------------------------
     	//chowder
     	//
+	glGenTextures(1, &gl.chowderTexture);
     	w = img[2].width;
     	h = img[2].height;
     	//
@@ -421,10 +423,11 @@ void init_opengl()
     	//-------------------------------------------------------------------------
     	//jpc
     	//
+	glGenTextures(1, &gl.jpcTexture);
     	w = img[3].width;
     	h = img[3].height;
     	//
-    	glBindTexture(GL_TEXTURE_2D, gl.seahorseTexture);
+    	glBindTexture(GL_TEXTURE_2D, gl.jpcTexture);
     	//
     	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);

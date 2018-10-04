@@ -79,7 +79,7 @@ void initSound()
 	
 
 	//Buffer holds the sound information.
-	sound  = alutCreateBufferFromFile("./test.wav");
+	sound  = alutCreateBufferFromFile("./fire.wav");
 	song = alutCreateBufferFromFile("./cartoonsound.wav");
 
 	//Generate a source, and store it in a buffer.
@@ -137,7 +137,7 @@ void playSound()
     #endif //USE_OPENAL_SOUND
 }
 
-//void playGameSound()
+/*void playGameSound()
 {
 	#ifdef USE_OPENAL_SOUND
     for (int i = 0; i < 42; i++) {
@@ -145,4 +145,4 @@ void playSound()
 		usleep(54100000);
     }
 	#endif //USE_OPENAL_SOUND
-}
+}*/

@@ -47,7 +47,9 @@ const float GRAVITY = -0.2f;
 #define ALPHA 1
 const int MAX_BULLETS = 11;
 const Flt MINIMUM_ASTEROID_SIZE = 60.0;
-
+extern void initSound();
+extern void cleanupSound();
+extern void playSound();
 //-----------------------------------------------------------------------------
 //Setup timers
 const double OOBILLION = 1.0 / 1e9;
@@ -360,6 +362,7 @@ void render();
 int main()
 {
     logOpen();
+    initSound();
     init_opengl();
     srand(time(NULL));
     x11.set_mouse_position(100, 100);
@@ -376,6 +379,7 @@ int main()
         x11.swapBuffers();
     }
     cleanup_fonts();
+    cleanupSound();
     logClose();
     return 0;
 }
@@ -494,7 +498,9 @@ void check_mouse(XEvent *e)
                 timeCopy(&g.bulletTimer, &bt);
                 //shoot a bullet...
                 if (g.nbullets < MAX_BULLETS) {
-                    Bullet *b = &g.barr[g.nbullets];
+                    
+		    playSound();
+		    Bullet *b = &g.barr[g.nbullets];
                     timeCopy(&b->time, &bt);
                     b->pos[0] = g.ship.pos[0];
                     b->pos[1] = g.ship.pos[1];

@@ -9,12 +9,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <GL/glx.h>
+#include <GL/glu.h>
+#define USE_OPENAL_SOUND
 #ifdef USE_OPENAL_SOUND
 #include </usr/include/AL/alut.h>
 #endif //USE_OPENAL_SOUND
 
 static ALuint sound;
 static ALuint alSource;
+
 void initSound()
 {
 	//Get started right here.
@@ -22,7 +28,7 @@ void initSound()
 	alutInit(0, NULL);
 	if (alGetError() != AL_NO_ERROR) {
 		printf("ERROR: alutInit()\n");
-		return 0;
+		return ;
 	}
 	//Clear error state.
 	alGetError();
@@ -33,38 +39,37 @@ void initSound()
 	alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
 	alListenerfv(AL_ORIENTATION, vec);
 	alListenerf(AL_GAIN, 1.0f);
-	//
+	
+
 	//Buffer holds the sound information.
-	ALuint song;
-	song = alutCreateBufferFromFile("./test.wav");
-	//
-	//Source refers to the sound.
-	ALuint alSource;
+	sound  = alutCreateBufferFromFile("./fire.wav");
+	//ALuint alSource;
 	//Generate a source, and store it in a buffer.
 	alGenSources(1, &alSource);
-	alSourcei(alSource, AL_BUFFER, sound);
+	alSourcei(alSource, AL_BUFFER , sound);
 	//Set volume and pitch to normal, no looping of sound.
-	/*alSourcef(alSource, AL_GAIN, 1.0f);
+	alSourcef(alSource, AL_GAIN, 1.0f);
 	alSourcef(alSource, AL_PITCH, 1.0f);
 	alSourcei(alSource, AL_LOOPING, AL_FALSE);
 	if (alGetError() != AL_NO_ERROR) {
 		printf("ERROR: setting source\n");
-		return 0;
-	}*/
+		return ;
+	}
+//	alSourcePlay(alSource);
 
     //Play a looping sound
-    alSourcef(alSource, AL_GAIN, 0.5f);
+   /* alSourcef(alSource, AL_GAIN, 0.5f);
     alSourcef(alSource, AL_PITCH, 1.0f);
     alSourcei(alSource, AL_LOOPING, AL_TRUE);
     if (alGetError() != AL_NO_ERROR) {
         printf("Error: setting source\n");
-        return 0;
+        return ;
     }
-    alSourcePlay(alSource[1]);
+    alSourcePlay(alSource);
     for (int i = 0; i < 42; i++) {
-        alSourcePlay(alSource[0]);
-        usleep(500000);
-    }
+        alSourcePlay(alSource);
+	//usleep(500000);
+    }*/
 
 	/*for (int i=0; i<4; i++) {
 		alSourcePlay(alSource);
@@ -78,7 +83,7 @@ void cleanupSound()
 	//First delete the source.
 	alDeleteSources(1, &alSource);
 	//Delete the buffer.
-	alDeleteBuffers(1, sound);
+	alDeleteBuffers(1, &sound);
 	//Close out OpenAL itself.
 	//Get active context.
 	ALCcontext *Context = alcGetCurrentContext();
@@ -93,10 +98,10 @@ void cleanupSound()
     #endif //USE_OPENAL_SOUND
 }
 
-void playSound(ALuint source)
+void playSound()
 {
     #ifdef USE_OPENAL_SOUND
-    alSourcePlay(source);
+    alSourcePlay(alSource);
     #endif //USE_OPENAL_SOUND
 }
 

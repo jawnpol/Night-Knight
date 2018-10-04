@@ -14,8 +14,8 @@ LFLAGS = -lrt -lX11 -lGL
 
 all: asteroids
 
-asteroids: asteroids.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp sound.cpp
-	g++ $(CFLAGS) asteroids.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp log.cpp timers.cpp sound.cpp \
+asteroids: asteroids.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp 
+	g++ $(CFLAGS) asteroids.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp log.cpp timers.cpp \
     	/usr/lib/x86_64-linux-gnu/libopenal.so \
     	/usr/lib/x86_64-linux-gnu/libalut.so libggfonts.a -Wall $(LFLAGS) -o asteroids
 

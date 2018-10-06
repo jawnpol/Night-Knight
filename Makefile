@@ -18,8 +18,6 @@ nightKnight: nightKnight.cpp log.cpp timers.cpp
 	g++ $(CFLAGS) nightKnight.cpp log.cpp timers.cpp \
 	libggfonts.a -Wall $(LFLAGS) -o nightKnight
 
-clean:
-	rm -f nightKnight
 all: asteroids
 
 asteroids: asteroids.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp 

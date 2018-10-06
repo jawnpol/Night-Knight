@@ -56,6 +56,8 @@ const double OOBILLION = 1.0 / 1e9;
 extern struct timespec timeStart, timeCurrent;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
+//-----------------------------------------------------------------------------
+//Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
 extern void bb_show_credits(Rect &r);
@@ -64,7 +66,8 @@ extern void zwShowPicture(int x, int y, GLuint texid);
 extern void zkShowPicture(int x, int y, GLuint texid);
 extern void bbShowPicture(int x, int y, GLuint texid);
 extern void jpcShowPicture(int x, int y, GLuint texid);
-//-----------------------------------------------------------------------------
+extern void zw_save_mouse_pos(int x, int y);
+extern float zw_change_angle(double posx, double posy);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -131,8 +134,10 @@ class Global {
         GLuint duckTexture;
         GLuint jpcTexture;
         Global() {
-            xres = 1250;
-            yres = 900;
+            //Changed by Zakary Worman: Just made this resolution slightly larger
+            xres = 1920;
+            yres = 1080;
+            //------------------------------------------------------------------
             memset(keys, 0, 65536);
             credits = false;
         }
@@ -478,9 +483,10 @@ void normalize2d(Vec v)
 void check_mouse(XEvent *e)
 {
     //Was a mouse button clicked?
-    static int savex = 0;
-    static int savey = 0;
-    static int ct=0;
+    //static int savex = 0;
+    //static int savey = 0;
+    //static int ct=0;      //changed by Zakary Worman:
+                            //these 3 variables not used because of my change of mouse aiming
     if (e->type != ButtonPress &&
             e->type != ButtonRelease &&
             e->type != MotionNotify)
@@ -527,9 +533,17 @@ void check_mouse(XEvent *e)
         }
     }
     if (e->type == MotionNotify) {
-        if (savex != e->xbutton.x || savey != e->xbutton.y) {
+        //if (savex != e->xbutton.x || savey != e->xbutton.y) {
             //Mouse moved
-            int xdiff = savex - e->xbutton.x;
+            //Changed by Zakary Worman: Changed to remove movement from mouse
+            //and allow for aiming with mouse. The rest of this usage is found
+            //in physics
+            int x = e->xbutton.x;           //just to save the x position of mouse
+            int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
+                                            //X11 and OpenGL start (0,0) in opposite
+                                            //y positions 
+            zw_save_mouse_pos(x, y);        //save this position to be used
+            /*int xdiff = savex - e->xbutton.x;
             int ydiff = savey - e->xbutton.y;
             if (++ct < 10)
                 return;		
@@ -567,35 +581,42 @@ void check_mouse(XEvent *e)
             }
             x11.set_mouse_position(100, 100);
             savex = savey = 100;
-        }
+        }*/
     }
 }
 
 int check_keys(XEvent *e)
 {
     //keyboard input?
-    static int shift=0;
+    //static int shift=0;
     if (e->type != KeyPress && e->type != KeyRelease)
         return 0;
     int key = (XLookupKeysym(&e->xkey, 0) & 0x0000ffff);
     //Log("key: %i\n", key);
     if (e->type == KeyRelease) {
         gl.keys[key]=0;
-        if (key == XK_Shift_L || key == XK_Shift_R)
-            shift=0;
+        //Changed by Zakary Worman: change not used
+        /*if (key == XK_Shift_L || key == XK_Shift_R)
+            shift=0;*/
         return 0;
     }
     gl.keys[key]=1;
-    if (key == XK_Shift_L || key == XK_Shift_R) {
+    //Changed by Zakary Worman: Not used for anything
+    /*if (key == XK_Shift_L || key == XK_Shift_R) {
         shift=1;
         return 0;
     }
-    (void)shift;
+    (void)shift;*/
     switch (key) {
         case XK_Escape:
             return 1;
-        case XK_f:
+        //Added by Zakary Worman:
+        //accelerates the unit as if a sprint
+        case XK_Shift_L:
+            g.ship.vel[0] *= 1.5;
+            g.ship.vel[1] *= 1.5;
             break;
+        //------------------------------------
         case XK_c:
             gl.credits = !gl.credits;
             break;
@@ -798,7 +819,10 @@ void physics()
     }
     //---------------------------------------------------
     //check keys pressed now
-    if (gl.keys[XK_Left]) {
+    //Changed by Zakary Worman:
+    //are not used right now but later 
+    //will be used to include straifing
+    /*if (gl.keys[XK_Left]) {
         g.ship.angle += 4.0;
         if (g.ship.angle >= 360.0f)
             g.ship.angle -= 360.0f;
@@ -807,25 +831,54 @@ void physics()
         g.ship.angle -= 4.0;
         if (g.ship.angle < 0.0f)
             g.ship.angle += 360.0f;
-    }
-    if (gl.keys[XK_Up]) {
+    }*/
+    //changed by Zakary Worman: changed this to use w instead of up arrow to move
+    if (gl.keys[XK_w]) {
         //apply thrust
         //convert ship angle to radians
         Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
         //convert angle to a vector
         Flt xdir = cos(rad);
         Flt ydir = sin(rad);
-        g.ship.vel[0] += xdir*0.02f;
-        g.ship.vel[1] += ydir*0.02f;
+        g.ship.vel[0] += xdir;
+        g.ship.vel[1] += ydir;
         Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
                 g.ship.vel[1]*g.ship.vel[1]);
-        if (speed > 10.0f) {
-            speed = 10.0f;
+        //Changed by Zakary Worman: changed to simply reduce the speed
+        //to be more characteristic of a human rather than ship
+        if (speed > 5.0f) {
+            speed = 5.0f;
             normalize2d(g.ship.vel);
             g.ship.vel[0] *= speed;
             g.ship.vel[1] *= speed;
         }
     }
+    //Added by Zakary Worman: this allows for backward movement with s
+    else if (gl.keys[XK_s]) {
+        //convert ship angle to radians
+        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        g.ship.vel[0] -= xdir;
+        g.ship.vel[1] -= ydir;
+        Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+                g.ship.vel[1]*g.ship.vel[1]);
+        //Changed by Zakary Worman: changed to simply reduce the speed
+        //to be more characteristic of a human rather than ship
+        if (speed > 5.0f) {
+            speed = 5.0f;
+            normalize2d(g.ship.vel);
+            g.ship.vel[0] *= speed;
+            g.ship.vel[1] *= speed;
+        }
+    }
+    //Added by Zakary Worman: this makes the person slow down as you stop moving
+    else {
+        g.ship.vel[0] *= 0.8;
+        g.ship.vel[1] *= 0.8;
+    }
+    g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     if (gl.keys[XK_space]) {
         //a little time between each bullet
         struct timespec bt;
@@ -858,14 +911,15 @@ void physics()
             }
         }
     }
-    if (g.mouseThrustOn) {
+    //Changed by Zakary Worman: not used anymore
+    /*if (g.mouseThrustOn) {
         //should thrust be turned off
         struct timespec mtt;
         clock_gettime(CLOCK_REALTIME, &mtt);
         double tdif = timeDiff(&mtt, &g.mouseThrustTimer);
         if (tdif < -0.3)
             g.mouseThrustOn = false;
-    }
+    }*/
 }
 
 void render()

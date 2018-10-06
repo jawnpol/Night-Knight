@@ -12,7 +12,6 @@ CFLAGS = -I ./include
 #LFLAGS = -lrt -lX11 -lGLU -lGL -pthread -lm
 LFLAGS = -lrt -lX11 -lGL
 
-<<<<<<< HEAD
 all: nightKnight
 
 nightKnight: nightKnight.cpp log.cpp timers.cpp
@@ -21,7 +20,6 @@ nightKnight: nightKnight.cpp log.cpp timers.cpp
 
 clean:
 	rm -f nightKnight
-=======
 all: asteroids
 
 asteroids: asteroids.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp 
@@ -31,6 +29,5 @@ asteroids: asteroids.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cp
 
 clean:
 	rm -f asteroids
->>>>>>> 9e111b38296793803a3e99d5b46c637606946ae6
 	rm -f *.o
 

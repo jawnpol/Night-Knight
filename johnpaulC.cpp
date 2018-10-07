@@ -65,7 +65,7 @@ void initSound()
 	alutInit(0, NULL);
 	if (alGetError() != AL_NO_ERROR) {
 		printf("ERROR: alutInit()\n");
-	return ;
+		return ;
 	}
 	//Clear error state.
 	alGetError();
@@ -79,13 +79,13 @@ void initSound()
 
 
 	//Buffer holds the sound information.
-	sound  = alutCreateBufferFromFile("./fire.wav");
-	song = alutCreateBufferFromFile("./cartoonsound.wav");
+	sound  = alutCreateBufferFromFile("./test.wav");
+	//song = alutCreateBufferFromFile("./cartoonsound.wav");
 
 	//Generate a source, and store it in a buffer.
 	alGenSources(1, &alSource);
-	alGenSources(1, &gameSong);
-	alSourcei(gameSong, AL_BUFFER, song);
+	//alGenSources(1, &gameSong);
+	//alSourcei(gameSong, AL_BUFFER, song);
 	alSourcei(alSource, AL_BUFFER , sound);
 	//Set volume and pitch to normal, no looping of sound.
 	alSourcef(alSource, AL_GAIN, 1.0f);
@@ -97,14 +97,14 @@ void initSound()
 	}
 
 	//Play a looping sound
-	//For future use
-	alSourcef(gameSong, AL_GAIN, 0.5f);
+	//For future use as main game sound
+	/*alSourcef(gameSong, AL_GAIN, 0.5f);
 	alSourcef(gameSong, AL_PITCH, 1.0f);
 	alSourcei(gameSong, AL_LOOPING, AL_TRUE);
 	if (alGetError() != AL_NO_ERROR) {
 		printf("Error: setting source\n");
 		return ;
-	}
+	}*/
 }
 
 void cleanupSound()

@@ -10,14 +10,7 @@
 // - Create a function to handle alSource 
 #include <stdio.h>
 #include "fonts.h"
-#include "math.h"
-#include <string.h>
 #include <math.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
 #include <GL/glx.h>
 #include <GL/glu.h>
 #define USE_OPENAL_SOUND

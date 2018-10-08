@@ -1,13 +1,13 @@
 //Author: Brandon Burdick
 //Class:  CMPS 3350
-//Group#: 8
+//Group#: 9
 //Game:   Night Knight:
-//	  Top Down 2D Survival Shooter Utilizing C++ and OpenGL
+//        Top Down 2D Survival Shooter Utilizing C++ and OpenGL
 //	  
 //Current Functions: Show_Credits -> outputs name in credit screen
-//		     showPicture  -> prints picture in credit screen
+//        showPicture  -> prints picture in credit screen
 //Future additions:  Powerups     -> create powerup to be used in NightKnight
-//		     Skins?       -> Different cosmetic looks for characters
+//                   Skins?       -> Different cosmetic looks for characters
 
 #include<stdio.h>
 #include"fonts.h"

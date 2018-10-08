@@ -1,5 +1,4 @@
-//Author: Gordon Griesel from openalTest framework
-//Modified: John Paul Cailing
+//Author: John Paul Cailing
 //Date: 09/25/2018
 //Purpose: Contains credits and picture
 //Main sound file for the project

@@ -727,17 +727,19 @@ void physics()
     g.ship.pos[0] += g.ship.vel[0];
     g.ship.pos[1] += g.ship.vel[1];
     //Check for collision with window edges
+    //Edited by Zachary Kaiser: Forced ship to stay within screen
+    //boundaries
     if (g.ship.pos[0] < 0.0) {
-        g.ship.pos[0] += (float)gl.xres;
+        g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[0] > (float)gl.xres) {
-        g.ship.pos[0] -= (float)gl.xres;
+        g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[1] < 0.0) {
-        g.ship.pos[1] += (float)gl.yres;
+        g.ship.pos[1] = (float)gl.yres;
     }
     else if (g.ship.pos[1] > (float)gl.yres) {
-        g.ship.pos[1] -= (float)gl.yres;
+        g.ship.pos[1] = (float)gl.yres;
     }
     //
     //Update bullet positions
@@ -747,8 +749,9 @@ void physics()
     while (i < g.nbullets) {
         Bullet *b = &g.barr[i];
         //How long has bullet been alive?
+	//Edited by Zachary Kaiser: decreased amount of time to delete bullet
         double ts = timeDiff(&b->time, &bt);
-        if (ts > 2.5) {
+        if (ts > 2.0) {
             //time to delete the bullet.
             memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
@@ -760,17 +763,22 @@ void physics()
         b->pos[0] += b->vel[0];
         b->pos[1] += b->vel[1];
         //Check for collision with window edges
+	//Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
         if (b->pos[0] < 0.0) {
-            b->pos[0] += (float)gl.xres;
+	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[0] > (float)gl.xres) {
-            b->pos[0] -= (float)gl.xres;
+	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[1] < 0.0) {
-            b->pos[1] += (float)gl.yres;
+	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[1] > (float)gl.yres) {
-            b->pos[1] -= (float)gl.yres;
+	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         i++;
     }

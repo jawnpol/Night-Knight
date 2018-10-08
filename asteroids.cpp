@@ -17,9 +17,9 @@
 using namespace std;
 #include <unistd.h>
 #include <X11/Xlib.h>
-//#include <X11/Xutil.h>
-//#include <GL/gl.h>
-//#include <GL/glu.h>
+#include <X11/Xutil.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <X11/Xutil.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -339,7 +339,8 @@ class X11_wrapper {
                 return;
             }
             //vars to make blank cursor
-            Pixmap blank;
+            //Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
+            /*Pixmap blank;
             XColor dummy;
             char data[1] = {0};
             Cursor cursor;
@@ -350,7 +351,7 @@ class X11_wrapper {
             cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
             XFreePixmap(dpy, blank);
             //this makes you the cursor. then set it using this function
-            XDefineCursor(dpy, win, cursor);
+            XDefineCursor(dpy, win, cursor);*/
             //after you do not need the cursor anymore use this function.
             //it will undo the last change done by XDefineCursor
             //(thus do only use ONCE XDefineCursor and then XUndefineCursor):
@@ -489,7 +490,7 @@ void check_mouse(XEvent *e)
     //static int savex = 0;
     //static int savey = 0;
     //static int ct=0;      //changed by Zakary Worman:
-                            //these 3 variables not used because of my change of mouse aiming
+    //these 3 variables not used because of my change of mouse aiming
     if (e->type != ButtonPress &&
             e->type != ButtonRelease &&
             e->type != MotionNotify)
@@ -508,9 +509,9 @@ void check_mouse(XEvent *e)
                 timeCopy(&g.bulletTimer, &bt);
                 //shoot a bullet...
                 if (g.nbullets < MAX_BULLETS) {
-                    
-		    playSound();
-		    Bullet *b = &g.barr[g.nbullets];
+
+                    playSound();
+                    Bullet *b = &g.barr[g.nbullets];
                     timeCopy(&b->time, &bt);
                     b->pos[0] = g.ship.pos[0];
                     b->pos[1] = g.ship.pos[1];
@@ -533,91 +534,91 @@ void check_mouse(XEvent *e)
             }
         }
     }
-        //edited by Zachary Kaiser: Messing around with the bullet physics to create new weapons
-        //Most likely won't use right click as a weapon but just using as a quick way to test
-        if (e->xbutton.button==3) {
-            //Right button is down
-            struct timespec bt;
-            clock_gettime(CLOCK_REALTIME, &bt);
-            double ts = timeDiff(&g.bulletTimer, &bt);
-            if (ts > 0.1) {
-                timeCopy(&g.bulletTimer, &bt);
-                //shoot a bullet...
-                if (g.nbullets < MAX_BULLETS) {      
-		    //playSound();
-		    Bullet *b = &g.barr[g.nbullets];
-                    timeCopy(&b->time, &bt);
-                    b->pos[0] = g.ship.pos[0];
-                    b->pos[1] = g.ship.pos[1];
-                    b->vel[0] = g.ship.vel[0];
-                    b->vel[1] = g.ship.vel[1];
-                    //convert ship angle to radians
-                    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-                    //convert angle to a vector
-                    Flt xdir = cos(rad);
-                    Flt ydir = sin(rad);
-                    b->pos[0] += xdir*20.0f;
-                    b->pos[1] += ydir*20.0f;
-                    b->vel[0] += xdir*6.0f + rnd()*0.1;
-                    b->vel[1] += ydir*6.0f + rnd()*0.1;
-                    b->color[0] = 1.0f;
-                    b->color[1] = 1.0f;
-                    b->color[2] = 1.0f;
-                    ++g.nbullets;
-                }
+    //edited by Zachary Kaiser: Messing around with the bullet physics to create new weapons
+    //Most likely won't use right click as a weapon but just using as a quick way to test
+    if (e->xbutton.button==3) {
+        //Right button is down
+        struct timespec bt;
+        clock_gettime(CLOCK_REALTIME, &bt);
+        double ts = timeDiff(&g.bulletTimer, &bt);
+        if (ts > 0.1) {
+            timeCopy(&g.bulletTimer, &bt);
+            //shoot a bullet...
+            if (g.nbullets < MAX_BULLETS) {      
+                //playSound();
+                Bullet *b = &g.barr[g.nbullets];
+                timeCopy(&b->time, &bt);
+                b->pos[0] = g.ship.pos[0];
+                b->pos[1] = g.ship.pos[1];
+                b->vel[0] = g.ship.vel[0];
+                b->vel[1] = g.ship.vel[1];
+                //convert ship angle to radians
+                Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+                //convert angle to a vector
+                Flt xdir = cos(rad);
+                Flt ydir = sin(rad);
+                b->pos[0] += xdir*20.0f;
+                b->pos[1] += ydir*20.0f;
+                b->vel[0] += xdir*6.0f + rnd()*0.1;
+                b->vel[1] += ydir*6.0f + rnd()*0.1;
+                b->color[0] = 1.0f;
+                b->color[1] = 1.0f;
+                b->color[2] = 1.0f;
+                ++g.nbullets;
             }
         }
-        if (e->type == MotionNotify) {
-            //if (savex != e->xbutton.x || savey != e->xbutton.y) {
-            //Mouse moved
-            //Changed by Zakary Worman: Changed to remove movement from mouse
-            //and allow for aiming with mouse. The rest of this usage is found
-            //in physics
-            int x = e->xbutton.x;           //just to save the x position of mouse
-            int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
-            //X11 and OpenGL start (0,0) in opposite
-            //y positions 
-            zw_save_mouse_pos(x, y);        //save this position to be used
-            /*int xdiff = savex - e->xbutton.x;
-              int ydiff = savey - e->xbutton.y;
-              if (++ct < 10)
-              return;		
-              if (xdiff > 0) {
-            //mouse moved along the x-axis.
-            g.ship.angle += 0.05f * (float)xdiff;
-            if (g.ship.angle >= 360.0f)
-            g.ship.angle -= 360.0f;
-            }
-            else if (xdiff < 0) {
-            g.ship.angle += 0.05f * (float)xdiff;
-            if (g.ship.angle < 0.0f)
-            g.ship.angle += 360.0f;
-            }
-            if (ydiff > 0) {
-            //mouse moved along the y-axis.
-            //apply thrust
-            //convert ship angle to radians
-            Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-            //convert angle to a vector
-            Flt xdir = cos(rad);
-            Flt ydir = sin(rad);
-            g.ship.vel[0] += xdir * (float)ydiff * 0.001f;
-            g.ship.vel[1] += ydir * (float)ydiff * 0.001f;
-            Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-            g.ship.vel[1]*g.ship.vel[1]);
-            if (speed > 15.0f) {
-            speed = 15.0f;
-            normalize2d(g.ship.vel);
-            g.ship.vel[0] *= speed;
-            g.ship.vel[1] *= speed;
-            }
-            g.mouseThrustOn = true;
-            clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
-            }
-            x11.set_mouse_position(100, 100);
-            savex = savey = 100;
-            }*/
+    }
+    if (e->type == MotionNotify) {
+        //if (savex != e->xbutton.x || savey != e->xbutton.y) {
+        //Mouse moved
+        //Changed by Zakary Worman: Changed to remove movement from mouse
+        //and allow for aiming with mouse. The rest of this usage is found
+        //in physics
+        int x = e->xbutton.x;           //just to save the x position of mouse
+        int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
+        //X11 and OpenGL start (0,0) in opposite
+        //y positions 
+        zw_save_mouse_pos(x, y);        //save this position to be used
+        /*int xdiff = savex - e->xbutton.x;
+          int ydiff = savey - e->xbutton.y;
+          if (++ct < 10)
+          return;		
+          if (xdiff > 0) {
+        //mouse moved along the x-axis.
+        g.ship.angle += 0.05f * (float)xdiff;
+        if (g.ship.angle >= 360.0f)
+        g.ship.angle -= 360.0f;
         }
+        else if (xdiff < 0) {
+        g.ship.angle += 0.05f * (float)xdiff;
+        if (g.ship.angle < 0.0f)
+        g.ship.angle += 360.0f;
+        }
+        if (ydiff > 0) {
+        //mouse moved along the y-axis.
+        //apply thrust
+        //convert ship angle to radians
+        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        g.ship.vel[0] += xdir * (float)ydiff * 0.001f;
+        g.ship.vel[1] += ydir * (float)ydiff * 0.001f;
+        Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+        g.ship.vel[1]*g.ship.vel[1]);
+        if (speed > 15.0f) {
+        speed = 15.0f;
+        normalize2d(g.ship.vel);
+        g.ship.vel[0] *= speed;
+        g.ship.vel[1] *= speed;
+        }
+        g.mouseThrustOn = true;
+        clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
+        }
+        x11.set_mouse_position(100, 100);
+        savex = savey = 100;
+        }*/
+    }
 }
 
 int check_keys(XEvent *e)

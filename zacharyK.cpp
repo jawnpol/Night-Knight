@@ -1,8 +1,7 @@
 //Zachary Kaiser
-//lab05
 
 
-#include "fonts.h" 
+#include"fonts.h" 
 #include<stdio.h>
 #include<GL/glx.h>
 #include<cstdlib>
@@ -11,8 +10,7 @@ void zk_show_credits(Rect &r) {
    ggprint16(&r, 150, 0x00fff000, "Zachary Kaiser");  
 }
 
-void zkShowPicture(int x, int y, GLuint texid)
-{
+void zkShowPicture(int x, int y, GLuint texid) {
     glColor3ub(255,255,255);
     int wid = 64;
 

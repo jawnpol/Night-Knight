@@ -18,6 +18,13 @@
 #include </usr/include/AL/alut.h>
 //#endif //USE_OPENAL_SOUND
 
+enum {
+    MODE_ROUND_START = 0,
+    MODE_ROUND_END,
+    MODE_BUILD,
+    MODE_DEATH
+};
+
 void jc_show_credits(Rect &r)
 {
 	ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
@@ -143,8 +150,8 @@ void playSound()
 
 //Building functionality
 //Shows grid on the game map
-#define MAXGRID 16
-#define GRIDDIM 10
+//#define MAXGRID 16
+//#define GRIDDIM 10
 
 typedef struct t_grid {
 	int displayState;
@@ -158,7 +165,7 @@ int gridDim = 40;
 
 void initBoard(void)
 {
-	boardDim = gridDim * GRIDDIM;
+	boardDim = 1920;
 }
 
 void renderBoard(int xres, int yres)
@@ -166,17 +173,17 @@ void renderBoard(int xres, int yres)
     //--------------------------------------------------------
     //This code is repeated several times in this program, so
     //it can be made more generic and cleaner with some work.
-    int b2 = boardDim/5;
-    int s0 = xres/5;
-    int s1 = yres/5;
+    int b2 = boardDim/2;
+    int s0 = xres/2;
+    int s1 = yres/2;
     //center of a grid
-    int cent[2];
+    //int cent[2];
     //bq is the width of one grid section
     //--------------------------------------------------------
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_BLEND);
-    //glColor3f(0.0f, 0.0f, 0.0f);
+    //glClearColor(0.0, 0.0, 0.0, 1.0);
+    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //glEnable(GL_BLEND);
+    glColor3f(0.0f, 0.0f, 0.0f);
     glBegin(GL_QUADS);
     	glVertex2i(s0-b2, s1-b2);
         glVertex2i(s0-b2, s1+b2);
@@ -185,7 +192,7 @@ void renderBoard(int xres, int yres)
     glEnd();
     glDisable(GL_BLEND);
 	
-	int x0 = s0-b2;
+    int x0 = s0-b2;
     int x1 = s0+b2;
     int y0 = s1-b2;
     int y1 = s1+b2;
@@ -194,7 +201,7 @@ void renderBoard(int xres, int yres)
     glColor3f(0.8f, 0.8f, 0.8f);
     glBegin(GL_LINES);
     for (int i=1; i<gridDim; i++) {
-        y0 += 30;
+        y0 += 100;
         glVertex2i(x0,y0);
         glVertex2i(x1,y0);
     }
@@ -202,7 +209,7 @@ void renderBoard(int xres, int yres)
     y0 = s1-b2;
     y1 = s1+b2;
     for (int j=1; j<gridDim; j++) {
-        x0 += 30;
+        x0 += 100;
         glVertex2i(x0,y0);
         glVertex2i(x0,y1);
     }

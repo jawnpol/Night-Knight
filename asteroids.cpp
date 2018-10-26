@@ -71,6 +71,7 @@ extern void bbShowPicture(int x, int y, GLuint texid);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
+extern void zw_gameover(double yres, double xres);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -153,6 +154,7 @@ class Ship {
         Vec vel;
         float angle;
         float color[3];
+        int health = 3;
     public:
         Ship() {
             VecZero(dir);
@@ -181,7 +183,7 @@ class Asteroid {
         Vec vel;
         int nverts;
         Flt radius;
-        Vec vert[8];
+        Vec vert[360];
         float angle;
         float rotate;
         float color[3];
@@ -214,14 +216,13 @@ class Game {
             //build 10 asteroids...
             for (int j=0; j<10; j++) {
                 Asteroid *a = new Asteroid;
-                a->nverts = 8;
+                a->nverts = 360;
                 a->radius = rnd()*80.0 + 40.0;
-                Flt r2 = a->radius / 2.0;
                 Flt angle = 0.0f;
                 Flt inc = (PI * 2.0) / (Flt)a->nverts;
                 for (int i=0; i<a->nverts; i++) {
-                    a->vert[i][0] = sin(angle) * (r2 + rnd() * a->radius);
-                    a->vert[i][1] = cos(angle) * (r2 + rnd() * a->radius);
+                    a->vert[i][0] = sinf(angle) * a->radius;
+                    a->vert[i][1] = cosf(angle) * a->radius;
                     angle += inc;
                 }
                 a->pos[0] = (Flt)(rand() % gl.xres);
@@ -341,13 +342,13 @@ class X11_wrapper {
             //vars to make blank cursor
             //Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
             /*Pixmap blank;
-            XColor dummy;
-            char data[1] = {0};
-            Cursor cursor;
+              XColor dummy;
+              char data[1] = {0};
+              Cursor cursor;
             //make a blank cursor
             blank = XCreateBitmapFromData (dpy, win, data, 1, 1);
             if (blank == None)
-                std::cout << "error: out of memory." << std::endl;
+            std::cout << "error: out of memory." << std::endl;
             cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
             XFreePixmap(dpy, blank);
             //this makes you the cursor. then set it using this function
@@ -749,7 +750,7 @@ void physics()
     while (i < g.nbullets) {
         Bullet *b = &g.barr[i];
         //How long has bullet been alive?
-	//Edited by Zachary Kaiser: decreased amount of time to delete bullet
+        //Edited by Zachary Kaiser: decreased amount of time to delete bullet
         double ts = timeDiff(&b->time, &bt);
         if (ts > 2.0) {
             //time to delete the bullet.
@@ -763,21 +764,21 @@ void physics()
         b->pos[0] += b->vel[0];
         b->pos[1] += b->vel[1];
         //Check for collision with window edges
-	//Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
+        //Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
         if (b->pos[0] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
         else if (b->pos[0] > (float)gl.xres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
         else if (b->pos[1] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
         else if (b->pos[1] > (float)gl.yres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
         i++;
@@ -812,6 +813,17 @@ void physics()
     //      if asteroid small, delete it
     a = g.ahead;
     while (a) {
+        //Zakary Worman: Checking for ship collision
+        //------------------------------------------
+        d0 = g.ship.pos[0] - a->pos[0];
+        d1 = g.ship.pos[1] - a->pos[1];
+        dist = d0*d0 + d1*d1;
+        if(dist < (a->radius*a->radius)) {
+            g.ship.vel[0] *= -1.5;
+            g.ship.vel[1] *= -1.5;
+            g.ship.health--;
+        }
+        //------------------------------------------
         //is there a bullet within its radius?
         int i=0;
         while (i < g.nbullets) {
@@ -845,7 +857,7 @@ void physics()
                     //asteroid is too small to break up
                     //delete the asteroid and bullet
                     Asteroid *savea = a->next;
-                    deleteAsteroid(&g, a);
+                    deleteAsteroid(&g,a);
                     a = savea;
                     g.nasteroids--;
                 }
@@ -984,6 +996,10 @@ void render()
         bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
         jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
         ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+        return;
+    }
+    if(g.ship.health <= 0) {
+        zw_gameover(gl.yres, gl.xres);
         return;
     }
     glClear(GL_COLOR_BUFFER_BIT);

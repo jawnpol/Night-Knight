@@ -19,11 +19,105 @@ struct Aim {
     double x, y;
 } m;
 
+//Set of Structures for Unique Enemies
+struct Zombie {
+    float dir[2];
+    float pos[2];
+    float vel[2];
+    float angle;
+    float color[3];
+    int sod = rand()%51;
+
+    Zombie() {
+        int num = rand()%2;
+        if (num == 0) {
+            pos[0] = rand()%1920;
+            num = rand()%2;
+            if  (num == 0)
+                pos[1] = 0;
+            else
+                pos[1] = 1080;
+        }
+        else {
+           pos[1] = rand()%1080;
+           num = rand()%2;
+           if (num == 0)
+               pos[0] = 0;
+           else
+               pos[1] = 1920;
+        }
+    }
+};
+struct Orc {
+    float dir[2];
+    float pos[2];
+    float vel[2];
+    float angle;
+    float color[3];
+
+    Orc() {
+        int num = rand()%2;
+        if (num == 0) {
+            pos[0] = rand()%1920;
+            num = rand()%2;
+            if  (num == 0)
+                pos[1] = 0;
+            else
+                pos[1] = 1080;
+        }
+        else {
+           pos[1] = rand()%1080;
+           num = rand()%2;
+           if (num == 0)
+               pos[0] = 0;
+           else
+               pos[1] = 1920;
+        }
+    }
+};
+struct Vampire {
+    float dir[2];
+    float pos[2];
+    float vel[2];
+    float angle;
+    float color[3];
+
+    Vampire() {
+        int num = rand()%2;
+        if (num == 0) {
+            pos[0] = rand()%1920;
+            num = rand()%2;
+            if  (num == 0)
+                pos[1] = 0;
+            else
+                pos[1] = 1080;
+        }
+        else {
+           pos[1] = rand()%1080;
+           num = rand()%2;
+           if (num == 0)
+               pos[0] = 0;
+           else
+               pos[1] = 1920;
+        }
+    }
+};
+
 //this is used to save the mouse position from check mouse in main program
 void zw_save_mouse_pos(int x, int y)
 {
     m.x = x;
     m.y = y;
+}
+
+//
+void zw_gameover(double yres, double xres) 
+{
+        Rect n; 
+        n.bot = yres/2;
+        n.left = xres/2;
+        n.center = xres/2;
+        ggprint16(&n, 16, 0x00ff0000, "GAME OVER");
 }
 
 //used to calculate the new angle of the ship based on the mouse

@@ -10,6 +10,7 @@
 //                   Skins?       -> Different cosmetic looks for characters
 
 #include<stdio.h>
+#include<cstdlib>
 #include"fonts.h"
 #include<GL/glx.h>
 
@@ -37,3 +38,47 @@ void bbShowPicture(int x, int y, GLuint texid)
     glEnd();
     glPopMatrix();
 }   
+
+//Could be used in the future for PowerUps implemented through image
+//files. Need to fix whitespace issues behind image, for now powerups
+//are just colored diamonds.
+void renderPowerup(int x, int y, int color)
+{
+    glColor3ub(color,color,color);
+	
+    float fx = (float) x;
+    float fy = (float) y;
+	
+    glPushMatrix();
+    glTranslatef(fx,fy,0);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(  0.0f,  16.0f);
+    glVertex2f( 16.0f,   0.0f);
+    glVertex2f(-16.0f,   0.0f);
+    glVertex2f(-16.0f,   0.0f);
+    glVertex2f( 16.0f,   0.0f);
+    glVertex2f(  0.0f, -16.0f);
+    glEnd();
+    glPopMatrix();
+}
+
+//Function for determining the chances that powerup spawns
+bool powerupChance(int chance) 
+{
+	int success = rand() % chance;
+	if (success == 0) {
+		return true;
+	} else { 
+		return false;
+	}
+}
+
+//Function that spawns powerup at specified location
+void spawnPowerup(int x_position, int y_position)
+{
+	//1 in 15 chance of spawning a powerup
+	if (powerupChance(15)) {
+		renderPowerup(x_position,y_position,255);
+	}
+}
+

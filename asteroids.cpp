@@ -68,6 +68,9 @@ extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
 extern void zkShowPicture(int x, int y, GLuint texid);
 extern void bbShowPicture(int x, int y, GLuint texid);
+extern void renderPowerup(int x, int y, int color);
+extern bool powerupChance(int chance);
+extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
@@ -1096,4 +1099,6 @@ void render()
         glEnd();
         ++b;
     }
+    //Function below used to check renderPowerup functionality
+    //renderPowerup(gl.xres/4,3*gl.yres/4,255);
 }

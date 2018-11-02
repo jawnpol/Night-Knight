@@ -217,10 +217,10 @@ class Game {
             nbullets = 0;
             mouseThrustOn = false;
             //build 10 asteroids...
-            for (int j=0; j<10; j++) {
+            for (int j=0; j<100; j++) {
                 Asteroid *a = new Asteroid;
                 a->nverts = 360;
-                a->radius = rnd()*80.0 + 40.0;
+                a->radius = rnd() + 40.0;
                 Flt angle = 0.0f;
                 Flt inc = (PI * 2.0) / (Flt)a->nverts;
                 for (int i=0; i<a->nverts; i++) {
@@ -702,7 +702,7 @@ void deleteAsteroid(Game *g, Asteroid *node)
 void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 {
     //build ta from a
-    ta->nverts = 8;
+    ta->nverts = 360;
     ta->radius = a->radius / 2.0;
     Flt r2 = ta->radius / 2.0;
     Flt angle = 0.0f;
@@ -837,7 +837,7 @@ void physics()
             if (dist < (a->radius*a->radius)) {
                 //cout << "asteroid hit." << endl;
                 //this asteroid is hit.
-                if (a->radius > MINIMUM_ASTEROID_SIZE) {
+                /*if (a->radius > MINIMUM_ASTEROID_SIZE) {
                     //break it into pieces.
                     Asteroid *ta = a;
                     buildAsteroidFragment(ta, a);
@@ -853,7 +853,7 @@ void physics()
                         g.ahead = ta;
                         g.nasteroids++;
                     }
-                } else {
+                } else {*/
                     a->color[0] = 1.0;
                     a->color[1] = 0.1;
                     a->color[2] = 0.1;
@@ -863,7 +863,7 @@ void physics()
                     deleteAsteroid(&g,a);
                     a = savea;
                     g.nasteroids--;
-                }
+                //}
                 //delete the bullet...
                 memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;

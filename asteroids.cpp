@@ -76,6 +76,8 @@ extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
 extern void zw_gameover(double yres, double xres);
+extern void initBoard();
+extern void renderBoard(int xres, int yres);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -137,6 +139,7 @@ class Global {
         int xres, yres;
         char keys[65536];
         bool credits;
+        bool build;
         GLuint seahorseTexture;
         GLuint chowderTexture;
         GLuint duckTexture;
@@ -148,6 +151,7 @@ class Global {
             //------------------------------------------------------------------
             memset(keys, 0, 65536);
             credits = false;
+            build = false;
         }
 } gl;
 
@@ -376,7 +380,9 @@ void render();
 int main()
 {
     logOpen();
+    //edited by John Paul; initializing sound + grid
     initSound();
+    initBoard();
     init_opengl();
     srand(time(NULL));
     x11.set_mouse_position(100, 100);
@@ -669,6 +675,8 @@ int check_keys(XEvent *e)
             break;
         case XK_minus:
             break;
+        case XK_b:
+            gl.build = !gl.build;
     }
     return 0;
 }
@@ -1003,6 +1011,7 @@ void render()
         ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
         return;
     }
+    
     if(g.ship.health <= 0) {
         zw_gameover(gl.yres, gl.xres);
         return;
@@ -1016,6 +1025,11 @@ void render()
     ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
     ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
+    
+    /*if (gl.build) {
+        renderBoard(gl.xres, gl.yres);
+        return;
+    }*/
     //
     //-------------
     //Draw the ship
@@ -1100,6 +1114,12 @@ void render()
         glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
         glEnd();
         ++b;
+    }
+    //Added by JPC - renders the board
+    if (gl.build) {
+        //glClear(GL_COLOR_BUFFER_BIT);
+        renderBoard(gl.xres, gl.yres);
+        return;
     }
     //Function below used to check renderPowerup functionality
     //FOR NOW: Powerups spawn at random locations on screen, will change this

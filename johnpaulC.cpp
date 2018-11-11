@@ -2,11 +2,15 @@
 //Date: 09/25/2018
 //Purpose: Contains credits and picture
 //Main sound file for the project
+//Contains building aspect
+//In progress: 
+// -Hovering over a graph square and placement from bship framework
 //To do list:
 // - Add sound for character movement
 // - Multiple sounds for different weapons
 // - Use an array to hold the buffers
 // - Create a function to handle alSource 
+// - Create materials class responsible for building
 #include <stdio.h>
 #include "fonts.h"
 #include <math.h>
@@ -17,13 +21,6 @@
 //#ifdef USE_OPENAL_SOUND
 #include </usr/include/AL/alut.h>
 //#endif //USE_OPENAL_SOUND
-
-enum {
-    MODE_ROUND_START = 0,
-    MODE_ROUND_END,
-    MODE_BUILD,
-    MODE_DEATH
-};
 
 void jc_show_credits(Rect &r)
 {
@@ -150,8 +147,7 @@ void playSound()
 
 //Building functionality
 //Shows grid on the game map
-//#define MAXGRID 16
-//#define GRIDDIM 10
+#define MAXGRID 16
 
 typedef struct t_grid {
 	int displayState;
@@ -159,59 +155,86 @@ typedef struct t_grid {
 	int over;
 	float color[4];
 } Grid;
+Grid buildingGrid[MAXGRID][MAXGRID];
 
+int gridDim = 120;
 int boardDim;
-int gridDim = 40;
+int quadSize;
 
 void initBoard(void)
 {
 	boardDim = 1920;
+    quadSize = (boardDim / gridDim) / 2 - 1;
 }
 
 void renderBoard(int xres, int yres)
 {
-    //--------------------------------------------------------
-    //This code is repeated several times in this program, so
-    //it can be made more generic and cleaner with some work.
-    int b2 = boardDim/2;
-    int s0 = xres/2;
-    int s1 = yres/2;
-    //center of a grid
-    //int cent[2];
-    //bq is the width of one grid section
-    //--------------------------------------------------------
+    int boardSize = boardDim/2;
+    int xBorder = xres/2;
+    int yBorder = yres/2;
+    
     //glClearColor(0.0, 0.0, 0.0, 1.0);
     //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glEnable(GL_BLEND);
-    glColor3f(0.0f, 0.0f, 0.0f);
+    /*glColor3f(0.0f, 0.0f, 0.0f);
     glBegin(GL_QUADS);
-    	glVertex2i(s0-b2, s1-b2);
-        glVertex2i(s0-b2, s1+b2);
-        glVertex2i(s0+b2, s1+b2);
-        glVertex2i(s0+b2, s1-b2);
-    glEnd();
-    glDisable(GL_BLEND);
+    	glVertex2i(xBorder-boardSize, yBorder-boardSize);
+        glVertex2i(xBorder-boardSize, yBorder+boardSize);
+        glVertex2i(xBorder+boardSize, yBorder+boardSize);
+        glVertex2i(xBorder+boardSize, yBorder-boardSize);
+    glEnd();*/
+    //glDisable(GL_BLEND);
 	
-    int x0 = s0-b2;
-    int x1 = s0+b2;
-    int y0 = s1-b2;
-    int y1 = s1+b2;
+    int x0 = xBorder-boardSize;
+    int x1 = xBorder+boardSize;
+    int y0 = yBorder-boardSize;
+    int y1 = yBorder+boardSize;
     //glEnable(GL_BLEND);
     //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
     glColor3f(0.8f, 0.8f, 0.8f);
     glBegin(GL_LINES);
     for (int i=1; i<gridDim; i++) {
-        y0 += 100;
+        y0 += gridDim;
         glVertex2i(x0,y0);
         glVertex2i(x1,y0);
     }
-    x0 = s0-b2;
-    y0 = s1-b2;
-    y1 = s1+b2;
+    x0 = xBorder-boardSize;
+    y0 = yBorder-boardSize;
+    y1 = yBorder+boardSize;
     for (int j=1; j<gridDim; j++) {
-        x0 += 100;
+        x0 += gridDim;
         glVertex2i(x0,y0);
         glVertex2i(x0,y1);
     }
     glEnd();
 }
+
+void gridCenter(int xres, int yres, const int i, const int j, int cent[2])
+{
+    int quad[2];
+    int xBorder = xres / 2;
+    int yBorder = yres / 2;
+
+    quad[0] = xBorder - (boardDim / 2);
+    quad[1] = yBorder - (boardDim / 2);
+    cent[0] = quad[0] + ((boardDim / gridDim) / 2);
+    cent[1] = quad[1] + ((boardDim / gridDim) / 2);
+    cent[0] += (boardDim / gridDim) * j;
+    cent[1] += (boardDim / gridDim) * i;
+
+}
+
+//Building structures
+//Adding a Materials class to handle building
+typedef struct t_wood {
+    int health = 50;
+    int repair = 30;
+    double buildTime = 1.5;
+} Wood;
+
+typedef struct t_stone {
+    int health = 150;
+    int repair = 100;
+    int damageResistance = 10;
+    double buildTime = 2.5;
+} Stone;

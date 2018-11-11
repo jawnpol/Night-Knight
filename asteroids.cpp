@@ -44,6 +44,7 @@ typedef Flt	Matrix[4][4];
                              (c)[1]=(a)[1]-(b)[1]; \
 (c)[2]=(a)[2]-(b)[2]
 //constants
+int powerups[5] ={0,0,0,0,0};
 const float TIMESLICE = 1.0f;
 const float GRAVITY = -0.2f;
 #define PI 3.141592653589793
@@ -68,9 +69,9 @@ extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
 extern void zkShowPicture(int x, int y, GLuint texid);
 extern void bbShowPicture(int x, int y, GLuint texid);
-extern void renderPowerup(int x, int y, int color);
-extern bool powerupChance(int chance);
-extern void spawnPowerup(int x_position, int y_position);
+extern void renderPowerup(int x, int y, int red, int gre, int blu);
+extern void powerupChance(int chance);
+extern void spawnPowerup(int x_position, int y_position, int powerups[]);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
@@ -837,6 +838,7 @@ void physics()
             if (dist < (a->radius*a->radius)) {
                 //cout << "asteroid hit." << endl;
                 //this asteroid is hit.
+		spawnPowerup(a->pos[0],a->pos[1],powerups);
                 /*if (a->radius > MINIMUM_ASTEROID_SIZE) {
                     //break it into pieces.
                     Asteroid *ta = a;
@@ -1100,5 +1102,26 @@ void render()
         ++b;
     }
     //Function below used to check renderPowerup functionality
-    //renderPowerup(gl.xres/4,3*gl.yres/4,255);
+    //FOR NOW: Powerups spawn at random locations on screen, will change this
+    //to the location of asteroids destroyed soon.
+    for(int i=0;i<5;i++){
+	    if (powerups[i] == 1) {
+		    if (i==0) {
+			    renderPowerup(gl.xres/2,gl.yres/2,255,255,255);
+		    }
+		    if (i==1) {
+			    renderPowerup(gl.xres/2,3*gl.yres/4,255,0,0);
+		    }
+		    if (i==2) {
+			    renderPowerup(gl.xres/2,-3*gl.yres/4,0,255,0);
+		    }
+		    if (i==3) {
+			    renderPowerup(gl.xres/2,-gl.yres/4,0,0,255);
+		    }
+		    if (i==4) {
+			    renderPowerup(gl.xres/4,gl.yres/2,156,99,92);
+		    }
+
+	    }
+    }
 }

@@ -7,12 +7,19 @@
 //Current Functions: Show_Credits -> outputs name in credit screen
 //                   showPicture  -> prints picture in credit screen
 //Future additions:  Powerups     -> create powerup to be used in NightKnight
+//			***NOTES*** 
+//			-Powerups currently spawn at random location
+//			will change this to death location of asteroids soon.
+//			-Also, need to implement collision detection of powerups
+//			When this is done, powerups will be given specific 
+//			attributes that affect character.
 //                   Skins?       -> Different cosmetic looks for characters
 
 #include<stdio.h>
 #include<cstdlib>
 #include"fonts.h"
 #include<GL/glx.h>
+
 
 void bb_show_credits(Rect &r)
 {
@@ -42,9 +49,9 @@ void bbShowPicture(int x, int y, GLuint texid)
 //Could be used in the future for PowerUps implemented through image
 //files. Need to fix whitespace issues behind image, for now powerups
 //are just colored diamonds.
-void renderPowerup(int x, int y, int color)
+void renderPowerup(int x, int y, int red, int gre, int blu)
 {
-    glColor3ub(color,color,color);
+    glColor3ub(red,gre,blu);
 	
     float fx = (float) x;
     float fy = (float) y;
@@ -74,11 +81,30 @@ bool powerupChance(int chance)
 }
 
 //Function that spawns powerup at specified location
-void spawnPowerup(int x_position, int y_position)
+void spawnPowerup(int x_position, int y_position,int powerups[])
 {
 	//1 in 15 chance of spawning a powerup
+	//Array element number correlates to different powerups
 	if (powerupChance(15)) {
-		renderPowerup(x_position,y_position,255);
+		powerups[0]=1;
+		return;
+	}
+	if (powerupChance(15)) {
+		powerups[1]=1;
+		return;
+	}
+	if (powerupChance(15)) {
+		powerups[2]=1;
+		return;
+	}
+	if (powerupChance(15)) {
+		powerups[3]=1;
+		return;
+	}
+	if (powerupChance(15)) {
+		powerups[4]=1;
+		return;
+	} else {
+		return;
 	}
 }
-

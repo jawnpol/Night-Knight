@@ -26,7 +26,7 @@ struct Zombie {
     float vel[2];
     float angle;
     float color[3];
-    int sod = rand()%51;
+    int wood = rand()%11;
 
     Zombie() {
         int num = rand()%2;
@@ -54,6 +54,7 @@ struct Orc {
     float vel[2];
     float angle;
     float color[3];
+    int stone = rand()%11;
 
     Orc() {
         int num = rand()%2;
@@ -81,6 +82,8 @@ struct Vampire {
     float vel[2];
     float angle;
     float color[3];
+    int wood = rand()%21;
+    int stone = rand()%21;
 
     Vampire() {
         int num = rand()%2;

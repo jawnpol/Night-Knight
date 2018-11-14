@@ -1,4 +1,3 @@
-//EDITED BY ZAKARY WORMAN
 //
 //
 //
@@ -18,9 +17,12 @@
 using namespace std;
 #include <unistd.h>
 #include <X11/Xlib.h>
-//#include <X11/Xutil.h>
-//#include <GL/gl.h>
-//#include <GL/glu.h>
+#include <X11/Xutil.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <X11/Xutil.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include "log.h"
@@ -42,13 +44,16 @@ typedef Flt	Matrix[4][4];
                              (c)[1]=(a)[1]-(b)[1]; \
 (c)[2]=(a)[2]-(b)[2]
 //constants
+int powerups[5] ={0,0,0,0,0};
 const float TIMESLICE = 1.0f;
 const float GRAVITY = -0.2f;
 #define PI 3.141592653589793
 #define ALPHA 1
 const int MAX_BULLETS = 11;
 const Flt MINIMUM_ASTEROID_SIZE = 60.0;
-
+extern void initSound();
+extern void cleanupSound();
+extern void playSound();
 //-----------------------------------------------------------------------------
 //Setup timers
 const double OOBILLION = 1.0 / 1e9;
@@ -56,17 +61,97 @@ extern struct timespec timeStart, timeCurrent;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
 //-----------------------------------------------------------------------------
+//Group extern includes to use personal files
+extern void zw_show_credits(Rect &r);
+extern void zk_show_credits(Rect &r);
+extern void bb_show_credits(Rect &r);
+extern void jc_show_credits(Rect &r);
+extern void zwShowPicture(int x, int y, GLuint texid);
+extern void zkShowPicture(int x, int y, GLuint texid);
+extern void bbShowPicture(int x, int y, GLuint texid);
+extern void renderPowerup(int x, int y, int red, int gre, int blu);
+extern void powerupChance(int chance);
+extern void spawnPowerup(int x_position, int y_position, int powerups[]);
+extern void jpcShowPicture(int x, int y, GLuint texid);
+extern void zw_save_mouse_pos(int x, int y);
+extern float zw_change_angle(double posx, double posy);
+extern void zw_gameover(double yres, double xres);
+extern void initBoard();
+extern void renderBoard(int xres, int yres);
+//-----------------------------------------------------------------------------
+class Image {
+    public:
+        int width, height;
+        unsigned char *data;
+        ~Image() { delete [] data; }
+        Image(const char *fname) {
+            if (fname[0] == '\0')
+                return;
+            //printf("fname **%s**\n", fname);
+            int ppmFlag = 0;
+            char name[40];
+            strcpy(name, fname);
+            int slen = strlen(name);
+            char ppmname[80];
+            if (strncmp(name+(slen-4), ".ppm", 4) == 0)
+                ppmFlag = 1;
+            if (ppmFlag) {
+                strcpy(ppmname, name);
+            } else {
+                name[slen-4] = '\0';
+                //printf("name **%s**\n", name);
+                sprintf(ppmname,"%s.ppm", name);
+                //printf("ppmname **%s**\n", ppmname);
+                char ts[100];
+                //system("convert eball.jpg eball.ppm");
+                sprintf(ts, "convert %s %s", fname, ppmname);
+                system(ts);
+            }
+            //sprintf(ts, "%s", name);
+            FILE *fpi = fopen(ppmname, "r");
+            if (fpi) {
+                char line[200];
+                fgets(line, 200, fpi);
+                fgets(line, 200, fpi);
+                //skip comments and blank lines
+                while (line[0] == '#' || strlen(line) < 2)
+                    fgets(line, 200, fpi);
+                sscanf(line, "%i %i", &width, &height);
+                fgets(line, 200, fpi);
+                //get pixel data
+                int n = width * height * 3;
+                data = new unsigned char[n];
+                for (int i=0; i<n; i++)
+                    data[i] = fgetc(fpi);
+                fclose(fpi);
+            } else {
+                printf("ERROR opening image: %s\n",ppmname);
+                exit(0);
+            }
+            if (!ppmFlag)
+                unlink(ppmname);
+        }
+};
+Image img[4] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg"};
 
 class Global {
     public:
         int xres, yres;
         char keys[65536];
+        bool credits;
+        bool build;
+        GLuint seahorseTexture;
+        GLuint chowderTexture;
+        GLuint duckTexture;
+        GLuint jpcTexture;
         Global() {
+            //Changed by Zakary Worman: Just made this resolution slightly larger
             xres = 1920;
             yres = 1080;
-            xres = 1250;
-            yres = 900;
+            //------------------------------------------------------------------
             memset(keys, 0, 65536);
+            credits = false;
+            build = false;
         }
 } gl;
 
@@ -77,6 +162,7 @@ class Ship {
         Vec vel;
         float angle;
         float color[3];
+        int health = 3;
     public:
         Ship() {
             VecZero(dir);
@@ -87,7 +173,7 @@ class Ship {
             angle = 0.0;
             color[0] = color[1] = color[2] = 1.0;
         }
-} ship;
+};
 
 class Bullet {
     public:
@@ -99,13 +185,13 @@ class Bullet {
         Bullet() { }
 };
 
-/*class Asteroid {
+class Asteroid {
     public:
         Vec pos;
         Vec vel;
         int nverts;
         Flt radius;
-        Vec vert[8];
+        Vec vert[360];
         float angle;
         float rotate;
         float color[3];
@@ -116,36 +202,35 @@ class Bullet {
             prev = NULL;
             next = NULL;
         }
-};*/
+};
 
 class Game {
     public:
         Ship ship;
-        //Asteroid *ahead;
+        Asteroid *ahead;
         Bullet *barr;
-        //int nasteroids;
+        int nasteroids;
         int nbullets;
         struct timespec bulletTimer;
-        //struct timespec mouseThrustTimer;
-        //bool mouseThrustOn;
+        struct timespec mouseThrustTimer;
+        bool mouseThrustOn;
     public:
         Game() {
-            //ahead = NULL;
+            ahead = NULL;
             barr = new Bullet[MAX_BULLETS];
-            //nasteroids = 0;
+            nasteroids = 0;
             nbullets = 0;
-            //mouseThrustOn = false;
+            mouseThrustOn = false;
             //build 10 asteroids...
-            /*for (int j=0; j<10; j++) {
+            for (int j=0; j<100; j++) {
                 Asteroid *a = new Asteroid;
-                a->nverts = 8;
-                a->radius = rnd()*80.0 + 40.0;
-                Flt r2 = a->radius / 2.0;
+                a->nverts = 360;
+                a->radius = rnd() + 40.0;
                 Flt angle = 0.0f;
                 Flt inc = (PI * 2.0) / (Flt)a->nverts;
                 for (int i=0; i<a->nverts; i++) {
-                    a->vert[i][0] = sin(angle) * (r2 + rnd() * a->radius);
-                    a->vert[i][1] = cos(angle) * (r2 + rnd() * a->radius);
+                    a->vert[i][0] = sinf(angle) * a->radius;
+                    a->vert[i][1] = cosf(angle) * a->radius;
                     angle += inc;
                 }
                 a->pos[0] = (Flt)(rand() % gl.xres);
@@ -164,8 +249,8 @@ class Game {
                 if (ahead != NULL)
                     ahead->prev = a;
                 ahead = a;
-                //++nasteroids;
-            }*/
+                ++nasteroids;
+            }
             clock_gettime(CLOCK_REALTIME, &bulletTimer);
         }
         ~Game() {
@@ -207,7 +292,7 @@ class X11_wrapper {
             set_title();
             glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
             glXMakeCurrent(dpy, win, glc);
-            //show_mouse_cursor(0);
+            show_mouse_cursor(0);
         }
         ~X11_wrapper() {
             XDestroyWindow(dpy, win);
@@ -256,35 +341,31 @@ class X11_wrapper {
         void set_mouse_position(int x, int y) {
             XWarpPointer(dpy, None, win, 0, 0, 0, 0, x, y);
         }
-        /*void show_mouse_cursor(const int onoff) {
+        void show_mouse_cursor(const int onoff) {
             if (onoff) {
                 //this removes our own blank cursor.
                 XUndefineCursor(dpy, win);
                 return;
             }
             //vars to make blank cursor
-            Pixmap blank;
-            XColor dummy;
-            char data[1] = {0};
-            Cursor cursor;
+            //Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
+            /*Pixmap blank;
+              XColor dummy;
+              char data[1] = {0};
+              Cursor cursor;
             //make a blank cursor
             blank = XCreateBitmapFromData (dpy, win, data, 1, 1);
             if (blank == None)
-                std::cout << "error: out of memory." << std::endl;
+            std::cout << "error: out of memory." << std::endl;
             cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
             XFreePixmap(dpy, blank);
             //this makes you the cursor. then set it using this function
-            XDefineCursor(dpy, win, cursor);
+            XDefineCursor(dpy, win, cursor);*/
             //after you do not need the cursor anymore use this function.
             //it will undo the last change done by XDefineCursor
             //(thus do only use ONCE XDefineCursor and then XUndefineCursor):
-        }*/
+        }
 } x11;
-
-//To track the mouse position
-struct Aim {
-    double x, y;
-} m;
 
 //function prototypes
 void init_opengl();
@@ -299,9 +380,11 @@ void render();
 int main()
 {
     logOpen();
+    //edited by John Paul; initializing sound + grid
+    initSound();
+    initBoard();
     init_opengl();
     srand(time(NULL));
-    x11.set_mouse_position(300, 300);
     x11.set_mouse_position(100, 100);
     int done=0;
     while (!done) {
@@ -316,6 +399,7 @@ int main()
         x11.swapBuffers();
     }
     cleanup_fonts();
+    cleanupSound();
     logClose();
     return 0;
 }
@@ -323,6 +407,62 @@ int main()
 void init_opengl()
 {
     //OpenGL initialization
+    //-------------------------------------------------------------------------
+    //seahorse
+    //
+    glGenTextures(1, &gl.seahorseTexture);
+    int w = img[0].width;
+    int h = img[0].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.seahorseTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //duck
+    //
+    glGenTextures(1, &gl.duckTexture);
+    w = img[1].width;
+    h = img[1].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.duckTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, img[1].data);
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //chowder
+    //
+    glGenTextures(1, &gl.chowderTexture);
+    w = img[2].width;
+    h = img[2].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.chowderTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, img[2].data);
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //jpc
+    //
+    glGenTextures(1, &gl.jpcTexture);
+    w = img[3].width;
+    h = img[3].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.jpcTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+            GL_RGB, GL_UNSIGNED_BYTE, img[3].data);
+    //-------------------------------------------------------------------------
     glViewport(0, 0, gl.xres, gl.yres);
     //Initialize matrices
     glMatrixMode(GL_PROJECTION); glLoadIdentity();
@@ -360,7 +500,8 @@ void check_mouse(XEvent *e)
     //Was a mouse button clicked?
     //static int savex = 0;
     //static int savey = 0;
-    //static int ct=0;
+    //static int ct=0;      //changed by Zakary Worman:
+    //these 3 variables not used because of my change of mouse aiming
     if (e->type != ButtonPress &&
             e->type != ButtonRelease &&
             e->type != MotionNotify)
@@ -368,17 +509,19 @@ void check_mouse(XEvent *e)
     if (e->type == ButtonRelease)
         return;
     if (e->type == ButtonPress) {
+        //edited by Zachary Kaiser: Messing around with bullet physics to create new weapons
         if (e->xbutton.button==1) {
             //Left button is down
             //a little time between each bullet
             struct timespec bt;
             clock_gettime(CLOCK_REALTIME, &bt);
             double ts = timeDiff(&g.bulletTimer, &bt);
-            if (ts > 0.3) {
             if (ts > 0.1) {
                 timeCopy(&g.bulletTimer, &bt);
                 //shoot a bullet...
                 if (g.nbullets < MAX_BULLETS) {
+
+                    playSound();
                     Bullet *b = &g.barr[g.nbullets];
                     timeCopy(&b->time, &bt);
                     b->pos[0] = g.ship.pos[0];
@@ -394,8 +537,6 @@ void check_mouse(XEvent *e)
                     b->pos[1] += ydir*20.0f;
                     b->vel[0] += xdir*5.1f + rnd()*0.5;
                     b->vel[1] += ydir*5.1f + rnd()*0.5;
-                    b->vel[0] += xdir*6.0f + rnd()*0.1;
-                    b->vel[1] += ydir*6.0f + rnd()*0.1;
                     b->color[0] = 1.0f;
                     b->color[1] = 1.0f;
                     b->color[2] = 1.0f;
@@ -403,140 +544,144 @@ void check_mouse(XEvent *e)
                 }
             }
         }
-        if (e->xbutton.button==3) {
-            //Right button is down
-	    struct timespec bt;
-            clock_gettime(CLOCK_REALTIME, &bt);
-            double ts = timeDiff(&g.bulletTimer, &bt);
-	    if (ts > 0) {
-                timeCopy(&g.bulletTimer, &bt);
-                //shoot a bullet...
-                if (g.nbullets < MAX_BULLETS) {
-                    Bullet *b = &g.barr[g.nbullets];
-                    timeCopy(&b->time, &bt);
-                    b->pos[0] = g.ship.pos[0];
-                    b->pos[1] = g.ship.pos[1];
-                    b->vel[0] = g.ship.vel[0];
-                    b->vel[1] = g.ship.vel[1];
-                    //convert ship angle to radians
-                    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-                    //convert angle to a vector
-                    Flt xdir = cos(rad);
-                    Flt ydir = sin(rad);
-                    b->pos[0] += xdir*20.0f;
-                    b->pos[1] += ydir*20.0f;
-                    b->vel[0] += xdir*5.1f;
-                    b->vel[1] += ydir*5.1f;
-                    b->color[0] = 1.0f;
-                    b->color[1] = 1.0f;
-                    b->color[2] = 1.0f;
-                    ++g.nbullets;
-                }
-            }
-
-        }
     }
-    if (e->type == MotionNotify) {
-        m.x = e->xbutton.x;
-        m.y = gl.yres - e->xbutton.y;
-        //g.ship.angle = -angle - 90.0f;
-        }
-    }
-    //if (e->type == MotionNotify) {
-        double xdiff = e->xbutton.x - (g.ship.pos[0] + g.ship.vel[0]);
-        double ydiff = e->xbutton.y - (g.ship.pos[1] + g.ship.vel[1]);
-        float angle = atan2(ydiff,xdiff)*180/3.14159265;
-        g.ship.angle = -angle - 90.0f;
-        /*if (savex != e->xbutton.x || savey != e->xbutton.y) {
-            //Mouse moved
-            int xdiff = savex - e->xbutton.x;
-            int ydiff = savey - e->xbutton.y;
-            savex = e->xbutton.x;
-            savey = e->xbutton.y;
-            if (++ct < 10)
-                return;		
-            if (xdiff > 0) {
-                //mouse moved along the x-axis.
-                g.ship.angle += 0.05f * (float)xdiff;
-                if (g.ship.angle >= 360.0f)
-                    g.ship.angle -= 360.0f;
-            }
-            else if (xdiff < 0) {
-                g.ship.angle += 0.05f * (float)xdiff;
-                if (g.ship.angle < 0.0f)
-                    g.ship.angle += 360.0f;
-            }
-            if (ydiff > 0) {
-                //mouse moved along the y-axis.
-                //apply thrust
+    //edited by Zachary Kaiser: Messing around with the bullet physics to create new weapons
+    //Most likely won't use right click as a weapon but just using as a quick way to test
+    if (e->xbutton.button==3) {
+        //Right button is down
+        struct timespec bt;
+        clock_gettime(CLOCK_REALTIME, &bt);
+        double ts = timeDiff(&g.bulletTimer, &bt);
+        if (ts > 0.1) {
+            timeCopy(&g.bulletTimer, &bt);
+            //shoot a bullet...
+            if (g.nbullets < MAX_BULLETS) {      
+                //playSound();
+                Bullet *b = &g.barr[g.nbullets];
+                timeCopy(&b->time, &bt);
+                b->pos[0] = g.ship.pos[0];
+                b->pos[1] = g.ship.pos[1];
+                b->vel[0] = g.ship.vel[0];
+                b->vel[1] = g.ship.vel[1];
                 //convert ship angle to radians
                 Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
                 //convert angle to a vector
                 Flt xdir = cos(rad);
                 Flt ydir = sin(rad);
-                g.ship.vel[0] += xdir * (float)ydiff * 0.001f;
-                g.ship.vel[1] += ydir * (float)ydiff * 0.001f;
-                Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-                        g.ship.vel[1]*g.ship.vel[1]);
-                if (speed > 15.0f) {
-                    speed = 15.0f;
-                    normalize2d(g.ship.vel);
-                    g.ship.vel[0] *= speed;
-                    g.ship.vel[1] *= speed;
-                }
-                //g.mouseThrustOn = true;
-                //clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
+                b->pos[0] += xdir*20.0f;
+                b->pos[1] += ydir*20.0f;
+                b->vel[0] += xdir*6.0f + rnd()*0.1;
+                b->vel[1] += ydir*6.0f + rnd()*0.1;
+                b->color[0] = 1.0f;
+                b->color[1] = 1.0f;
+                b->color[2] = 1.0f;
+                ++g.nbullets;
             }
-            //x11.set_mouse_position(0, 0);
-            //savex = savey = 100;
+        }
+    }
+    if (e->type == MotionNotify) {
+        //if (savex != e->xbutton.x || savey != e->xbutton.y) {
+        //Mouse moved
+        //Changed by Zakary Worman: Changed to remove movement from mouse
+        //and allow for aiming with mouse. The rest of this usage is found
+        //in physics
+        int x = e->xbutton.x;           //just to save the x position of mouse
+        int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
+        //X11 and OpenGL start (0,0) in opposite
+        //y positions 
+        zw_save_mouse_pos(x, y);        //save this position to be used
+        /*int xdiff = savex - e->xbutton.x;
+          int ydiff = savey - e->xbutton.y;
+          if (++ct < 10)
+          return;		
+          if (xdiff > 0) {
+        //mouse moved along the x-axis.
+        g.ship.angle += 0.05f * (float)xdiff;
+        if (g.ship.angle >= 360.0f)
+        g.ship.angle -= 360.0f;
+        }
+        else if (xdiff < 0) {
+        g.ship.angle += 0.05f * (float)xdiff;
+        if (g.ship.angle < 0.0f)
+        g.ship.angle += 360.0f;
+        }
+        if (ydiff > 0) {
+        //mouse moved along the y-axis.
+        //apply thrust
+        //convert ship angle to radians
+        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        g.ship.vel[0] += xdir * (float)ydiff * 0.001f;
+        g.ship.vel[1] += ydir * (float)ydiff * 0.001f;
+        Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+        g.ship.vel[1]*g.ship.vel[1]);
+        if (speed > 15.0f) {
+        speed = 15.0f;
+        normalize2d(g.ship.vel);
+        g.ship.vel[0] *= speed;
+        g.ship.vel[1] *= speed;
+        }
+        g.mouseThrustOn = true;
+        clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
+        }
+        x11.set_mouse_position(100, 100);
+        savex = savey = 100;
         }*/
     }
-    //}
 }
 
 int check_keys(XEvent *e)
 {
     //keyboard input?
-    static int shift=0;
+    //static int shift=0;
     if (e->type != KeyPress && e->type != KeyRelease)
         return 0;
     int key = (XLookupKeysym(&e->xkey, 0) & 0x0000ffff);
     //Log("key: %i\n", key);
     if (e->type == KeyRelease) {
         gl.keys[key]=0;
-        if (key == XK_Shift_L || key == XK_Shift_R)
-            shift=0;
+        //Changed by Zakary Worman: change not used
+        /*if (key == XK_Shift_L || key == XK_Shift_R)
+          shift=0;*/
         return 0;
     }
     gl.keys[key]=1;
-    if (key == XK_Shift_L || key == XK_Shift_R) {
-        shift=1;
-        return 0;
-    }
-    (void)shift;
+    //Changed by Zakary Worman: Not used for anything
+    /*if (key == XK_Shift_L || key == XK_Shift_R) {
+      shift=1;
+      return 0;
+      }
+      (void)shift;*/
     switch (key) {
         case XK_Escape:
             return 1;
-        case XK_f:
+            //Added by Zakary Worman:
+            //accelerates the unit as if a sprint
+        case XK_Shift_L:
             g.ship.vel[0] *= 1.5;
             g.ship.vel[1] *= 1.5;
             break;
+            //------------------------------------
+        case XK_c:
+            gl.credits = !gl.credits;
+            break;
         case XK_s:
-            g.ship.vel[0] *= 0;
-            g.ship.vel[1] *= 0;
             break;
         case XK_Down:
-            g.ship.angle = 90;
             break;
         case XK_equal:
             break;
         case XK_minus:
             break;
+        case XK_b:
+            gl.build = !gl.build;
     }
     return 0;
 }
 
-/*void deleteAsteroid(Game *g, Asteroid *node)
+void deleteAsteroid(Game *g, Asteroid *node)
 {
     //Remove a node from doubly-linked list.
     //Must look at 4 special cases below.
@@ -561,12 +706,12 @@ int check_keys(XEvent *e)
     }
     delete node;
     node = NULL;
-}*/
+}
 
-/*void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
+void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 {
     //build ta from a
-    ta->nverts = 8;
+    ta->nverts = 360;
     ta->radius = a->radius / 2.0;
     Flt r2 = ta->radius / 2.0;
     Flt angle = 0.0f;
@@ -586,36 +731,28 @@ int check_keys(XEvent *e)
     ta->color[2] = 0.7;
     ta->vel[0] = a->vel[0] + (rnd()*2.0-1.0);
     ta->vel[1] = a->vel[1] + (rnd()*2.0-1.0);
-}*/
+}
 
 void physics()
 {
-    //Flt d0,d1,dist;
+    Flt d0,d1,dist;
     //Update ship position
     g.ship.pos[0] += g.ship.vel[0];
     g.ship.pos[1] += g.ship.vel[1];
     //Check for collision with window edges
+    //Edited by Zachary Kaiser: Forced ship to stay within screen
+    //boundaries
     if (g.ship.pos[0] < 0.0) {
         g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[0] > (float)gl.xres) {
         g.ship.pos[0] = (float)gl.xres;
     }
-    if (g.ship.pos[1] < 0.0) {
+    else if (g.ship.pos[1] < 0.0) {
         g.ship.pos[1] = (float)gl.yres;
     }
     else if (g.ship.pos[1] > (float)gl.yres) {
         g.ship.pos[1] = (float)gl.yres;
-        g.ship.pos[0] += (float)gl.xres;
-    }
-    else if (g.ship.pos[0] > (float)gl.xres) {
-        g.ship.pos[0] -= (float)gl.xres;
-    }
-    if (g.ship.pos[1] < 0.0) {
-        g.ship.pos[1] += (float)gl.yres;
-    }
-    else if (g.ship.pos[1] > (float)gl.yres) {
-        g.ship.pos[1] -= (float)gl.yres;
     }
     //
     //Update bullet positions
@@ -624,13 +761,10 @@ void physics()
     int i=0;
     while (i < g.nbullets) {
         Bullet *b = &g.barr[i];
-	Flt bspeed = sqrt(b->vel[0]*b->vel[0]+b->vel[1]*b->vel[1]);
         //How long has bullet been alive?
+        //Edited by Zachary Kaiser: decreased amount of time to delete bullet
         double ts = timeDiff(&b->time, &bt);
-        if (ts > bspeed/5) {
-        //How long has bullet been alive?
-        double ts = timeDiff(&b->time, &bt);
-        if (ts > 2.5) {
+        if (ts > 2.0) {
             //time to delete the bullet.
             memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
@@ -642,42 +776,29 @@ void physics()
         b->pos[0] += b->vel[0];
         b->pos[1] += b->vel[1];
         //Check for collision with window edges
+        //Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
         if (b->pos[0] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-            g.nbullets--;
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[0] > (float)gl.xres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-            g.nbullets--;
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[1] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-            g.nbullets--;
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         else if (b->pos[1] > (float)gl.yres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-            g.nbullets--;
-            b->pos[0] += (float)gl.xres;
-        }
-        else if (b->pos[0] > (float)gl.xres) {
-            b->pos[0] -= (float)gl.xres;
-        }
-        else if (b->pos[1] < 0.0) {
-            b->pos[1] += (float)gl.yres;
-        }
-        else if (b->pos[1] > (float)gl.yres) {
-            b->pos[1] -= (float)gl.yres;
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
         }
         i++;
     }
     //
     //Update asteroid positions
-    //Asteroid *a = g.ahead;
-    /*while (a) {
+    Asteroid *a = g.ahead;
+    while (a) {
         a->pos[0] += a->vel[0];
         a->pos[1] += a->vel[1];
         //Check for collision with window edges
@@ -695,15 +816,26 @@ void physics()
         }
         a->angle += a->rotate;
         a = a->next;
-    }*/
+    }
     //
     //Asteroid collision with bullets?
     //If collision detected:
     //   1. delete the bullet
     //   2. break the asteroid into pieces
     //      if asteroid small, delete it
-    //a = g.ahead;
-    /*while (a) {
+    a = g.ahead;
+    while (a) {
+        //Zakary Worman: Checking for ship collision
+        //------------------------------------------
+        d0 = g.ship.pos[0] - a->pos[0];
+        d1 = g.ship.pos[1] - a->pos[1];
+        dist = d0*d0 + d1*d1;
+        if(dist < (a->radius*a->radius)) {
+            g.ship.vel[0] *= -1.5;
+            g.ship.vel[1] *= -1.5;
+            g.ship.health--;
+        }
+        //------------------------------------------
         //is there a bullet within its radius?
         int i=0;
         while (i < g.nbullets) {
@@ -714,10 +846,11 @@ void physics()
             if (dist < (a->radius*a->radius)) {
                 //cout << "asteroid hit." << endl;
                 //this asteroid is hit.
-                if (a->radius > MINIMUM_ASTEROID_SIZE) {
+		spawnPowerup(a->pos[0],a->pos[1],powerups);
+                /*if (a->radius > MINIMUM_ASTEROID_SIZE) {
                     //break it into pieces.
-                    //Asteroid *ta = a;
-                    //buildAsteroidFragment(ta, a);
+                    Asteroid *ta = a;
+                    buildAsteroidFragment(ta, a);
                     int r = rand()%10+5;
                     for (int k=0; k<r; k++) {
                         //get the next asteroid position in the array
@@ -728,19 +861,19 @@ void physics()
                         if (g.ahead != NULL)
                             g.ahead->prev = ta;
                         g.ahead = ta;
-                        //g.nasteroids++;
+                        g.nasteroids++;
                     }
-                } else {
+                } else {*/
                     a->color[0] = 1.0;
                     a->color[1] = 0.1;
                     a->color[2] = 0.1;
                     //asteroid is too small to break up
                     //delete the asteroid and bullet
-                    //Asteroid *savea = a->next;
-                    //deleteAsteroid(&g, a);
+                    Asteroid *savea = a->next;
+                    deleteAsteroid(&g,a);
                     a = savea;
-                    //g.nasteroids--;
-                }
+                    g.nasteroids--;
+                //}
                 //delete the bullet...
                 memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
@@ -752,21 +885,23 @@ void physics()
         if (a == NULL)
             break;
         a = a->next;
-    }*/
+    }
     //---------------------------------------------------
     //check keys pressed now
-    /*if (gl.keys[XK_a]) {
-    if (gl.keys[XK_a]) {
-        g.ship.angle += 4.0;
-        if (g.ship.angle >= 360.0f)
-            g.ship.angle -= 360.0f;
-    }
-    if (gl.keys[XK_d]) {
-        g.ship.angle -= 4.0;
-        if (g.ship.angle < 0.0f)
-            g.ship.angle += 360.0f;
-    }*/
-    }
+    //Changed by Zakary Worman:
+    //are not used right now but later 
+    //will be used to include straifing
+    /*if (gl.keys[XK_Left]) {
+      g.ship.angle += 4.0;
+      if (g.ship.angle >= 360.0f)
+      g.ship.angle -= 360.0f;
+      }
+      if (gl.keys[XK_Right]) {
+      g.ship.angle -= 4.0;
+      if (g.ship.angle < 0.0f)
+      g.ship.angle += 360.0f;
+      }*/
+    //changed by Zakary Worman: changed this to use w instead of up arrow to move
     if (gl.keys[XK_w]) {
         //apply thrust
         //convert ship angle to radians
@@ -778,17 +913,41 @@ void physics()
         g.ship.vel[1] += ydir;
         Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
                 g.ship.vel[1]*g.ship.vel[1]);
-        if (speed > 10.0f) {
-            speed = 10.0f;
+        //Changed by Zakary Worman: changed to simply reduce the speed
+        //to be more characteristic of a human rather than ship
+        if (speed > 5.0f) {
+            speed = 5.0f;
             normalize2d(g.ship.vel);
             g.ship.vel[0] *= speed;
             g.ship.vel[1] *= speed;
         }
     }
+    //Added by Zakary Worman: this allows for backward movement with s
+    else if (gl.keys[XK_s]) {
+        //convert ship angle to radians
+        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        g.ship.vel[0] -= xdir;
+        g.ship.vel[1] -= ydir;
+        Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+                g.ship.vel[1]*g.ship.vel[1]);
+        //Changed by Zakary Worman: changed to simply reduce the speed
+        //to be more characteristic of a human rather than ship
+        if (speed > 5.0f) {
+            speed = 5.0f;
+            normalize2d(g.ship.vel);
+            g.ship.vel[0] *= speed;
+            g.ship.vel[1] *= speed;
+        }
+    }
+    //Added by Zakary Worman: this makes the person slow down as you stop moving
     else {
         g.ship.vel[0] *= 0.8;
         g.ship.vel[1] *= 0.8;
     }
+    g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     if (gl.keys[XK_space]) {
         //a little time between each bullet
         struct timespec bt;
@@ -821,32 +980,56 @@ void physics()
             }
         }
     }
-    double xdiff = g.ship.pos[0] - m.x;
-    double ydiff = g.ship.pos[1] - m.y;
-    float angle = atan2(ydiff,xdiff)*180/PI + 90.0f;
-    g.ship.angle = angle;
+    //Changed by Zakary Worman: not used anymore
     /*if (g.mouseThrustOn) {
-        //should thrust be turned off
-        struct timespec mtt;
-        clock_gettime(CLOCK_REALTIME, &mtt);
-        double tdif = timeDiff(&mtt, &g.mouseThrustTimer);
-        if (tdif < -0.3)
-            g.mouseThrustOn = false;
+    //should thrust be turned off
+    struct timespec mtt;
+    clock_gettime(CLOCK_REALTIME, &mtt);
+    double tdif = timeDiff(&mtt, &g.mouseThrustTimer);
+    if (tdif < -0.3)
+    g.mouseThrustOn = false;
     }*/
 }
 
 void render()
 {
-    //Rect r;
+    Rect r;
+    glClear(GL_COLOR_BUFFER_BIT);
+    if(gl.credits) {
+        Rect n;
+        n.bot = gl.yres - gl.yres/5;
+        n.left = gl.xres/2;
+        n.center = gl.xres/3;
+        zw_show_credits(n);
+        zk_show_credits(n);
+        bb_show_credits(n);
+        jc_show_credits(n);
+        zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+        zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+        bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+        jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+        ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+        return;
+    }
+    
+    if(g.ship.health <= 0) {
+        zw_gameover(gl.yres, gl.xres);
+        return;
+    }
     glClear(GL_COLOR_BUFFER_BIT);
     //
-    //r.bot = gl.yres - 20;
-    //r.left = 10;
-    //r.center = 0;
-    //ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
-    //ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-    //ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
-    //ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
+    r.bot = gl.yres - 20;
+    r.left = 10;
+    r.center = 0;
+    ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
+    ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
+    ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
+    ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
+    
+    /*if (gl.build) {
+        renderBoard(gl.xres, gl.yres);
+        return;
+    }*/
     //
     //-------------
     //Draw the ship
@@ -867,7 +1050,7 @@ void render()
     glVertex2f(0.0f, 0.0f);
     glEnd();
     glPopMatrix();
-    /*if (gl.keys[XK_Up] || g.mouseThrustOn) {
+    if (gl.keys[XK_Up] || g.mouseThrustOn) {
         int i;
         //draw thrust
         Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -887,12 +1070,12 @@ void render()
             glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
         }
         glEnd();
-    }*/
+    }
     //------------------
     //Draw the asteroids
     {
-        //Asteroid *a = g.ahead;
-        /*while (a) {
+        Asteroid *a = g.ahead;
+        while (a) {
             //Log("draw asteroid...\n");
             glColor3fv(a->color);
             glPushMatrix();
@@ -910,14 +1093,13 @@ void render()
             glVertex2f(a->pos[0], a->pos[1]);
             glEnd();
             a = a->next;
-        }*/
+        }
     }
     //----------------
     //Draw the bullets
     Bullet *b = &g.barr[0];
     for (int i=0; i<g.nbullets; i++) {
         //Log("draw bullet...\n");
-        glColor3f(0.3, 0.1, 0.4);
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_POINTS);
         glVertex2f(b->pos[0],      b->pos[1]);
@@ -932,5 +1114,34 @@ void render()
         glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
         glEnd();
         ++b;
+    }
+    //Added by JPC - renders the board
+    if (gl.build) {
+        //glClear(GL_COLOR_BUFFER_BIT);
+        renderBoard(gl.xres, gl.yres);
+        return;
+    }
+    //Function below used to check renderPowerup functionality
+    //FOR NOW: Powerups spawn at random locations on screen, will change this
+    //to the location of asteroids destroyed soon.
+    for(int i=0;i<5;i++){
+	    if (powerups[i] == 1) {
+		    if (i==0) {
+			    renderPowerup(gl.xres/2,gl.yres/2,255,255,255);
+		    }
+		    if (i==1) {
+			    renderPowerup(gl.xres/2,3*gl.yres/4,255,0,0);
+		    }
+		    if (i==2) {
+			    renderPowerup(gl.xres/2,-3*gl.yres/4,0,255,0);
+		    }
+		    if (i==3) {
+			    renderPowerup(gl.xres/2,-gl.yres/4,0,0,255);
+		    }
+		    if (i==4) {
+			    renderPowerup(gl.xres/4,gl.yres/2,156,99,92);
+		    }
+
+	    }
     }
 }

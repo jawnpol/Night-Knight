@@ -70,6 +70,7 @@ extern void zkShowPicture(int x, int y, GLuint texid);
 extern void bbShowPicture(int x, int y, GLuint texid);
 extern void renderPowerup(int x, int y, int color);
 extern bool powerupChance(int chance);
+extern void printMenuScreen(float x, float y);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
@@ -968,6 +969,8 @@ void physics()
     }
     g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     if (gl.keys[XK_space]) {
+	    if(gl.menuScreen)
+		    gl.menuScreen = false;
         //a little time between each bullet
         struct timespec bt;
         clock_gettime(CLOCK_REALTIME, &bt);
@@ -1013,6 +1016,11 @@ extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
 void render()
 {
+    if(gl.menuScreen) {
+	    printMenuScreen(gl.xres, gl.yres);
+	    return;
+    }
+
     Rect r;
     glClear(GL_COLOR_BUFFER_BIT);
     //gameBackground(gl.xres,gl.yres, gl.backgroundTexture);

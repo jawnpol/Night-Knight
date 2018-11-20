@@ -9,8 +9,9 @@
 
 #include "fonts.h"
 #include <GL/glx.h>
-#include <cstdlib>
+#include <iostream>
 #include <cmath>
+using namespace std;
 
 #define PI 3.141592653589793
 
@@ -24,15 +25,17 @@ struct Aim {
 struct Zombie {
     float dir[2];
     float pos[2];
-    float vel[2];
+    float vel[2] = {0};
     float angle;
     float color[3];
     int wood = rand()%11;
+    bool dead;
     bool new_round = true;
 
     void set_up() {
         if(!new_round)
             return;
+        dead = false;
         int num = rand()%2;
         if (num == 0) {
             pos[0] = rand()%1920;
@@ -54,8 +57,6 @@ struct Zombie {
         color[1] = 0.5f;
         color[2] = 0.0f;
         angle = 0;
-        vel[0] = rand()%1920;
-        vel[1] = rand()%1080;
         new_round = false;
     }
 }z[300];
@@ -178,25 +179,47 @@ void zwShowPicture(int x, int y, GLuint texid)
 
 void zw_z_pos(Zombie *z, int tX, int tY) {
     if(z->pos[0] > tX)
-        z->pos[0] -= 0.001*tX;
+        z->vel[0] -= 0.001*tX;
     else if(z->pos[0] < tX)
-        z->pos[0] += 0.001*tX;
+        z->vel[0] += 0.001*tX;
     if(z->pos[1] > tY)
-        z->pos[1] -= 0.001*tY;
+        z->vel[1] -= 0.001*tY;
     else if(z->pos[1] < tY)
-        z->pos[1] += 0.001*tY;
+        z->vel[1] += 0.001*tY;
 }
 
-void zw_spawn_enemies(int round, int tX, int tY) {
+void zw_spawn_enemies(int round, int tX, int tY)
+{
     for (int i = 0; i < round*2; i++) {
+        if (z[i].dead)
+            continue;
         z[i].set_up();
+        for (int k = i+1; k < round*2; k++) {
+            float d0 = z[i].pos[0] - z[k].pos[0];
+            float d1 = z[i].pos[1] - z[k].pos[1];
+            if (d0*d0+d1*d1 <= 400) {
+                cout << "dist" << endl;
+                    z[i].vel[0] *= -1;
+                    z[i].vel[1] *= -1;
+            }
+        }
         zw_z_pos(&z[i], tX, tY);
+        if(z[i].vel[0] >= 1)
+            z[i].vel[0] = 1;
+        if(z[i].vel[0] <= -1)
+            z[i].vel[0] = -1;
+        if(z[i].vel[1] >= 1)
+            z[i].vel[1] = 1;
+        if(z[i].vel[1] <= -1)
+            z[i].vel[1] = -1;
+        z[i].pos[0] += z[i].vel[0];
+        z[i].pos[1] += z[i].vel[1];
         glColor3fv(z[i].color);
         glPushMatrix();
         glTranslatef(z[i].pos[0], z[i].pos[1], 0.0f);
         glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
         glBegin(GL_LINE_LOOP);
-        for(float fill = 0; fill < 15; fill += 0.5) {
+        for (float fill = 0; fill < 18; fill += 0.5) {
             for (int j = 0; j < 360; j++)
                 glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
         }
@@ -215,3 +238,7 @@ void zw_spawn_enemies(int round, int tX, int tY) {
     }
 }
 
+bool zw_check_enemy_hit(float x, float y)
+{
+    return false;
+}

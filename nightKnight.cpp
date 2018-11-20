@@ -75,7 +75,8 @@ extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
 extern void zw_gameover(double yres, double xres);
-extern void zw_spawn_enemies (int round, int tX, int tY);
+extern void zw_spawn_enemies(int round, int tX, int tY);
+extern bool zw_check_enemy_hit(float x, float y);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -786,6 +787,10 @@ void physics()
             memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
+        if(zw_check_enemy_hit(b->pos[0], b->pos[1])) {
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+            g.nbullets--;
+        } 
         i++;
     }
     //
@@ -927,8 +932,8 @@ void physics()
                 g.ship.vel[1]*g.ship.vel[1]);
         //Changed by Zakary Worman: changed to simply reduce the speed
         //to be more characteristic of a human rather than ship
-        if (speed > 5.0f) {
-            speed = 5.0f;
+        if (speed > 3.0f) {
+            speed = 3.0f;
             normalize2d(g.ship.vel);
             g.ship.vel[0] *= speed;
             g.ship.vel[1] *= speed;

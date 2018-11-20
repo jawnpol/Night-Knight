@@ -108,3 +108,21 @@ void spawnPowerup(int x_position, int y_position,int powerups[])
 		return;
 	}
 }
+
+void printMenuScreen(float x, float y)
+{
+        //std::cout << "in menu screen\n";
+        Rect m,p;
+        m.bot = y - y/5;
+        m.left = x/2;
+        m.center = x/3;
+
+        p.bot = y;
+        p.left = x;
+        p.center = x/2;
+        ggprint8b(&m, 16, 0x00ff0000, "Night-Knight");
+        ggprint8b(&m, 16, 0x00ff0000, "Press space to play");
+
+}
+
+

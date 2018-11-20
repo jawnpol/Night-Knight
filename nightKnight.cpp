@@ -140,6 +140,7 @@ class Global {
         int xres, yres;
         char keys[65536];
         bool credits;
+	bool menuScreen = true;
         GLuint seahorseTexture;
         GLuint chowderTexture;
         GLuint duckTexture;
@@ -1016,6 +1017,7 @@ extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
 void render()
 {
+    glClear(GL_COLOR_BUFFER_BIT);
     if(gl.menuScreen) {
 	    printMenuScreen(gl.xres, gl.yres);
 	    return;

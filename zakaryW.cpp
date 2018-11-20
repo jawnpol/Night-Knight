@@ -14,6 +14,7 @@
 
 #define PI 3.141592653589793
 
+
 //structure used to allow for mouse aiming
 struct Aim {
     double x, y;
@@ -27,8 +28,11 @@ struct Zombie {
     float angle;
     float color[3];
     int wood = rand()%11;
+    bool new_round = true;
 
-    Zombie() {
+    void set_up() {
+        if(!new_round)
+            return;
         int num = rand()%2;
         if (num == 0) {
             pos[0] = rand()%1920;
@@ -39,15 +43,22 @@ struct Zombie {
                 pos[1] = 1080;
         }
         else {
-           pos[1] = rand()%1080;
-           num = rand()%2;
-           if (num == 0)
-               pos[0] = 0;
-           else
-               pos[1] = 1920;
+            pos[1] = rand()%1080;
+            num = rand()%2;
+            if (num == 0)
+                pos[0] = 0;
+            else
+                pos[0] = 1920;
         }
+        color[0] = 0.0f;
+        color[1] = 0.5f;
+        color[2] = 0.0f;
+        angle = 0;
+        vel[0] = rand()%1920;
+        vel[1] = rand()%1080;
+        new_round = false;
     }
-};
+}z[300];
 struct Orc {
     float dir[2];
     float pos[2];
@@ -67,13 +78,16 @@ struct Orc {
                 pos[1] = 1080;
         }
         else {
-           pos[1] = rand()%1080;
-           num = rand()%2;
-           if (num == 0)
-               pos[0] = 0;
-           else
-               pos[1] = 1920;
+            pos[1] = rand()%1080;
+            num = rand()%2;
+            if (num == 0)
+                pos[0] = 0;
+            else
+                pos[1] = 1920;
         }
+        color[0] = 0.0;
+        color[1] = 1.0;
+        color[2] = 0.8;
     }
 };
 struct Vampire {
@@ -96,13 +110,16 @@ struct Vampire {
                 pos[1] = 1080;
         }
         else {
-           pos[1] = rand()%1080;
-           num = rand()%2;
-           if (num == 0)
-               pos[0] = 0;
-           else
-               pos[1] = 1920;
+            pos[1] = rand()%1080;
+            num = rand()%2;
+            if (num == 0)
+                pos[0] = 0;
+            else
+                pos[1] = 1920;
         }
+        color[0] = 1.0;
+        color[1] = 0.5;
+        color[2] = 0.0;
     }
 };
 
@@ -116,11 +133,11 @@ void zw_save_mouse_pos(int x, int y)
 //
 void zw_gameover(double yres, double xres) 
 {
-        Rect n; 
-        n.bot = yres/2;
-        n.left = xres/2;
-        n.center = xres/2;
-        ggprint16(&n, 16, 0x00ff0000, "GAME OVER");
+    Rect n; 
+    n.bot = yres/2;
+    n.left = xres/2;
+    n.center = xres/2;
+    ggprint16(&n, 16, 0x00ff0000, "GAME OVER");
 }
 
 //used to calculate the new angle of the ship based on the mouse
@@ -158,3 +175,43 @@ void zwShowPicture(int x, int y, GLuint texid)
     glEnd();
     glPopMatrix();
 }
+
+void zw_z_pos(Zombie *z, int tX, int tY) {
+    if(z->pos[0] > tX)
+        z->pos[0] -= 0.001*tX;
+    else if(z->pos[0] < tX)
+        z->pos[0] += 0.001*tX;
+    if(z->pos[1] > tY)
+        z->pos[1] -= 0.001*tY;
+    else if(z->pos[1] < tY)
+        z->pos[1] += 0.001*tY;
+}
+
+void zw_spawn_enemies(int round, int tX, int tY) {
+    for (int i = 0; i < round*2; i++) {
+        z[i].set_up();
+        zw_z_pos(&z[i], tX, tY);
+        glColor3fv(z[i].color);
+        glPushMatrix();
+        glTranslatef(z[i].pos[0], z[i].pos[1], 0.0f);
+        glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
+        glBegin(GL_LINE_LOOP);
+        for(float fill = 0; fill < 15; fill += 0.5) {
+            for (int j = 0; j < 360; j++)
+                glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
+        }
+        glEnd();
+        glPopMatrix();
+    }
+    if (round > 5) {
+        Orc o[(round-4)*2];
+        for (int i = 0; i < (round-4)*2; i++) {
+        }
+    }
+    if (round > 10) {
+        Vampire v[(round-9)];
+        for (int i = 0; i < round-9; i++) {
+        }
+    }
+}
+

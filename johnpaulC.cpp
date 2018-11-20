@@ -238,3 +238,35 @@ typedef struct t_stone {
     int damageResistance = 10;
     double buildTime = 2.5;
 } Stone;
+
+void renderHealth(int health)
+{
+    //int hSize = health * 15;
+    glBegin(GL_QUADS);
+    glColor3f(1, 0, 0);
+    glVertex2f(0, 0);
+    glVertex2f(50, 0);
+    glVertex2f(50, health*50);
+    glVertex2f(0, health*50);
+    glEnd();
+}
+
+void gameBackground(int xres, int yres, GLuint texid)
+{
+    int tileSize = 100;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(1.0, 1.0, 1.0);
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < xres; i+=tileSize) {
+        for (int j = 0; j < yres; j +=tileSize) {
+                glTexCoord2f(0.0f, 1.0f); glVertex2i(i, j);
+                glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
+                glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
+                glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize, j);
+        }
+    }
+    glEnd();
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+}

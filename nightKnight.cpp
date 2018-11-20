@@ -76,7 +76,8 @@ extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
 extern void zw_gameover(double yres, double xres);
 extern void zw_spawn_enemies(int round, int tX, int tY);
-extern bool zw_check_enemy_hit(float x, float y);
+extern bool zw_check_enemy_hit(int round, float x, float y);
+extern bool zw_player_hit(int round, float x, float y);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -160,6 +161,7 @@ class Ship {
         float angle;
         float color[3];
         int health = 3;
+        int hit_recent = 0;
     public:
         Ship() {
             VecZero(dir);
@@ -787,11 +789,21 @@ void physics()
             memcpy(&g.barr[i], &g.barr[g.nbullets-1],
                     sizeof(Bullet));
         }
-        if(zw_check_enemy_hit(b->pos[0], b->pos[1])) {
+        if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
             memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
             g.nbullets--;
         } 
         i++;
+    }
+    if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
+        if(g.ship.hit_recent == 0) {
+            g.ship.vel[0] *= -3.5;
+            g.ship.vel[1] *= -3.5;
+            g.ship.health--;
+            g.ship.hit_recent = 2;
+        }
+        if(g.ship.hit_recent > 0)
+            g.ship.hit_recent--;
     }
     //
     //Update asteroid positions
@@ -1041,6 +1053,18 @@ void render()
     glVertex2f(0.0f, 0.0f);
     glEnd();
     glPopMatrix();
+    if (g.ship.hit_recent > 0) {
+        glColor3f(1.0f,1.0f,0.0f);
+        glPushMatrix();
+        glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+        glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+        glBegin(GL_LINE_LOOP);
+        for(int i = 0; i < 360; i++) {
+			glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
+        }
+        glEnd();
+        glPopMatrix();
+    }
     if (gl.keys[XK_Up] || g.mouseThrustOn) {
         int i;
         //draw thrust

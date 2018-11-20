@@ -20,6 +20,6 @@ nightKnight: nightKnight.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandon
     	/usr/lib/x86_64-linux-gnu/libalut.so libggfonts.a -Wall $(LFLAGS) -o nightKnight
 
 clean:
-	rm -f asteroids
+	rm -f nightKnight 
 	rm -f *.o
 

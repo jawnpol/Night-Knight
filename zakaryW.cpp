@@ -197,10 +197,9 @@ void zw_spawn_enemies(int round, int tX, int tY)
         for (int k = i+1; k < round*2; k++) {
             float d0 = z[i].pos[0] - z[k].pos[0];
             float d1 = z[i].pos[1] - z[k].pos[1];
-            if (d0*d0+d1*d1 <= 400) {
-                cout << "dist" << endl;
-                    z[i].vel[0] *= -1;
-                    z[i].vel[1] *= -1;
+            if (d0*d0+d1*d1 <= 600) {
+                z[i].vel[0] *= -1;
+                z[i].vel[1] *= -1;
             }
         }
         zw_z_pos(&z[i], tX, tY);
@@ -238,7 +237,27 @@ void zw_spawn_enemies(int round, int tX, int tY)
     }
 }
 
-bool zw_check_enemy_hit(float x, float y)
+bool zw_check_enemy_hit(int round, float x, float y)
 {
+    for (int i = 0; i < round*2; i++) {
+        float d0 = z[i].pos[0] - x;
+        float d1 = z[i].pos[1] - y;
+        if(d0*d0 + d1*d1 <= 324) {
+            z[i].dead = true;
+            return 1;
+        }
+    }
+    return false;
+}
+
+
+bool zw_player_hit(int round, float x, float y)
+{
+    for (int i = 0; i < round*2; i++) {
+        float d0 = z[i].pos[0] - x;
+        float d1 = z[i].pos[1] - y;
+        if(d0*d0 + d1*d1 <= 1000) 
+            return 1;
+    }
     return false;
 }

@@ -134,7 +134,7 @@ class Image {
 		unlink(ppmname);
 	}
 };
-Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./Night-Knight-Menu.jpg"};
+Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "grass.jpg"};
 
 class Global {
     public:

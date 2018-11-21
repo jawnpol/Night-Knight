@@ -71,6 +71,7 @@ extern void bbShowPicture(int x, int y, GLuint texid);
 extern void renderPowerup(int x, int y, int color);
 extern bool powerupChance(int chance);
 extern void printMenuScreen(float x, float y);
+extern void menuScreenImage(float x, float y, GLuint texid);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
@@ -133,7 +134,7 @@ class Image {
 		unlink(ppmname);
 	}
 };
-Image img[5] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg"};
+Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./Night-Knight-Menu.jpg"};
 
 class Global {
     public:
@@ -144,6 +145,7 @@ class Global {
 	GLuint seahorseTexture;
 	GLuint chowderTexture;
 	GLuint duckTexture;
+	GLuint menuTexture;
 	GLuint jpcTexture;
 	GLuint backgroundTexture;
 	Global() {
@@ -451,6 +453,19 @@ void init_opengl()
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
 	    GL_RGB, GL_UNSIGNED_BYTE, img[2].data);
+    //-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    //Menu Image
+    glGenTextures(1, &gl.menuTexture);
+    w = img[5].width;
+    h = img[5].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.menuTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+	    GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
     //-------------------------------------------------------------------------
     //-------------------------------------------------------------------------
     //jpc
@@ -1028,7 +1043,6 @@ void render()
 	printMenuScreen(gl.xres, gl.yres);
 	return;
     }
-    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
     glClear(GL_COLOR_BUFFER_BIT);
     gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
     if(g.roundEnd) {
@@ -1037,7 +1051,6 @@ void render()
     }
     //glClear(GL_COLOR_BUFFER_BIT);
     Rect r;
-    //gameBackground(gl.xres,gl.yres, gl.backgroundTexture);
     if(gl.credits) {
 	Rect n;
 	n.bot = gl.yres - gl.yres/5;
@@ -1080,9 +1093,6 @@ void render()
     ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
     //-------------
     //Draw the ship
-
-    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-
     glColor3fv(g.ship.color);
     glPushMatrix();
     glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);

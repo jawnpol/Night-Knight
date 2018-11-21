@@ -267,6 +267,4 @@ void gameBackground(int xres, int yres, GLuint texid)
         }
     }
     glEnd();
-    glBindTexture(GL_TEXTURE_2D, 0);
-
 }

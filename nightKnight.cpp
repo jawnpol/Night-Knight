@@ -63,6 +63,7 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 //Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
+extern void zk_gameoverimage(int x, int y, GLuint texid);
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
@@ -133,7 +134,7 @@ class Image {
 				unlink(ppmname);
 		}
 };
-Image img[5] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg"};
+Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./gameovertexture.jpg"};
 
 class Global {
 	public:
@@ -145,6 +146,7 @@ class Global {
 		GLuint chowderTexture;
 		GLuint duckTexture;
 		GLuint jpcTexture;
+		GLuint gameoverTexture;
 		GLuint backgroundTexture;
 		Global() {
 			//Changed by Zakary Worman: Just made this resolution slightly larger
@@ -465,6 +467,22 @@ void init_opengl()
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
 			GL_RGB, GL_UNSIGNED_BYTE, img[3].data);
 	//-------------------------------------------------------------------------
+	//gameoverimage
+	//
+	glGenTextures(1, &gl.gameoverTexture);
+	w = img[5].width;
+	h = img[5].height;
+	//
+	glBindTexture(GL_TEXTURE_2D, gl.gameoverTexture);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+			GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+	//-------------------------------------------------------------------------
+
+	
+	
 	glViewport(0, 0, gl.xres, gl.yres);
 	//Initialize matrices
 	glMatrixMode(GL_PROJECTION); glLoadIdentity();
@@ -1044,7 +1062,8 @@ void render()
 		return;
 	}
 	if(g.ship.health <= 0) {
-		zw_gameover(gl.yres, gl.xres);
+		//zw_gameover(gl.yres, gl.xres);
+		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
 		return;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);

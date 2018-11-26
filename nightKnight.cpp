@@ -798,9 +798,9 @@ int check_keys(XEvent *e)
 	case XK_c:
 	    gl.credits = !gl.credits;
 	    break;
-	case XK_s:
+	case XK_a:
 	    break;
-	case XK_Down:
+	case XK_d:
 	    break;
 	case XK_equal:
 	    break;
@@ -988,6 +988,7 @@ void physics()
     d1 = b->pos[1] - a->pos[1];
     dist = (d0*d0 + d1*d1);
     if (dist < (a->radius*a->radius)) {
+    //E
     //cout << "asteroid hit." << endl;
     //this asteroid is hit.
     if (a->radius > MINIMUM_ASTEROID_SIZE) {
@@ -1045,85 +1046,80 @@ void physics()
       g.ship.angle += 360.0f;
       }*/
     //changed by Zakary Worman: changed this to use w instead of up arrow to move
+    //apply thrust
+    //convert ship angle to radians
+    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+    //convert angle to a vector
+    Flt xdir = cos(rad);
+    Flt ydir = sin(rad);
+    if (gl.keys[XK_a]) {
+	    g.ship.vel[0] -= sin(rad)*2;
+	    g.ship.vel[1] += cos(rad)*2;
+    }
+    else if (gl.keys[XK_d]) {
+	    g.ship.vel[0] += sin(rad)*2;
+	    g.ship.vel[1] -= cos(rad)*2;
+    }
     if (gl.keys[XK_w]) {
-	//apply thrust
-	//convert ship angle to radians
-	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-	//convert angle to a vector
-	Flt xdir = cos(rad);
-	Flt ydir = sin(rad);
-	g.ship.vel[0] += xdir;
-	g.ship.vel[1] += ydir;
-	Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-		g.ship.vel[1]*g.ship.vel[1]);
-	//Changed by Zakary Worman: changed to simply reduce the speed
-	//to be more characteristic of a human rather than ship
-	if (speed > 2.0f) {
-	    speed = 2.0f;
-	    normalize2d(g.ship.vel);
-	    g.ship.vel[0] *= speed;
-	    g.ship.vel[1] *= speed;
-	}
+	    g.ship.vel[0] += xdir;
+	    g.ship.vel[1] += ydir;
+	    //Changed by Zakary Worman: changed to simply reduce the speed
+	    //to be more characteristic of a human rather than ship
     }
     //Added by Zakary Worman: this allows for backward movement with s
     else if (gl.keys[XK_s]) {
-	//convert ship angle to radians
-	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-	//convert angle to a vector
-	Flt xdir = cos(rad);
-	Flt ydir = sin(rad);
-	g.ship.vel[0] -= xdir;
-	g.ship.vel[1] -= ydir;
-	Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-		g.ship.vel[1]*g.ship.vel[1]);
-	//Changed by Zakary Worman: changed to simply reduce the speed
-	//to be more characteristic of a human rather than ship
-	if (speed > 2.0f) {
+	    g.ship.vel[0] -= xdir;
+	    g.ship.vel[1] -= ydir;
+    }
+    //Changed by Zakary Worman: changed to simply reduce the speed
+    //to be more characteristic of a human rather than ship
+    Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+		    g.ship.vel[1]*g.ship.vel[1]);
+    if (speed > 2.0f) {
 	    speed = 2.0f;
 	    normalize2d(g.ship.vel);
 	    g.ship.vel[0] *= speed;
 	    g.ship.vel[1] *= speed;
-	}
     }
     //Added by Zakary Worman: this makes the person slow down as you stop moving
     else {
-	g.ship.vel[0] *= 0.8;
-	g.ship.vel[1] *= 0.8;
+	    g.ship.vel[0] *= 0.8;
+	    g.ship.vel[1] *= 0.8;
     }
     g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     if (gl.keys[XK_space]) {
-	if(gl.menuScreen)
-	    gl.menuScreen = false;
-	//a little time between each bullet
-	/*struct timespec bt;
-	  clock_gettime(CLOCK_REALTIME, &bt);
-	  double ts = timeDiff(&g.bulletTimer, &bt);
-	  if (ts > 0.1) {
-	  timeCopy(&g.bulletTimer, &bt);
-	  if (g.nbullets < MAX_BULLETS) {
-	//shoot a bullet...
-	//Bullet *b = new Bullet;
-	Bullet *b = &g.barr[g.nbullets];
-	timeCopy(&b->time, &bt);
-	b->pos[0] = g.ship.pos[0];
-	b->pos[1] = g.ship.pos[1];
-	b->vel[0] = g.ship.vel[0];
-	b->vel[1] = g.ship.vel[1];
-	//convert ship angle to radians
-	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-	//convert angle to a vector
-	Flt xdir = cos(rad);
-	Flt ydir = sin(rad);
-	b->pos[0] += xdir*20.0f;
-	b->pos[1] += ydir*20.0f;
-	b->vel[0] += xdir*6.0f + rnd()*0.1;
-	b->vel[1] += ydir*6.0f + rnd()*0.1;
-	b->color[0] = 1.0f;
-	b->color[1] = 1.0f;
-	b->color[2] = 1.0f;
-	g.nbullets++;
-	}
-	}*/
+	    if(gl.menuScreen)
+		    gl.menuScreen = false;
+	    //a little time between each bullet
+	    /*struct timespec bt;
+	      clock_gettime(CLOCK_REALTIME, &bt);
+	      double ts = timeDiff(&g.bulletTimer, &bt);
+	      if (ts > 0.1) {
+	      timeCopy(&g.bulletTimer, &bt);
+	      if (g.nbullets < MAX_BULLETS) {
+	    //shoot a bullet...
+	    //Bullet *b = new Bullet;
+	    Bullet *b = &g.barr[g.nbullets];
+	    timeCopy(&b->time, &bt);
+	    b->pos[0] = g.ship.pos[0];
+	    b->pos[1] = g.ship.pos[1];
+	    b->vel[0] = g.ship.vel[0];
+	    b->vel[1] = g.ship.vel[1];
+	    //convert ship angle to radians
+	    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+	    //convert angle to a vector
+	    Flt xdir = cos(rad);
+	    Flt ydir = sin(rad);
+	    b->pos[0] += xdir*20.0f;
+	    b->pos[1] += ydir*20.0f;
+	    b->vel[0] += xdir*6.0f + rnd()*0.1;
+	    b->vel[1] += ydir*6.0f + rnd()*0.1;
+	    b->color[0] = 1.0f;
+	    b->color[1] = 1.0f;
+	    b->color[2] = 1.0f;
+	    g.nbullets++;
+	    }
+	    }*/
     }
     //Changed by Zakary Worman: not used anymore
     /*if (g.mouseThrustOn) {
@@ -1138,20 +1134,20 @@ void physics()
 
 void render()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-    if(gl.menuScreen) {
+	glClear(GL_COLOR_BUFFER_BIT);
+	if(gl.menuScreen) {
 		printMenuScreen(gl.xres, gl.yres);
 		return;
-    }
-    glClear(GL_COLOR_BUFFER_BIT);
-    gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-    if(g.roundEnd) {
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+	if(g.roundEnd) {
 		renderBoard(gl.xres, gl.yres);
 		return;
-    }
-    //glClear(GL_COLOR_BUFFER_BIT);
-    Rect r;
-    if(gl.credits) {
+	}
+	//glClear(GL_COLOR_BUFFER_BIT);
+	Rect r;
+	if(gl.credits) {
 		Rect n;
 		n.bot = gl.yres - gl.yres/5;
 		n.left = gl.xres/2;
@@ -1166,65 +1162,65 @@ void render()
 		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
 		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
 		return;
-    }
-    //glClear(GL_COLOR_BUFFER_BIT);
-    if(g.ship.health <= 0) {
+	}
+	//glClear(GL_COLOR_BUFFER_BIT);
+	if(g.ship.health <= 0) {
 		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-	//zw_gameover(gl.yres, gl.xres);
-	return;
-    }
-    //glClear(GL_COLOR_BUFFER_BIT);
-    //
-    //Drop Shadow
-    Rect s;
-    s.bot = gl.yres - 28;
-    s.left = 10;
-    s.center = 0;
-    ggprint8b(&s, 15, 0x00000000, "3350 - Night Knight");
-    ggprint8b(&s, 15, 0x00000000, "Arrows: %i", g.nbullets);
-    ggprint8b(&s, 15, 0x00000000, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
-    ggprint8b(&s, 15, 0x00000000, "Enemies Killed: %i", g.killed);
-    //
-    r.bot = gl.yres - 20;
-    r.left = 10;
-    r.center = 0;
-    ggprint8b(&r, 16, 0xaaffaaaa, "3350 - Night Knight");
-    ggprint8b(&r, 16, 0x00ffff00, "Arrows: %i", g.nbullets);
-    ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
-    ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
-    //-------------
-    //Draw the ship
-    /*glColor3fv(g.ship.color);
-    glPushMatrix();
-    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
-    glVertex2f(-12.0f, -10.0f);
-    glVertex2f(  0.0f, 20.0f);
-    glVertex2f(  0.0f, -6.0f);
-    glVertex2f(  0.0f, -6.0f);
-    glVertex2f(  0.0f, 20.0f);
-    glVertex2f( 12.0f, -10.0f);
-    glEnd();
-    glColor3f(1.0f, 0.0f, 0.0f);*/
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
-    glEnd();
-    glPopMatrix();
-    if (g.ship.hit_recent > 0) {
+		//zw_gameover(gl.yres, gl.xres);
+		return;
+	}
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//
+	//Drop Shadow
+	Rect s;
+	s.bot = gl.yres - 28;
+	s.left = 10;
+	s.center = 0;
+	ggprint8b(&s, 15, 0x00000000, "3350 - Night Knight");
+	ggprint8b(&s, 15, 0x00000000, "Arrows: %i", g.nbullets);
+	ggprint8b(&s, 15, 0x00000000, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
+	ggprint8b(&s, 15, 0x00000000, "Enemies Killed: %i", g.killed);
+	//
+	r.bot = gl.yres - 20;
+	r.left = 10;
+	r.center = 0;
+	ggprint8b(&r, 16, 0xaaffaaaa, "3350 - Night Knight");
+	ggprint8b(&r, 16, 0x00ffff00, "Arrows: %i", g.nbullets);
+	ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
+	ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
+	//-------------
+	//Draw the ship
+	/*glColor3fv(g.ship.color);
+	  glPushMatrix();
+	  glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+	  glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+	  glBegin(GL_TRIANGLES);
+	  glVertex2f(-12.0f, -10.0f);
+	  glVertex2f(  0.0f, 20.0f);
+	  glVertex2f(  0.0f, -6.0f);
+	  glVertex2f(  0.0f, -6.0f);
+	  glVertex2f(  0.0f, 20.0f);
+	  glVertex2f( 12.0f, -10.0f);
+	  glEnd();
+	  glColor3f(1.0f, 0.0f, 0.0f);*/
+	glBegin(GL_POINTS);
+	glVertex2f(0.0f, 0.0f);
+	glEnd();
+	glPopMatrix();
+	if (g.ship.hit_recent > 0) {
 		glColor3f(1.0f,1.0f,0.0f);
 		glPushMatrix();
 		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
 		glBegin(GL_LINE_LOOP);
-	for(int i = 0; i < 360; i++) {
-	    glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
+		for(int i = 0; i < 360; i++) {
+			glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
+		}
+		glEnd();
+		glPopMatrix();
 	}
-	glEnd();
-	glPopMatrix();
-    }
-    playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
-    if (gl.keys[XK_Up]) {
+	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	if (gl.keys[XK_Up]) {
 		int i;
 		//draw thrust
 		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -1234,44 +1230,44 @@ void render()
 		Flt xs,ys,xe,ye,r;
 		glBegin(GL_LINES);
 		for (i=0; i<16; i++) {
-	    	xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-	    	ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-	    	r = rnd()*40.0+40.0;
-	    	xe = -xdir * r + rnd() * 18.0 - 9.0;
-	    	ye = -ydir * r + rnd() * 18.0 - 9.0;
-	    	glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-	    	glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-	    	glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+			r = rnd()*40.0+40.0;
+			xe = -xdir * r + rnd() * 18.0 - 9.0;
+			ye = -ydir * r + rnd() * 18.0 - 9.0;
+			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
+			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
 		}
 		glEnd();
-    }
-    //------------------
-    //Draw the asteroids
-    zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
-    /*Asteroid *a = g.ahead;
-      while (a) {
-    //Log("draw asteroid...\n");
-    glColor3fv(a->color);
-    glPushMatrix();
-    glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
-    glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_LINE_LOOP);
-    //Log("%i verts\n",a->nverts);
-    for (int j=0; j<a->nverts; j++) {
-    glVertex2f(a->vert[j][0], a->vert[j][1]);
-    }
-    glEnd();
-    glPopMatrix();
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glBegin(GL_POINTS);
-    glVertex2f(a->pos[0], a->pos[1]);
-    glEnd();
-    a = a->next;
-    }*/
-    //----------------
-    //Draw the bullets
-    Bullet *b = &g.barr[0];
-    for (int i=0; i<g.nbullets; i++) {
+	}
+	//------------------
+	//Draw the asteroids
+	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
+	/*Asteroid *a = g.ahead;
+	  while (a) {
+	//Log("draw asteroid...\n");
+	glColor3fv(a->color);
+	glPushMatrix();
+	glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
+	glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
+	glBegin(GL_LINE_LOOP);
+	//Log("%i verts\n",a->nverts);
+	for (int j=0; j<a->nverts; j++) {
+	glVertex2f(a->vert[j][0], a->vert[j][1]);
+	}
+	glEnd();
+	glPopMatrix();
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(a->pos[0], a->pos[1]);
+	glEnd();
+	a = a->next;
+	}*/
+	//----------------
+	//Draw the bullets
+	Bullet *b = &g.barr[0];
+	for (int i=0; i<g.nbullets; i++) {
 		glPushMatrix();
 		//Log("draw bullet...\n");
 		glColor3f(0.5451, 0.2706, 0.0745);
@@ -1313,9 +1309,9 @@ void render()
 		//glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
 		glPopMatrix();
 		++b;
-    }
-    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-    renderHealth(g.ship.health);
-    //Function below used to check renderPowerup functionality
-    //renderPowerup(gl.xres/4,3*gl.yres/4,255);
+	}
+	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+	renderHealth(g.ship.health);
+	//Function below used to check renderPowerup functionality
+	//renderPowerup(gl.xres/4,3*gl.yres/4,255);
 }

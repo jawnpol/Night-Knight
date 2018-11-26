@@ -84,6 +84,7 @@ extern bool zw_player_hit(int round, float x, float y);
 extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, GLfloat angle, GLuint texture);
 extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
+extern void renderBoard(int xres, int yres);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -138,8 +139,7 @@ class Image {
 		unlink(ppmname);
 	}
 };
-<<<<<<< HEAD
-Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png"};
+Image img[7] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png", "gameovertexture.jpg"};
 
 
 unsigned char *buildAlphaData(Image *img)
@@ -177,9 +177,6 @@ unsigned char *buildAlphaData(Image *img)
         }
         return newdata;
 }
-=======
-Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "grass.jpg"};
->>>>>>> 052ede3b911d7b58a9f572a4fc3bf8844e7e463d
 
 class Global {
 	public:
@@ -532,15 +529,15 @@ void init_opengl()
 	//gameoverimage
 	//
 	glGenTextures(1, &gl.gameoverTexture);
-	w = img[5].width;
-	h = img[5].height;
+	w = img[6].width;
+	h = img[6].height;
 	//
 	glBindTexture(GL_TEXTURE_2D, gl.gameoverTexture);
 	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-			GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+			GL_RGB, GL_UNSIGNED_BYTE, img[6].data);
 	//-------------------------------------------------------------------------
 
 	
@@ -565,8 +562,6 @@ void init_opengl()
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
-
-<<<<<<< HEAD
 	
 	//-------------------------------------------------------------------------
 	//-------------------------------------------------------------------------
@@ -615,17 +610,6 @@ void init_opengl()
         glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
                         0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
     //-------------------------------------------------------------------------
-=======
-    glGenTextures(1, &gl.backgroundTexture);
-    w = img[4].width;
-    h = img[4].height;
-
-    glBindTexture(GL_TEXTURE_2D, gl.backgroundTexture);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-	    0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);
->>>>>>> 052ede3b911d7b58a9f572a4fc3bf8844e7e463d
 }
 
 void normalize2d(Vec v)
@@ -1151,19 +1135,23 @@ void physics()
     g.mouseThrustOn = false;
     }*/
 }
-<<<<<<< HEAD
 
 void render()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
-	if(gl.menuScreen) {
+    glClear(GL_COLOR_BUFFER_BIT);
+    if(gl.menuScreen) {
 		printMenuScreen(gl.xres, gl.yres);
 		return;
-	}
-	Rect r;
-	glClear(GL_COLOR_BUFFER_BIT);
-	//gameBackground(gl.xres,gl.yres, gl.backgroundTexture);
-	if(gl.credits) {
+    }
+    glClear(GL_COLOR_BUFFER_BIT);
+    gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+    if(g.roundEnd) {
+		renderBoard(gl.xres, gl.yres);
+		return;
+    }
+    //glClear(GL_COLOR_BUFFER_BIT);
+    Rect r;
+    if(gl.credits) {
 		Rect n;
 		n.bot = gl.yres - gl.yres/5;
 		n.left = gl.xres/2;
@@ -1178,185 +1166,6 @@ void render()
 		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
 		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
 		return;
-	}
-	if(g.ship.health <= 0) {
-		zw_gameover(gl.yres, gl.xres);
-		return;
-	}
-	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	//glClear(GL_COLOR_BUFFER_BIT);
-	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	//
-	r.bot = gl.yres - 20;
-	r.left = 10;
-	r.center = 0;
-	ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
-	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
-	ggprint8b(&r, 16, 0x00ffff00, "n asteroids destroyed: ");
-	//
-	//-------------
-	//Draw the ship
-
-	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	//glClear(GL_COLOR_BUFFER_BIT);
-	//playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
-	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	/*glColor3fv(g.ship.color);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
-	glVertex2f(-12.0f, -10.0f);
-	glVertex2f(  0.0f, 20.0f);
-	glVertex2f(  0.0f, -6.0f);
-	glVertex2f(  0.0f, -6.0f);
-	glVertex2f(  0.0f, 20.0f);
-	glVertex2f( 12.0f, -10.0f);
-	glEnd();*/
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(0.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
-	if (g.ship.hit_recent > 0) {
-		glColor3f(1.0f,1.0f,0.0f);
-		glPushMatrix();
-		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINE_LOOP);
-		for(int i = 0; i < 360; i++) {
-			glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
-		}
-		glEnd();
-		glPopMatrix();
-	}
-	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
-	if (gl.keys[XK_Up] || g.mouseThrustOn) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-		for (i=0; i<16; i++) {
-			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-			r = rnd()*40.0+40.0;
-			xe = -xdir * r + rnd() * 18.0 - 9.0;
-			ye = -ydir * r + rnd() * 18.0 - 9.0;
-			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-		}
-		glEnd();
-	}
-	//------------------
-	//Draw the asteroids
-	{
-		zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
-		/*Asteroid *a = g.ahead;
-		  while (a) {
-		//Log("draw asteroid...\n");
-		glColor3fv(a->color);
-		glPushMatrix();
-		glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
-		glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINE_LOOP);
-		//Log("%i verts\n",a->nverts);
-		for (int j=0; j<a->nverts; j++) {
-		glVertex2f(a->vert[j][0], a->vert[j][1]);
-		}
-		glEnd();
-		glPopMatrix();
-		glColor3f(1.0f, 0.0f, 0.0f);
-		glBegin(GL_POINTS);
-		glVertex2f(a->pos[0], a->pos[1]);
-		glEnd();
-		a = a->next;
-		}*/
-	}
-	//----------------
-	//Draw the bullets
-	Bullet *b = &g.barr[0];
-	for (int i=0; i<g.nbullets; i++) {
-		glPushMatrix();
-		//Log("draw bullet...\n");
-		glColor3f(0.5451, 0.2706, 0.0745);
-		glTranslatef(b->pos[0], b->pos[1], 0.0f);
-		glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINES);
-		glVertex2f(0.0f,0.0f);
-		glVertex2f(0.0f, -20.0f);
-		glVertex2f(0.5f,0.0f);
-		glVertex2f(0.5f, -20.0f);
-		glVertex2f(-0.5f,0.0f);
-		glVertex2f(-0.5f, -20.0f);
-		glColor3f(0.0f, 0.0f, 1.0f);
-		glVertex2f(-3.0f, -20.0f);
-		glVertex2f(0.0f, -15.0f);
-		glVertex2f(3.0f, -20.0f);
-		glVertex2f(0.0f, -15.0f);
-		glVertex2f(-3.0f, -18.0f);
-		glVertex2f(0.0f, -12.0f);
-		glVertex2f(3.0f, -18.0f);
-		glVertex2f(0.0f, -12.0f);
-		glVertex2f(-3.0f, -22.0f);
-		glVertex2f(0.0f, -17.0f);
-		glVertex2f(3.0f, -22.0f);
-		glVertex2f(0.0f, -17.0f);
-		glEnd();
-		glColor3f(0.5019, 0.5019, 0.5019);
-		glBegin(GL_TRIANGLES);
-		glVertex2f(0.0f,0.0f);
-		glVertex2f(5.0f, -7.0f);
-		glVertex2f(-5.0f, -7.0f);
-		glEnd();
-		//glVertex2f(b->pos[0],      b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0],      b->pos[1]+1.0f);
-		//glColor3f(0.8, 0.8, 0.8);
-		//glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
-		//glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
-		glPopMatrix();
-		++b;
-=======
-extern void gameBackground(int xres, int yres, GLuint texid);
-extern void renderHealth(int health);
-extern void renderBoard(int x, int y);
-void render()
-{
-    glClear(GL_COLOR_BUFFER_BIT);
-    if(gl.menuScreen) {
-	printMenuScreen(gl.xres, gl.yres);
-	return;
-    }
-    glClear(GL_COLOR_BUFFER_BIT);
-    gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-    if(g.roundEnd) {
-	renderBoard(gl.xres, gl.yres);
-	return;
-    }
-    //glClear(GL_COLOR_BUFFER_BIT);
-    Rect r;
-    if(gl.credits) {
-	Rect n;
-	n.bot = gl.yres - gl.yres/5;
-	n.left = gl.xres/2;
-	n.center = gl.xres/3;
-	zw_show_credits(n);
-	zk_show_credits(n);
-	bb_show_credits(n);
-	jc_show_credits(n);
-	zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-	zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-	bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-	jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-	ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-	return;
     }
     //glClear(GL_COLOR_BUFFER_BIT);
     if(g.ship.health <= 0) {
@@ -1385,7 +1194,7 @@ void render()
     ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
     //-------------
     //Draw the ship
-    glColor3fv(g.ship.color);
+    /*glColor3fv(g.ship.color);
     glPushMatrix();
     glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
     glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
@@ -1397,44 +1206,44 @@ void render()
     glVertex2f(  0.0f, 20.0f);
     glVertex2f( 12.0f, -10.0f);
     glEnd();
-    glColor3f(1.0f, 0.0f, 0.0f);
+    glColor3f(1.0f, 0.0f, 0.0f);*/
     glBegin(GL_POINTS);
     glVertex2f(0.0f, 0.0f);
     glEnd();
     glPopMatrix();
     if (g.ship.hit_recent > 0) {
-	glColor3f(1.0f,1.0f,0.0f);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_LINE_LOOP);
+		glColor3f(1.0f,1.0f,0.0f);
+		glPushMatrix();
+		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_LINE_LOOP);
 	for(int i = 0; i < 360; i++) {
 	    glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
 	}
 	glEnd();
 	glPopMatrix();
     }
+    playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
     if (gl.keys[XK_Up]) {
-	int i;
-	//draw thrust
-	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-	//convert angle to a vector
-	Flt xdir = cos(rad);
-	Flt ydir = sin(rad);
-	Flt xs,ys,xe,ye,r;
-	glBegin(GL_LINES);
-	for (i=0; i<16; i++) {
-	    xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-	    ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-	    r = rnd()*40.0+40.0;
-	    xe = -xdir * r + rnd() * 18.0 - 9.0;
-	    ye = -ydir * r + rnd() * 18.0 - 9.0;
-	    glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-	    glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-	    glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
->>>>>>> 052ede3b911d7b58a9f572a4fc3bf8844e7e463d
-	}
-	glEnd();
+		int i;
+		//draw thrust
+		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+		//convert angle to a vector
+		Flt xdir = cos(rad);
+		Flt ydir = sin(rad);
+		Flt xs,ys,xe,ye,r;
+		glBegin(GL_LINES);
+		for (i=0; i<16; i++) {
+	    	xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+	    	ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+	    	r = rnd()*40.0+40.0;
+	    	xe = -xdir * r + rnd() * 18.0 - 9.0;
+	    	ye = -ydir * r + rnd() * 18.0 - 9.0;
+	    	glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+	    	glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
+	    	glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+		}
+		glEnd();
     }
     //------------------
     //Draw the asteroids
@@ -1463,47 +1272,47 @@ void render()
     //Draw the bullets
     Bullet *b = &g.barr[0];
     for (int i=0; i<g.nbullets; i++) {
-	glPushMatrix();
-	//Log("draw bullet...\n");
-	glColor3f(0.5451, 0.2706, 0.0745);
-	glTranslatef(b->pos[0], b->pos[1], 0.0f);
-	glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_LINES);
-	glVertex2f(0.0f,0.0f);
-	glVertex2f(0.0f, -20.0f);
-	glVertex2f(0.5f,0.0f);
-	glVertex2f(0.5f, -20.0f);
-	glVertex2f(-0.5f,0.0f);
-	glVertex2f(-0.5f, -20.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);
-	glVertex2f(-3.0f, -20.0f);
-	glVertex2f(0.0f, -15.0f);
-	glVertex2f(3.0f, -20.0f);
-	glVertex2f(0.0f, -15.0f);
-	glVertex2f(-3.0f, -18.0f);
-	glVertex2f(0.0f, -12.0f);
-	glVertex2f(3.0f, -18.0f);
-	glVertex2f(0.0f, -12.0f);
-	glVertex2f(-3.0f, -22.0f);
-	glVertex2f(0.0f, -17.0f);
-	glVertex2f(3.0f, -22.0f);
-	glVertex2f(0.0f, -17.0f);
-	glEnd();
-	glColor3f(0.0f, 0.0f, 0.0f);
-	glBegin(GL_TRIANGLES);
-	glVertex2f(0.0f,0.0f);
-	glVertex2f(5.0f, -7.0f);
-	glVertex2f(-5.0f, -7.0f);
-	glEnd();
-	//glVertex2f(b->pos[0],      b->pos[1]-1.0f);
-	//glVertex2f(b->pos[0],      b->pos[1]+1.0f);
-	//glColor3f(0.8, 0.8, 0.8);
-	//glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
-	//glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
-	//glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
-	//glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
-	glPopMatrix();
-	++b;
+		glPushMatrix();
+		//Log("draw bullet...\n");
+		glColor3f(0.5451, 0.2706, 0.0745);
+		glTranslatef(b->pos[0], b->pos[1], 0.0f);
+		glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_LINES);
+		glVertex2f(0.0f,0.0f);
+		glVertex2f(0.0f, -20.0f);
+		glVertex2f(0.5f,0.0f);
+		glVertex2f(0.5f, -20.0f);
+		glVertex2f(-0.5f,0.0f);
+		glVertex2f(-0.5f, -20.0f);
+		glColor3f(0.0f, 0.0f, 1.0f);
+		glVertex2f(-3.0f, -20.0f);
+		glVertex2f(0.0f, -15.0f);
+		glVertex2f(3.0f, -20.0f);
+		glVertex2f(0.0f, -15.0f);
+		glVertex2f(-3.0f, -18.0f);
+		glVertex2f(0.0f, -12.0f);
+		glVertex2f(3.0f, -18.0f);
+		glVertex2f(0.0f, -12.0f);
+		glVertex2f(-3.0f, -22.0f);
+		glVertex2f(0.0f, -17.0f);
+		glVertex2f(3.0f, -22.0f);
+		glVertex2f(0.0f, -17.0f);
+		glEnd();
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glBegin(GL_TRIANGLES);
+		glVertex2f(0.0f,0.0f);
+		glVertex2f(5.0f, -7.0f);
+		glVertex2f(-5.0f, -7.0f);
+		glEnd();
+		//glVertex2f(b->pos[0],      b->pos[1]-1.0f);
+		//glVertex2f(b->pos[0],      b->pos[1]+1.0f);
+		//glColor3f(0.8, 0.8, 0.8);
+		//glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
+		//glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
+		//glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
+		//glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
+		glPopMatrix();
+		++b;
     }
     //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
     renderHealth(g.ship.health);

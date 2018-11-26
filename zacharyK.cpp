@@ -52,8 +52,10 @@ void zk_drawCircle() {
 }
 
 void zk_gameoverimage(int x, int y, GLuint texid) {
-    	glColor3ub(255,255,255);
+    Rect l;
+    glColor3ub(255,255,255);
 	
+    ggprint16(&l, 150, 0x00fff000, "GAME OVER");  
 	glPushMatrix();
 	glTranslatef(x/2, y/2, 0);
 	glBindTexture(GL_TEXTURE_2D, texid);

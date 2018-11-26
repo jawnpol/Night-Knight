@@ -63,6 +63,7 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 //Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
+extern void zk_drawCircle();
 extern void zk_gameoverimage(int x, int y, GLuint texid);
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
@@ -401,7 +402,7 @@ class X11_wrapper {
 	    }
 	    //vars to make blank cursor
 	    //Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
-	    /*Pixmap blank;
+	    Pixmap blank;
 	      XColor dummy;
 	      char data[1] = {0};
 	      Cursor cursor;
@@ -412,7 +413,7 @@ class X11_wrapper {
 	    cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
 	    XFreePixmap(dpy, blank);
 	    //this makes you the cursor. then set it using this function
-	    XDefineCursor(dpy, win, cursor);*/
+	    XDefineCursor(dpy, win, cursor);
 	    //after you do not need the cursor anymore use this function.
 	    //it will undo the last change done by XDefineCursor
 	    //(thus do only use ONCE XDefineCursor and then XUndefineCursor):
@@ -1138,6 +1139,7 @@ void physics()
 
 void render()
 {
+    
     glClear(GL_COLOR_BUFFER_BIT);
     if(gl.menuScreen) {
 		printMenuScreen(gl.xres, gl.yres);
@@ -1149,6 +1151,7 @@ void render()
 		renderBoard(gl.xres, gl.yres);
 		return;
     }
+    
     //glClear(GL_COLOR_BUFFER_BIT);
     Rect r;
     if(gl.credits) {
@@ -1167,7 +1170,8 @@ void render()
 		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
 		return;
     }
-    //glClear(GL_COLOR_BUFFER_BIT);
+    
+        //glClear(GL_COLOR_BUFFER_BIT);
     if(g.ship.health <= 0) {
 		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
 	//zw_gameover(gl.yres, gl.xres);
@@ -1245,7 +1249,6 @@ void render()
 		}
 		glEnd();
     }
-    //------------------
     //Draw the asteroids
     zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
     /*Asteroid *a = g.ahead;
@@ -1314,7 +1317,12 @@ void render()
 		glPopMatrix();
 		++b;
     }
-    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture)
+    ////draw Circle for crosshair
+    //------------------------
+    zk_drawCircle(); 
+    //------------------
+;
     renderHealth(g.ship.health);
     //Function below used to check renderPowerup functionality
     //renderPowerup(gl.xres/4,3*gl.yres/4,255);

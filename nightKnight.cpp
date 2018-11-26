@@ -79,6 +79,9 @@ extern void zw_gameover(double yres, double xres);
 extern void zw_spawn_enemies(int round, int tX, int tY);
 extern bool zw_check_enemy_hit(int round, float x, float y);
 extern bool zw_player_hit(int round, float x, float y);
+extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, GLfloat angle, GLuint texture);
+extern void gameBackground(int xres, int yres, GLuint texid);
+extern void renderHealth(int health);
 //-----------------------------------------------------------------------------
 class Image {
 	public:
@@ -133,7 +136,44 @@ class Image {
 				unlink(ppmname);
 		}
 };
-Image img[5] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg"};
+Image img[6] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png"};
+
+
+unsigned char *buildAlphaData(Image *img)
+{
+        //add 4th component to RGB stream...
+        int i;
+        int a,b,c;
+        unsigned char *newdata, *ptr;
+        unsigned char *data = (unsigned char *)img->data;
+        newdata = (unsigned char *)malloc(img->width * img->height * 4);
+        ptr = newdata;
+        for (i=0; i<img->width * img->height * 3; i+=3) {
+                a = *(data+0);
+                b = *(data+1);
+                c = *(data+2);
+                *(ptr+0) = a;
+                *(ptr+1) = b;
+                *(ptr+2) = c;
+                //-----------------------------------------------
+                //get largest color component...
+                //*(ptr+3) = (unsigned char)((
+                //              (int)*(ptr+0) +
+                //              (int)*(ptr+1) +
+                //              (int)*(ptr+2)) / 3);
+                //d = a;
+                //if (b >= a && b >= c) d = b;
+                //if (c >= a && c >= b) d = c;
+                //*(ptr+3) = d;
+                //-----------------------------------------------
+                //this code optimizes the commented code above.
+                *(ptr+3) = (a|b|c);
+                //-----------------------------------------------
+                ptr += 4;
+                data += 3;
+        }
+        return newdata;
+}
 
 class Global {
 	public:
@@ -146,6 +186,8 @@ class Global {
 		GLuint duckTexture;
 		GLuint jpcTexture;
 		GLuint backgroundTexture;
+		GLuint playerTexture;
+		GLuint playerSilhouette;
 		Global() {
 			//Changed by Zakary Worman: Just made this resolution slightly larger
 			xres = 1920;
@@ -466,6 +508,9 @@ void init_opengl()
 			GL_RGB, GL_UNSIGNED_BYTE, img[3].data);
 	//-------------------------------------------------------------------------
 	glViewport(0, 0, gl.xres, gl.yres);
+	
+	
+	
 	//Initialize matrices
 	glMatrixMode(GL_PROJECTION); glLoadIdentity();
 	glMatrixMode(GL_MODELVIEW); glLoadIdentity();
@@ -483,14 +528,54 @@ void init_opengl()
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
 
-	w = img[4].width;
-	h = img[4].height;
+	
+	//-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	//User Sprite - JPC
+	//
+	glGenTextures(1, &gl.playerTexture);
+	w = img[5].width;
+    h = img[5].height;
 
-	glBindTexture(GL_TEXTURE_2D, gl.backgroundTexture);
+    glBindTexture(GL_TEXTURE_2D, gl.playerTexture);
+        
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-			0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        //glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
+        //                0, GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+	
+        //Trying to make sprite work - JPC
+	
+	//glGenTextures(1, &gl.playerSilhouette);
+
+	//glBindTexture(GL_TEXTURE_2D, gl.playerSilhouette);
+        //
+        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        //
+        //must build a new set of data...*/
+    unsigned char *silhouetteData = buildAlphaData(&img[5]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                            GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+    free(silhouetteData);
+	//-------------------------------------------------------------------------
+
+
+	//-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	//Map Layout - JPC
+	//
+
+	glGenTextures(1, &gl.backgroundTexture);
+	w = img[4].width;
+    h = img[4].height;
+
+    glBindTexture(GL_TEXTURE_2D, gl.backgroundTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
+                        0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
+    //-------------------------------------------------------------------------
 }
 
 void normalize2d(Vec v)
@@ -1015,8 +1100,7 @@ void physics()
 	g.mouseThrustOn = false;
 	}*/
 }
-extern void gameBackground(int xres, int yres, GLuint texid);
-extern void renderHealth(int health);
+
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1048,7 +1132,7 @@ void render()
 		return;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT);
 	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//
 	r.bot = gl.yres - 20;
@@ -1063,8 +1147,10 @@ void render()
 	//Draw the ship
 
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-
-	glColor3fv(g.ship.color);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+	/*glColor3fv(g.ship.color);
 	glPushMatrix();
 	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
@@ -1075,8 +1161,8 @@ void render()
 	glVertex2f(  0.0f, -6.0f);
 	glVertex2f(  0.0f, 20.0f);
 	glVertex2f( 12.0f, -10.0f);
-	glEnd();
-	glColor3f(1.0f, 0.0f, 0.0f);
+	glEnd();*/
+	//glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
 	glVertex2f(0.0f, 0.0f);
 	glEnd();
@@ -1093,6 +1179,7 @@ void render()
 		glEnd();
 		glPopMatrix();
 	}
+	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
 	if (gl.keys[XK_Up] || g.mouseThrustOn) {
 		int i;
 		//draw thrust

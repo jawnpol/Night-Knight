@@ -139,7 +139,7 @@ class Image {
 		unlink(ppmname);
 	}
 };
-Image img[7] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png", "gameovertexture.jpg"};
+Image img[8] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png", "gameovertexture.jpg", "./menuscreen.jpg" };
 
 
 unsigned char *buildAlphaData(Image *img)
@@ -502,15 +502,15 @@ void init_opengl()
 	//-------------------------------------------------------------------------
         //Menu Image
         glGenTextures(1, &gl.menuTexture);
-        w = img[5].width;
-        h = img[5].height;
+        w = img[7].width;
+        h = img[7].height;
         //
         glBindTexture(GL_TEXTURE_2D, gl.menuTexture);
         //
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-                        GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+                        GL_RGB, GL_UNSIGNED_BYTE, img[7].data);
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
 	//jpc
@@ -1092,8 +1092,11 @@ void physics()
     }
     g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     if (gl.keys[XK_space]) {
-	if(gl.menuScreen)
+	if(gl.menuScreen){
+	    menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 	    gl.menuScreen = false;
+	    return;
+	}
 	//a little time between each bullet
 	/*struct timespec bt;
 	  clock_gettime(CLOCK_REALTIME, &bt);
@@ -1140,6 +1143,7 @@ void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     if(gl.menuScreen) {
+		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 		printMenuScreen(gl.xres, gl.yres);
 		return;
     }

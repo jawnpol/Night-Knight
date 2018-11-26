@@ -85,6 +85,7 @@ extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, GLfl
 extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
 extern void renderBoard(int xres, int yres);
+extern void zw_reset_round();
 //-----------------------------------------------------------------------------
 class Image {
 	public:
@@ -259,13 +260,14 @@ class Game {
 		Ship ship;
 		//Asteroid *ahead;
 		Bullet *barr;
-		int round = 1;
+		int round = 0;
+		int enemyCount;
 		int nasteroids;
 		int nbullets;
 		int killed = 0;;
 		struct timespec bulletTimer;
 		struct timespec mouseThrustTimer;
-		bool roundEnd = false;
+		bool roundEnd = true;
 	public:
 		Game() {
 			//ahead = NULL;
@@ -926,6 +928,9 @@ void physics()
 			g.killed++;
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
 			g.nbullets--;
+			g.enemyCount--;
+			if(g.enemyCount == 0)
+				g.roundEnd = true;
 		} 
 		i++;
 	}
@@ -1145,11 +1150,6 @@ void render()
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-	if(g.roundEnd) {
-		renderBoard(gl.xres, gl.yres);
-		return;
-	}
-	//glClear(GL_COLOR_BUFFER_BIT);
 	Rect r;
 	if(gl.credits) {
 		Rect n;
@@ -1167,6 +1167,27 @@ void render()
 		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
 		return;
 	}
+	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	if (g.roundEnd) {
+		zw_reset_round();
+		Rect s;
+		s.bot = gl.yres - 28;
+		s.left = gl.xres/2 - 27;
+		s.center = 0;
+		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
+		renderBoard(gl.xres, gl.yres);
+		if (gl.keys[XK_r]) {
+			g.round++;
+			g.roundEnd = false;
+			g.enemyCount = g.round*2;
+			if (g.round > 4)
+				g.enemyCount += (g.round-4)*2;
+			if (g.round > 9)
+				g.enemyCount += (g.round-9);
+		}
+		return;
+	}
+	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
 	if(g.ship.health <= 0) {
 		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
@@ -1180,17 +1201,17 @@ void render()
 	s.bot = gl.yres - 28;
 	s.left = 10;
 	s.center = 0;
-	ggprint8b(&s, 15, 0x00000000, "3350 - Night Knight");
-	ggprint8b(&s, 15, 0x00000000, "Arrows: %i", g.nbullets);
-	ggprint8b(&s, 15, 0x00000000, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
-	ggprint8b(&s, 15, 0x00000000, "Enemies Killed: %i", g.killed);
+	ggprint8b(&s, 16, 0x00000000, "3350 - Night Knight");
+	ggprint8b(&s, 16, 0x00000000, "Arrows: %i", g.nbullets);
+	ggprint8b(&s, 16, 0x00000000, "Enemies: %i", g.enemyCount);
+	ggprint8b(&s, 16, 0x00000000, "Enemies Killed: %i", g.killed);
 	//
 	r.bot = gl.yres - 20;
 	r.left = 10;
 	r.center = 0;
 	ggprint8b(&r, 16, 0xaaffaaaa, "3350 - Night Knight");
 	ggprint8b(&r, 16, 0x00ffff00, "Arrows: %i", g.nbullets);
-	ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.round*2+max(0,(g.round-4)*2)+max(0,g.round-9)-g.killed);
+	ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.enemyCount);
 	ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
 	//-------------
 	//Draw the ship
@@ -1217,35 +1238,13 @@ void render()
 		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
 		glBegin(GL_LINE_LOOP);
-		for(int i = 0; i < 360; i++) {
-			glVertex2f(22*sinf(i*3.14/180), 22*cosf(i*3.14/180));           
-		}
+		glVertex2f(-30, -40);           
+		glVertex2f(-30, 40);           
+		glVertex2f(30, 40);           
+		glVertex2f(30, -40);           
 		glEnd();
 		glPopMatrix();
 	}
-	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
-	if (gl.keys[XK_Up]) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-		for (i=0; i<16; i++) {
-			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-			r = rnd()*40.0+40.0;
-			xe = -xdir * r + rnd() * 18.0 - 9.0;
-			ye = -ydir * r + rnd() * 18.0 - 9.0;
-			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-		}
-		glEnd();
-	}
-	//------------------
 	//Draw the asteroids
 	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
 	/*Asteroid *a = g.ahead;

@@ -49,7 +49,7 @@ void bbShowPicture(int x, int y, GLuint texid)
 //Could be used in the future for PowerUps implemented through image
 //files. Need to fix whitespace issues behind image, for now powerups
 //are just colored diamonds.
-void renderPowerup(int x, int y, int red, int gre, int blu)
+void renderpowerup(int x, int y, int red, int gre, int blu)
 {
     glColor3ub(red,gre,blu);
 	
@@ -69,8 +69,8 @@ void renderPowerup(int x, int y, int red, int gre, int blu)
     glPopMatrix();
 }
 
-//Function for determining the chances that powerup spawns
-bool powerupChance(int chance) 
+//function for determining the chances that powerup spawns
+bool powerupchance(int chance) 
 {
 	int success = rand() % chance;
 	if (success == 0) {
@@ -80,28 +80,28 @@ bool powerupChance(int chance)
 	}
 }
 
-//Function that spawns powerup at specified location
-void spawnPowerup(int x_position, int y_position,int powerups[])
+//function that spawns powerup at specified location
+void spawnpowerup(int x_position, int y_position,int powerups[])
 {
 	//1 in 15 chance of spawning a powerup
-	//Array element number correlates to different powerups
-	if (powerupChance(15)) {
+	//array element number correlates to different powerups
+	if (powerupchance(15)) {
 		powerups[0]=1;
 		return;
 	}
-	if (powerupChance(15)) {
+	if (powerupchance(15)) {
 		powerups[1]=1;
 		return;
 	}
-	if (powerupChance(15)) {
+	if (powerupchance(15)) {
 		powerups[2]=1;
 		return;
 	}
-	if (powerupChance(15)) {
+	if (powerupchance(15)) {
 		powerups[3]=1;
 		return;
 	}
-	if (powerupChance(15)) {
+	if (powerupchance(15)) {
 		powerups[4]=1;
 		return;
 	} else {
@@ -112,14 +112,11 @@ void spawnPowerup(int x_position, int y_position,int powerups[])
 void printMenuScreen(float x, float y)
 {
         //std::cout << "in menu screen\n";
-        Rect m,p;
+        Rect m;
         m.bot = y - y/5;
         m.left = x/2;
         m.center = x/3;
 
-        p.bot = y;
-        p.left = x;
-        p.center = x/2;
         ggprint8b(&m, 16, 0x00ff0000, "Night-Knight");
         ggprint8b(&m, 16, 0x00ff0000, "Press space to play");
 
@@ -128,7 +125,7 @@ void printMenuScreen(float x, float y)
 void menuScreenImage(float x, float y, GLuint texid)
 {
     glColor3ub(255,255,255);
-    int wid = 500;
+    int wid = 525;
 
     float fx = (float) x;
     float fy = (float) y;
@@ -145,3 +142,4 @@ void menuScreenImage(float x, float y, GLuint texid)
     glPopMatrix();
 
 }
+

@@ -294,7 +294,7 @@ void zw_spawn_enemies(int round, int tX, int tY)
 			v[i].vel[1] *= -1;
 		    }
 		}
-		zw_v_pos(&v[i], tX, tY);
+		//zw_v_pos(&v[i], tX, tY);
 		if(v[i].vel[0] >= 1)
 		    v[i].vel[0] = 1;
 		if(v[i].vel[0] <= -1)

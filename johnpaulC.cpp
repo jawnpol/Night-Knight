@@ -271,7 +271,7 @@ void gameBackground(int xres, int yres, GLuint texid)
 
 }
 
-void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, GLfloat angle, GLuint texture)
+void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float angle, GLuint texture)
 {	
     //glEnable(GL_BLEND);
     //glBlendFunc(GL_ONE, GL_ONE);
@@ -279,6 +279,7 @@ void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, GLfloa
     glPushMatrix();
     //glColor3f(1.0, 1.0, 1.0);
     glTranslatef(pos[0], pos[1], pos[2]);
+    glRotatef(angle-180, 0, 0, 1);
     //glBindTexture(GL_TEXTURE_2D, texture);
     //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV, GL_REPLACE);
     //glBindTexture(GL_TEXTURE_2D, texture);    
@@ -289,10 +290,10 @@ void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, GLfloa
     glBindTexture(GL_TEXTURE_2D, texture);
     glBegin(GL_QUADS);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-    	glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-40);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 40);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 40);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-40);
+    	glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
     glEnd();
     //glDisable(GL_BLEND);
     glPopMatrix();

@@ -81,7 +81,7 @@ extern void zw_gameover(double yres, double xres);
 extern void zw_spawn_enemies(int round, int tX, int tY);
 extern bool zw_check_enemy_hit(int round, float x, float y);
 extern bool zw_player_hit(int round, float x, float y);
-extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, GLfloat angle, GLuint texture);
+extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, float angle, GLuint texture);
 extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
 extern void renderBoard(int xres, int yres);
@@ -140,7 +140,7 @@ class Image {
 				unlink(ppmname);
 		}
 };
-Image img[8] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./archer.png", "gameovertexture.jpg", "./menuscreen.jpg" };
+Image img[8] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png", "gameovertexture.jpg", "./menuscreen.jpg" };
 
 
 unsigned char *buildAlphaData(Image *img)
@@ -1172,8 +1172,8 @@ void render()
 		zw_reset_round();
 		Rect s;
 		s.bot = gl.yres - 28;
-		s.left = gl.xres/2 - 27;
-		s.center = 0;
+		s.left = gl.xres/2 - 10;
+		s.center = gl.xres/2;
 		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
 		renderBoard(gl.xres, gl.yres);
 		if (gl.keys[XK_r]) {
@@ -1205,6 +1205,11 @@ void render()
 	ggprint8b(&s, 16, 0x00000000, "Arrows: %i", g.nbullets);
 	ggprint8b(&s, 16, 0x00000000, "Enemies: %i", g.enemyCount);
 	ggprint8b(&s, 16, 0x00000000, "Enemies Killed: %i", g.killed);
+	s.bot = gl.yres - 28;
+	s.left = 10;
+	s.left = gl.xres/2 - 10;
+	s.center = gl.xres/2;
+	ggprint16(&s, 16, 0x00000000, "Round: %i", g.round);
 	//
 	r.bot = gl.yres - 20;
 	r.left = 10;
@@ -1273,43 +1278,35 @@ void render()
 	for (int i=0; i<g.nbullets; i++) {
 		glPushMatrix();
 		//Log("draw bullet...\n");
-		glColor3f(0.5451, 0.2706, 0.0745);
+		glColor3f(0.5, 0.5, 0.5);
 		glTranslatef(b->pos[0], b->pos[1], 0.0f);
 		glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINES);
-		glVertex2f(0.0f,0.0f);
-		glVertex2f(0.0f, -20.0f);
-		glVertex2f(0.5f,0.0f);
-		glVertex2f(0.5f, -20.0f);
-		glVertex2f(-0.5f,0.0f);
-		glVertex2f(-0.5f, -20.0f);
-		glColor3f(0.0f, 0.0f, 1.0f);
-		glVertex2f(-3.0f, -20.0f);
-		glVertex2f(0.0f, -15.0f);
-		glVertex2f(3.0f, -20.0f);
-		glVertex2f(0.0f, -15.0f);
-		glVertex2f(-3.0f, -18.0f);
-		glVertex2f(0.0f, -12.0f);
-		glVertex2f(3.0f, -18.0f);
-		glVertex2f(0.0f, -12.0f);
-		glVertex2f(-3.0f, -22.0f);
-		glVertex2f(0.0f, -17.0f);
-		glVertex2f(3.0f, -22.0f);
-		glVertex2f(0.0f, -17.0f);
+		glBegin(GL_QUADS);
+		glVertex2f(-2.0f, -7.0f);
+		glVertex2f(2.0f, -7.0f);
+		glVertex2f(2.0f, -30.0f);
+		glVertex2f(-2.0f, -30.0f);
+		glColor3f(0.5451, 0.2706, 0.0745);
+		glVertex2f(-5.0f, -30.f);
+		glVertex2f(5.0f, -30.f);
+		glVertex2f(5.0f, -32.f);
+		glVertex2f(-5.0f, -32.f);
+		glVertex2f(-1.0f, -32.f);
+		glVertex2f(1.0f, -32.f);
+		glVertex2f(1.0f, -40.f);
+		glVertex2f(-1.0f, -40.f);
 		glEnd();
-		glColor3f(0.0f, 0.0f, 0.0f);
+		glColor3f(0.5, 0.5, 0.5);
 		glBegin(GL_TRIANGLES);
 		glVertex2f(0.0f,0.0f);
-		glVertex2f(5.0f, -7.0f);
-		glVertex2f(-5.0f, -7.0f);
+		glVertex2f(2.0f, -7.0f);
+		glVertex2f(-2.0f, -7.0f);
 		glEnd();
-		//glVertex2f(b->pos[0],      b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0],      b->pos[1]+1.0f);
-		//glColor3f(0.8, 0.8, 0.8);
-		//glVertex2f(b->pos[0]-1.0f, b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0]-1.0f, b->pos[1]+1.0f);
-		//glVertex2f(b->pos[0]+1.0f, b->pos[1]-1.0f);
-		//glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
+		glColor3f(0.7, 0.7, 0.7);
+		glBegin(GL_LINES);
+		glVertex2f(0.0f, 0.0f);
+		glVertex2f(0.0f, -30.0f);
+		glEnd();
 		glPopMatrix();
 		++b;
 	}

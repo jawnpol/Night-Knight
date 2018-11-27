@@ -28,13 +28,14 @@ struct Zombie {
     float vel[2] = {0};
     float angle;
     float color[3];
-    int wood = rand()%11;
+    int wood = rand()%11, blood;
     bool dead, new_round = true;
 
     void set_up() {
 	if (!new_round)
 	    return;
 	dead = false;
+	blood = 50;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1920;
@@ -60,6 +61,14 @@ struct Zombie {
     }
 }z[300];
 
+struct Arrow {
+    	float start[2];
+	float pos[2];
+	float vel[2];
+	float angle;
+	bool live = false;
+};
+
 struct Orc {
     float dir[2];
     float pos[2];
@@ -68,6 +77,7 @@ struct Orc {
     float color[3];
     int stone = rand()%11;
     bool dead, new_round = true;
+    Arrow a;
 
     void set_up() {
 	if (!new_round)
@@ -97,6 +107,7 @@ struct Orc {
 	new_round = false;
     }
 }o[292];
+
 struct Vampire {
     float dir[2];
     float pos[2];
@@ -198,31 +209,145 @@ void zw_z_pos(Zombie *z, int tX, int tY) {
 	z->vel[1] -= 0.001*tY;
     else if(z->pos[1] < tY)
 	z->vel[1] += 0.001*tY;
+    z->angle = atan2(z->pos[1]-tY, z->pos[0]-tX)*180/PI;
 }
 
 void zw_o_pos(Orc *o, int tX, int tY) {
-    if(o->pos[0] > tX)
+    o->angle = atan2(o->pos[1]-tY, o->pos[0]-tX)*180/PI;
+    float d0 = o->pos[0]-tX;
+    float d1 = o->pos[1]-tY;
+    if (d0*d0+d1*d1 <= 100) {
+	if (o->a.live == true) {
+	    o->a.pos[0] += o->a.vel[0];
+	    o->a.pos[1] += o->a.vel[1];
+	    d0 = o->a.start[0] - o->a.pos[0];
+	    d1 = o->a.start[1] - o->a.pos[1];
+	    if (d0*d0+d1*d1 >= 100)
+		o->a.live = false;
+	}
+	else {
+	    o->a.start[0] = o->pos[0];
+	    o->a.start[1] = o->pos[1];
+	    o->a.angle = o->angle;
+	    o->a.vel[0] = 5*sinf(o->a.angle);
+	    o->a.vel[1] = 5*cosf(o->a.angle);
+	    o->a.live = true;
+	}
+	return;
+    }
+    if (o->pos[0] > tX)
 	o->vel[0] -= 0.001*tX;
-    else if(o->pos[0] < tX)
+    else if (o->pos[0] < tX)
 	o->vel[0] += 0.001*tX;
-    if(o->pos[1] > tY)
+    if (o->pos[1] > tY)
 	o->vel[1] -= 0.001*tY;
-    else if(o->pos[1] < tY)
+    else if (o->pos[1] < tY)
 	o->vel[1] += 0.001*tY;
 }
 
-void zw_spawn_enemies(int round, int tX, int tY)
+void zw_placeEnemies(GLuint t1, GLuint t2, GLuint t3, int round)
 {
     for (int i = 0; i < round*2; i++) {
 	if (z[i].dead)
 	    continue;
+	glPushMatrix();
+	glTranslatef(z[i].pos[0], z[i].pos[1], 0);
+	glRotatef(z[i].angle-180, 0, 0, 1);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0.0f);
+	glColor4ub(255, 255, 255, 255);
+	glBindTexture(GL_TEXTURE_2D, t1);
+	glBegin(GL_QUADS);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
+	glEnd();
+	glPopMatrix();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_ALPHA_TEST);
+    }
+    if (round > 4) {
+	for (int i = 0; i < (round-4)*2; i++) {
+	    if (o[i].dead)
+		continue;
+	    glPushMatrix();
+	    glTranslatef(o[i].pos[0], o[i].pos[1], 0);
+	    glRotatef(o[i].angle-90, 0, 0, 1);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255, 255, 255, 255);
+	    glBindTexture(GL_TEXTURE_2D, t2);
+	    glBegin(GL_QUADS);
+	    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	    glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
+	    glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
+	    glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
+	    glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
+	    glEnd();
+	    glPopMatrix();
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_ALPHA_TEST);
+	}
+    }
+}
+
+void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3)
+{
+    for (int i = 0; i < round*2; i++) {
+	if (z[i].dead) {
+	    if (z[i].blood != 0) {
+		glColor3f(1.0, 0.0, 0.0);
+		glPushMatrix();
+		glTranslatef(z[i].pos[0], z[i].pos[1], 0);
+		glBegin(GL_LINES);
+		for(int j = 0; j < 1000; j++) {
+		    int r = rand()%100-rand()%50;
+		    int r1 = rand()%100-rand()%50;
+		    glVertex2f((float)r, (float)r1);
+		}
+		glEnd();
+		glPopMatrix();
+		z[i].blood--;
+	    }
+	    continue;
+	}
 	z[i].set_up();
 	for (int k = i+1; k < round*2; k++) {
+	    if(z[i].dead)
+		continue;
 	    float d0 = z[i].pos[0] - z[k].pos[0];
 	    float d1 = z[i].pos[1] - z[k].pos[1];
 	    if (d0*d0+d1*d1 <= 600) {
-		z[i].vel[0] *= -1;
-		z[i].vel[1] *= -1;
+		z[i].vel[0] *= rand()%5-4;
+		z[i].vel[1] *= rand()%5-4;
+		z[i].pos[0] += z[i].vel[0];
+		z[i].pos[1] += z[i].vel[1];
+	    }
+	}
+	for (int k = 0; k < round-9; k++) {
+	    if (o[k].dead)
+		continue;
+	    float d0 = z[i].pos[0] - v[k].pos[0];
+	    float d1 = z[i].pos[1] - v[k].pos[1];
+	    if (d0*d0+d1*d1 <= 600) {
+		z[i].vel[0] *= rand()%5-4;
+		z[i].vel[1] *= rand()%5-4;
+		z[i].pos[0] += z[i].vel[0];
+		z[i].pos[1] += z[i].vel[1];
+	    }
+	}
+	for (int k = 0; k < (round-4)*2; k++) {
+	    if (v[k].dead)
+		continue;
+	    float d0 = z[i].pos[0] - o[k].pos[0];
+	    float d1 = z[i].pos[1] - o[k].pos[1];
+	    if (d0*d0+d1*d1 <= 600) {
+		z[i].vel[0] *= rand()%5-4;
+		z[i].vel[1] *= rand()%5-4;
+		z[i].pos[0] += z[i].vel[0];
+		z[i].pos[1] += z[i].vel[1];
 	    }
 	}
 	zw_z_pos(&z[i], tX, tY);
@@ -236,29 +361,78 @@ void zw_spawn_enemies(int round, int tX, int tY)
 	    z[i].vel[1] = -1;
 	z[i].pos[0] += z[i].vel[0];
 	z[i].pos[1] += z[i].vel[1];
-	glColor3fv(z[i].color);
-	glPushMatrix();
-	glTranslatef(z[i].pos[0], z[i].pos[1], 0.0f);
-	glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_LINE_LOOP);
-	for (float fill = 0; fill < 18; fill += 0.5) {
-	    for (int j = 0; j < 360; j++)
-		glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
-	}
-	glEnd();
-	glPopMatrix();
+	/*glColor3fv(z[i].color);
+	  glPushMatrix();
+	  glTranslatef(z[i].pos[0], z[i].pos[1], 0.0f);
+	  glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
+	  glBegin(GL_LINE_LOOP);
+	  for (float fill = 0; fill < 18; fill += 0.5) {
+	  for (int j = 0; j < 360; j++)
+	  glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
+	  }
+	  glEnd();
+	  glPopMatrix();*/
     }
     if (round > 4) {
 	for (int i = 0; i < (round-4)*2; i++) {
 	    if (o[i].dead)
 		continue;
 	    o[i].set_up();
+	    if (o[i].a.live) {
+		glPushMatrix();
+		glColor3f(0.5, 0.5, 0.5);
+		glTranslatef(o[i].a.pos[0], o[i].a.pos[1], 0.0f);
+		glRotatef(o[i].a.angle, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_QUADS);
+		glVertex2f(-2.0f, -7.0f);
+		glVertex2f(2.0f, -7.0f);
+		glVertex2f(2.0f, -30.0f);
+		glVertex2f(-2.0f, -30.0f);
+		glColor3f(0.5451, 0.2706, 0.0745);
+		glVertex2f(-5.0f, -30.f);
+		glVertex2f(5.0f, -30.f);
+		glVertex2f(5.0f, -32.f);
+		glVertex2f(-5.0f, -32.f);
+		glVertex2f(-1.0f, -32.f);
+		glVertex2f(1.0f, -32.f);
+		glVertex2f(1.0f, -40.f);
+		glVertex2f(-1.0f, -40.f);
+		glEnd();
+		glColor3f(0.5, 0.5, 0.5);
+		glBegin(GL_TRIANGLES);
+		glVertex2f(0.0f,0.0f);
+		glVertex2f(2.0f, -7.0f);
+		glVertex2f(-2.0f, -7.0f);
+		glEnd();
+		glColor3f(0.7, 0.7, 0.7);
+		glBegin(GL_LINES);
+		glVertex2f(0.0f, 0.0f);
+		glVertex2f(0.0f, -30.0f);
+		glEnd();
+		glPopMatrix();
+	    }
 	    for (int k = i+1; k < (round-4)*2; k++) {
+		if (o[k].dead)
+		    continue;
 		float d0 = o[i].pos[0] - o[k].pos[0];
 		float d1 = o[i].pos[1] - o[k].pos[1];
 		if (d0*d0+d1*d1 <= 600) {
 		    o[i].vel[0] *= -1;
 		    o[i].vel[1] *= -1;
+		    o[i].pos[0] += o[i].vel[0];
+		    o[i].pos[1] += o[i].vel[1];
+		}
+	    }
+	    for (int k = 0; k < round-9; k++) {
+		if (v[k].dead)
+		    continue;
+		float d0 = o[i].pos[0] - v[k].pos[0];
+		float d1 = o[i].pos[1] - v[k].pos[1];
+		if (d0*d0+d1*d1 <= 600) {
+		    o[i].vel[0] *= rand()%5-4;
+		    o[i].vel[1] *= rand()%5-4;
+		    o[i].pos[0] += o[i].vel[0];
+		    o[i].pos[1] += o[i].vel[1];
 		}
 	    }
 	    zw_o_pos(&o[i], tX, tY);
@@ -272,9 +446,50 @@ void zw_spawn_enemies(int round, int tX, int tY)
 		o[i].vel[1] = -1;
 	    o[i].pos[0] += o[i].vel[0];
 	    o[i].pos[1] += o[i].vel[1];
-	    glColor3fv(o[i].color);
+	    /*glColor3fv(o[i].color);
+	      glPushMatrix();
+	      glTranslatef(o[i].pos[0], o[i].pos[1], 0.0f);
+	      glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
+	      glBegin(GL_LINE_LOOP);
+	      for (float fill = 0; fill < 18; fill += 0.5) {
+	      for (int j = 0; j < 360; j++)
+	      glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
+	      }
+	      glEnd();
+	      glPopMatrix();*/
+	}
+    }
+    if (round > 10) {
+	for (int i = 0; i < round-9; i++) {
+	    if (v[i].dead)
+		continue;
+	    v[i].set_up();
+	    for (int k = i+1; k < round-9; k++) {
+		if (v[k].dead)
+		    continue;
+		float d0 = v[i].pos[0] - v[k].pos[0];
+		float d1 = v[i].pos[1] - v[k].pos[1];
+		if (d0*d0+d1*d1 <= 600) {
+		    v[i].vel[0] *= rand()%5-4;
+		    v[i].vel[1] *= rand()%5-4;
+		    v[i].pos[0] += v[i].vel[0];
+		    v[i].pos[1] += v[i].vel[1];
+		}
+	    }
+	    //zw_v_pos(&v[i], tX, tY);
+	    if(v[i].vel[0] >= 1)
+		v[i].vel[0] = 1;
+	    if(v[i].vel[0] <= -1)
+		v[i].vel[0] = -1;
+	    if(v[i].vel[1] >= 1)
+		v[i].vel[1] = 1;
+	    if(v[i].vel[1] <= -1)
+		v[i].vel[1] = -1;
+	    v[i].pos[0] += v[i].vel[0];
+	    v[i].pos[1] += v[i].vel[1];
+	    glColor3fv(v[i].color);
 	    glPushMatrix();
-	    glTranslatef(o[i].pos[0], o[i].pos[1], 0.0f);
+	    glTranslatef(v[i].pos[0], v[i].pos[1], 0.0f);
 	    glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
 	    glBegin(GL_LINE_LOOP);
 	    for (float fill = 0; fill < 18; fill += 0.5) {
@@ -284,51 +499,16 @@ void zw_spawn_enemies(int round, int tX, int tY)
 	    glEnd();
 	    glPopMatrix();
 	}
-	if (round > 10) {
-	    for (int i = 0; i < round-9; i++) {
-		if (v[i].dead)
-		    continue;
-		v[i].set_up();
-		for (int k = i+1; k < round-9; k++) {
-		    float d0 = v[i].pos[0] - v[k].pos[0];
-		    float d1 = v[i].pos[1] - v[k].pos[1];
-		    if (d0*d0+d1*d1 <= 600) {
-			v[i].vel[0] *= -1;
-			v[i].vel[1] *= -1;
-		    }
-		}
-		//zw_v_pos(&v[i], tX, tY);
-		if(v[i].vel[0] >= 1)
-		    v[i].vel[0] = 1;
-		if(v[i].vel[0] <= -1)
-		    v[i].vel[0] = -1;
-		if(v[i].vel[1] >= 1)
-		    v[i].vel[1] = 1;
-		if(v[i].vel[1] <= -1)
-		    v[i].vel[1] = -1;
-		v[i].pos[0] += v[i].vel[0];
-		v[i].pos[1] += v[i].vel[1];
-		glColor3fv(v[i].color);
-		glPushMatrix();
-		glTranslatef(v[i].pos[0], v[i].pos[1], 0.0f);
-		glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINE_LOOP);
-		for (float fill = 0; fill < 18; fill += 0.5) {
-		    for (int j = 0; j < 360; j++)
-			glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
-		}
-		glEnd();
-		glPopMatrix();
-	    }
-	}
     }
+    zw_placeEnemies(t1, t2, t3, round);
 }
 
 bool zw_check_enemy_hit(int round, float x, float y)
 {
     for (int i = 0; i < round*2; i++) {
-	if (z[i].dead)
+	if (z[i].dead) {
 	    continue;
+	}
 	float d0 = z[i].pos[0] - x;
 	float d1 = z[i].pos[1] - y;
 	if(d0*d0 + d1*d1 <= 324) {
@@ -380,4 +560,39 @@ void zw_reset_round()
 	v[i].new_round = true;
 	v[i].set_up();
     }
+}
+
+void zw_drawSword(float x, float y, float angle)
+{
+    glPushMatrix();
+    glColor3f(0.5, 0.5, 0.5);
+    glTranslatef(x, y, 0.0f);
+    glRotatef(angle, 0.0f, 0.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glVertex2f(-2.0f, -7.0f);
+    glVertex2f(2.0f, -7.0f);
+    glVertex2f(2.0f, -30.0f);
+    glVertex2f(-2.0f, -30.0f);
+    glColor3f(0.5451, 0.2706, 0.0745);
+    glVertex2f(-5.0f, -30.f);
+    glVertex2f(5.0f, -30.f);
+    glVertex2f(5.0f, -32.f);
+    glVertex2f(-5.0f, -32.f);
+    glVertex2f(-1.0f, -32.f);
+    glVertex2f(1.0f, -32.f);
+    glVertex2f(1.0f, -40.f);
+    glVertex2f(-1.0f, -40.f);
+    glEnd();
+    glColor3f(0.5, 0.5, 0.5);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(0.0f,0.0f);
+    glVertex2f(2.0f, -7.0f);
+    glVertex2f(-2.0f, -7.0f);
+    glEnd();
+    glColor3f(0.7, 0.7, 0.7);
+    glBegin(GL_LINES);
+    glVertex2f(0.0f, 0.0f);
+    glVertex2f(0.0f, -30.0f);
+    glEnd();
+    glPopMatrix();
 }

@@ -87,7 +87,7 @@ extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
 extern void zw_gameover(double yres, double xres);
-extern void zw_spawn_enemies(int round, int tX, int tY);
+extern void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3);
 extern bool zw_check_enemy_hit(int round, float x, float y);
 extern bool zw_player_hit(int round, float x, float y);
 extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, float angle, GLuint texture);
@@ -95,6 +95,7 @@ extern void gameBackground(int xres, int yres, GLuint texid);
 extern void renderHealth(int health);
 extern void renderBoard(int xres, int yres);
 extern void zw_reset_round();
+extern void zw_drawSword(float x, float y, float angle);
 //-----------------------------------------------------------------------------
 class Image {
 	public:
@@ -149,8 +150,8 @@ class Image {
 				unlink(ppmname);
 		}
 };
-Image img[8] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png", "gameovertexture.jpg", "./menuscreen.jpg" };
-
+Image img[10] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
+    "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg"};
 
 unsigned char *buildAlphaData(Image *img)
 {
@@ -203,7 +204,8 @@ class Global {
 		GLuint gameoverTexture;
 		GLuint backgroundTexture;
 		GLuint playerTexture;
-		GLuint playerSilhouette;
+		GLuint zombieTexture;
+		GLuint orcTexture;
 		Global() {
 			//Changed by Zakary Worman: Just made this resolution slightly larger
 			xres = 1920;
@@ -245,25 +247,6 @@ class Bullet {
 	public:
 		Bullet() { }
 };
-
-/*class Asteroid {
-  public:
-  Vec pos;
-  Vec vel;
-  int nverts;
-  Flt radius;
-  Vec vert[360];
-  float angle;
-  float rotate;
-  float color[3];
-  struct Asteroid *prev;
-  struct Asteroid *next;
-  public:
-  Asteroid() {
-  prev = NULL;
-  next = NULL;
-  }
-  };*/
 
 class Game {
 	public:
@@ -602,6 +585,41 @@ void init_opengl()
 	//
 	//must build a new set of data...*/
 	unsigned char *silhouetteData = buildAlphaData(&img[5]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+	free(silhouetteData);
+	//-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	//Zombie Sprite - Zakary
+	//
+	glGenTextures(1, &gl.zombieTexture);
+	w = img[8].width;
+	h = img[8].height;
+
+	glBindTexture(GL_TEXTURE_2D, gl.zombieTexture);
+
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+
+	silhouetteData = buildAlphaData(&img[8]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+			GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+	free(silhouetteData);
+	//-------------------------------------------------------------------------
+
+	//-------------------------------------------------------------------------
+	//Orc Sprite - Zakary
+	//
+	glGenTextures(1, &gl.orcTexture);
+	w = img[9].width;
+	h = img[9].height;
+
+	glBindTexture(GL_TEXTURE_2D, gl.orcTexture);
+
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+
+	silhouetteData = buildAlphaData(&img[9]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
 			GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
 	free(silhouetteData);
@@ -1284,7 +1302,7 @@ void render()
 		glPopMatrix();
 	}
 	//Draw the asteroids
-	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
+	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.zombieTexture);
 	/*Asteroid *a = g.ahead;
 	  while (a) {
 	//Log("draw asteroid...\n");
@@ -1309,39 +1327,8 @@ void render()
 	//Draw the bullets
 	Bullet *b = &g.barr[0];
 	for (int i=0; i<g.nbullets; i++) {
-		glPushMatrix();
-		//Log("draw bullet...\n");
-		glColor3f(0.5, 0.5, 0.5);
-		glTranslatef(b->pos[0], b->pos[1], 0.0f);
-		glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_QUADS);
-		glVertex2f(-2.0f, -7.0f);
-		glVertex2f(2.0f, -7.0f);
-		glVertex2f(2.0f, -30.0f);
-		glVertex2f(-2.0f, -30.0f);
-		glColor3f(0.5451, 0.2706, 0.0745);
-		glVertex2f(-5.0f, -30.f);
-		glVertex2f(5.0f, -30.f);
-		glVertex2f(5.0f, -32.f);
-		glVertex2f(-5.0f, -32.f);
-		glVertex2f(-1.0f, -32.f);
-		glVertex2f(1.0f, -32.f);
-		glVertex2f(1.0f, -40.f);
-		glVertex2f(-1.0f, -40.f);
-		glEnd();
-		glColor3f(0.5, 0.5, 0.5);
-		glBegin(GL_TRIANGLES);
-		glVertex2f(0.0f,0.0f);
-		glVertex2f(2.0f, -7.0f);
-		glVertex2f(-2.0f, -7.0f);
-		glEnd();
-		glColor3f(0.7, 0.7, 0.7);
-		glBegin(GL_LINES);
-		glVertex2f(0.0f, 0.0f);
-		glVertex2f(0.0f, -30.0f);
-		glEnd();
-		glPopMatrix();
-		++b;
+	    zw_drawSword(b->pos[0], b->pos[1], b->angle);
+	    ++b;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//Draw Circle over Crosshair, Zachary Kaiser

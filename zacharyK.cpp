@@ -52,7 +52,7 @@ void zk_drawCircle() {
 
 void zk_gameovertext(int x, int y) {
 	Rect r;
-	r.bot = y - y/5;
+	r.bot = y - y/6;
 	r.left = x/2;
 	r.center = x/3;
 
@@ -60,22 +60,67 @@ void zk_gameovertext(int x, int y) {
 	ggprint16(&r, 16, 0x00ff0000, "Press F to pay respects, and also play again.");
 }
 
+void zk_showhealthtext(int x, int y) {
+	Rect r;
+	r.bot = 165;
+	r.left = 25;
 
-void zk_gameoverimage(int x, int y, GLuint texid) {
-    glColor3ub(255,255,255);
+	ggprint16(&r, 16, 0x00ffffff, "HP: ");
+}
+
+void zk_blackbar() {
+	glBegin(GL_QUADS);
+	glColor3f(0, 0, 0);
+	glVertex2f(0, 0);
+	glVertex2f(55, 0);
+	glVertex2f(55, 155);
+	glVertex2f(0, 155);
+	glEnd();
+}
+
+void zk_pausemenu(int x, int y) {
+	glColor3f(0, 0, 0);
 
 	glPushMatrix();
-	glTranslatef((float)x, (float)y, 0);
-	glBindTexture(GL_TEXTURE_2D, texid);
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(-x/2, -y/2);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-x/2, y/2);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(x/2, y/2);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x/2, -y/2);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
 	glEnd();
 	glPopMatrix();
 }
 
+void zk_pausetext(int x, int y) {
+	Rect r;
+
+	r.bot = y - y/6;
+	r.left = x/2;
+	r.center = x/3;
+
+	ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
+}
+
+void zk_gameoverimage(int x, int y, GLuint texid) {
+    	glColor3ub(255, 255, 255);
+
+    	//glClear(GL_COLOR_BUFFER_BIT);
+	glPushMatrix();
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+	glEnd();
+	glPopMatrix();
+}
+
+void zk_resetpups(int arr[]) {
+	for(int i=0; i<5; i++) {
+		arr[i] = 0;
+	}
+}
 void zk_savemouse(int x, int y) {
 	k.x = x;
 	k.y = y;

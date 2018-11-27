@@ -66,7 +66,12 @@ extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
 extern void zk_gameovertext(int x, int y);
+extern void zk_showhealthtext(int x, int y);
 extern void zk_savemouse(int x, int y);
+extern void zk_resetpups(int powerups[]);
+extern void zk_blackbar();
+extern void zk_pausetext(int x, int y);
+extern void zk_pausemenu(int x, int y);
 extern void zk_drawCircle();
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
@@ -194,6 +199,7 @@ class Global {
 		int xres, yres;
 		char keys[65536];
 		bool credits;
+		bool pause;
 		bool gameoverScreen = false;
 		bool menuScreen = true;
 		GLuint seahorseTexture;
@@ -213,6 +219,7 @@ class Global {
 			//------------------------------------------------------------------
 			memset(keys, 0, 65536);
 			credits = false;
+			pause = false;
 		}
 } gl;
 
@@ -672,14 +679,14 @@ void check_mouse(XEvent *e)
 	if (e->type == ButtonRelease)
 		return;
 	if (e->type == ButtonPress) {
-		//edited by Zachary Kaiser: Messing around with bullet physics to create new weapons
+		//edited by Zachary Kaiser: Messing around with bullet physics
 		if (e->xbutton.button==1) {
 			//Left button is down
 			//a little time between each bullet
 			struct timespec bt;
 			clock_gettime(CLOCK_REALTIME, &bt);
 			double ts = timeDiff(&g.bulletTimer, &bt);
-			if (ts > 1) {
+			if (ts > 0.7) {
 				timeCopy(&g.bulletTimer, &bt);
 				//shoot a bullet...
 				if (g.nbullets < MAX_BULLETS) {
@@ -699,8 +706,8 @@ void check_mouse(XEvent *e)
 					Flt ydir = sin(rad);
 					b->pos[0] += xdir*20.0f;
 					b->pos[1] += ydir*20.0f;
-					b->vel[0] += xdir*2.0 + rnd()*0.5;
-					b->vel[1] += ydir*2.0 + rnd()*0.5;
+					b->vel[0] += xdir*2 + rnd()*0.2;
+					b->vel[1] += ydir*2 + rnd()*0.2;
 					b->color[0] = 0.0f;
 					b->color[1] = 0.0f;
 					b->color[2] = 1.0f;
@@ -832,7 +839,8 @@ int check_keys(XEvent *e)
 		case XK_c:
 			gl.credits = !gl.credits;
 			break;
-		case XK_a:
+		case XK_p:
+			gl.pause = !gl.pause;
 			break;
 		case XK_d:
 			break;
@@ -927,13 +935,16 @@ void physics()
 		//How long has bullet been alive?
 		//Edited by Zachary Kaiser: decreased amount of time to delete bullet
 		double ts = timeDiff(&b->time, &bt);
-		if (ts > 5.0) {
+		if (ts > 3.5) {
 			//time to delete the bullet.
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
 					sizeof(Bullet));
 			g.nbullets--;
 			//do not increment i.
 			continue;
+		}
+		if(g.roundEnd) {
+			g.nbullets--;
 		}
 		//move the bullet
 		b->pos[0] += b->vel[0];
@@ -1186,62 +1197,66 @@ void render()
 		return;
 	}
 	if(g.ship.health <= 0) {
-		Rect r;
-		r.bot = gl.yres - gl.yres/5;
-		r.left = gl.xres/2;
-		r.center = gl.xres/3;
-		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-		zk_gameovertext(gl.xres, gl.yres);
-		if(gl.keys[XK_f]) {
-			gl.menuScreen = true;
-			g.ship.health = 3;
-			g.roundEnd = true;
-			g.round = 0;
-			zw_reset_round();
-		}	
-		zk_drawCircle();
-		//zw_gameover(gl.yres, gl.xres);
-		return;
+	    zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+	    zk_gameovertext(gl.xres, gl.yres);
+	    if(gl.keys[XK_f]) {
+		gl.menuScreen = true;
+		g.ship.health = 3;
+		g.roundEnd = true;
+		g.round = 0;
+		zw_reset_round();
+		g.ship.hit_recent = 0;
+		zk_resetpups(powerups);
+	    }	
+	    zk_drawCircle();
+	    //zw_gameover(gl.yres, gl.xres);
+	    return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	Rect r;
 	if(gl.credits) {
-		Rect n;
-		n.bot = gl.yres - gl.yres/5;
-		n.left = gl.xres/2;
-		n.center = gl.xres/3;
-		zw_show_credits(n);
-		zk_show_credits(n);
-		bb_show_credits(n);
-		jc_show_credits(n);
-		zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-		return;
+	    Rect n;
+	    n.bot = gl.yres - gl.yres/5;
+	    n.left = gl.xres/2;
+	    n.center = gl.xres/3;
+	    zw_show_credits(n);
+	    zk_show_credits(n);
+	    bb_show_credits(n);
+	    jc_show_credits(n);
+	    zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+	    zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+	    bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+	    jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+	    ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+	    return;
 	}
 	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	if(gl.pause) {
+	    zk_pausemenu(gl.xres, gl.yres);
+	    zk_pausetext(gl.xres, gl.yres);
+	    zk_drawCircle();
+	    return;
+	}
 	if (g.roundEnd) {
-		zk_drawCircle();
-		zw_reset_round();
-		Rect s;
-		s.bot = gl.yres - 28;
-		s.left = gl.xres/2 - 10;
-		s.center = gl.xres/2;
-		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
-		renderBoard(gl.xres, gl.yres);
-		if (gl.keys[XK_r]) {
-			g.round++;
-			g.roundEnd = false;
-			g.enemyCount = g.round*2;
-			if (g.round > 4)
-				g.enemyCount += (g.round-4)*2;
-			if (g.round > 9)
-				g.enemyCount += (g.round-9);
-		}
-		return;
+	    zk_drawCircle();
+	    zw_reset_round();
+	    Rect s;
+	    s.bot = gl.yres - 28;
+	    s.left = gl.xres/2 - 10;
+	    s.center = gl.xres/2;
+	    ggprint16(&s, 15, 0x00000000, "Press r to start next round");
+	    renderBoard(gl.xres, gl.yres);
+	    if (gl.keys[XK_r]) {
+		g.round++;
+		g.roundEnd = false;
+		g.enemyCount = g.round*2;
+		if (g.round > 4)
+		    g.enemyCount += (g.round-4)*2;
+		if (g.round > 9)
+		    g.enemyCount += (g.round-9);
+	    }
+	    return;
 	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
@@ -1289,17 +1304,17 @@ void render()
 	glEnd();
 	glPopMatrix();
 	if (g.ship.hit_recent > 0) {
-		glColor3f(1.0f,1.0f,0.0f);
-		glPushMatrix();
-		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINE_LOOP);
-		glVertex2f(-30, -40);           
-		glVertex2f(-30, 40);           
-		glVertex2f(30, 40);           
-		glVertex2f(30, -40);           
-		glEnd();
-		glPopMatrix();
+	    glColor3f(1.0f,1.0f,0.0f);
+	    glPushMatrix();
+	    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+	    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+	    glBegin(GL_LINE_LOOP);
+	    glVertex2f(-30, -40);           
+	    glVertex2f(-30, 40);           
+	    glVertex2f(30, 40);           
+	    glVertex2f(30, -40);           
+	    glEnd();
+	    glPopMatrix();
 	}
 	//Draw the asteroids
 	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.zombieTexture);
@@ -1333,7 +1348,9 @@ void render()
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//Draw Circle over Crosshair, Zachary Kaiser
 	zk_drawCircle();
+	zk_blackbar();
 	renderHealth(g.ship.health);
+	zk_showhealthtext(gl.xres, gl.yres);
 	spawnPowerups(powerups);
 	//Function below used to check renderPowerup functionality
 	//renderPowerup(gl.xres/4,3*gl.yres/4,255);

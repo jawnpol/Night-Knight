@@ -180,7 +180,7 @@ void printMenuScreen(float x, float y)
 void menuScreenImage(int x, int y, GLuint texid)
 {
     glColor3ub(255,255,255);
-    int wid = 525;
+    //int wid = 525;
 
     glPushMatrix();
     glTranslatef((float)x/2,(float)y/2,0);

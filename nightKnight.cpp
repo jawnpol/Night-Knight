@@ -50,6 +50,7 @@ const float GRAVITY = -0.2f;
 #define ALPHA 1
 const int MAX_BULLETS = 11;
 const Flt MINIMUM_ASTEROID_SIZE = 60.0;
+int powerups[5] = {0,0,0,0,0};
 extern void initSound();
 extern void cleanupSound();
 extern void playSound();
@@ -69,11 +70,15 @@ extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
 extern void zkShowPicture(int x, int y, GLuint texid);
 extern void bbShowPicture(int x, int y, GLuint texid);
-extern void renderPowerup(int x, int y, int color);
-extern bool powerupChance(int chance);
+extern void renderPowerup(int x, int y, int red, int gre, int blu);
+extern void powerupChance(int powerups[]);
+extern bool spawnChance(int chance);
+extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
-extern void menuScreenImage(float x, float y, GLuint texid);
-extern void spawnPowerup(int x_position, int y_position);
+extern void storeDeathPosition(float x, float y);
+extern void menuScreenImage(int x, int y, GLuint texid);
+extern void initButtons();
+extern void drawButtons();
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
@@ -436,6 +441,7 @@ int main()
 	logOpen();
 	initSound();
 	init_opengl();
+	//initButtons();
 	srand(time(NULL));
 	x11.set_mouse_position(100, 100);
 	int done=0;
@@ -612,6 +618,8 @@ void init_opengl()
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
 			0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
 	//-------------------------------------------------------------------------
+	
+	initButtons();
 }
 
 void normalize2d(Vec v)
@@ -927,6 +935,8 @@ void physics()
 		if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
 			g.killed++;
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+			storeDeathPosition(b->pos[0],b->pos[1]);
+			powerupChance(powerups);
 			g.nbullets--;
 			g.enemyCount--;
 			if(g.enemyCount == 0)
@@ -1144,8 +1154,10 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(gl.menuScreen) {
+		drawButtons();
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 		printMenuScreen(gl.xres, gl.yres);
+		//drawButtons();
 		return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1312,6 +1324,7 @@ void render()
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	renderHealth(g.ship.health);
+	spawnPowerups(powerups);
 	//Function below used to check renderPowerup functionality
 	//renderPowerup(gl.xres/4,3*gl.yres/4,255);
 }

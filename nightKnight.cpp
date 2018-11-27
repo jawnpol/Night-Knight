@@ -66,7 +66,10 @@ extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
 extern void zk_gameovertext(int x, int y);
+extern void zk_showhealthtext(int x, int y);
 extern void zk_savemouse(int x, int y);
+extern void zk_resetpups(int powerups[]);
+extern void zk_blackbar();
 extern void zk_drawCircle();
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
@@ -1180,6 +1183,8 @@ void render()
 			g.roundEnd = true;
 			g.round = 0;
 			zw_reset_round();
+			g.ship.hit_recent = 0;
+			zk_resetpups(powerups);
 		}	
 		zk_drawCircle();
 		//zw_gameover(gl.yres, gl.xres);
@@ -1346,7 +1351,9 @@ void render()
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//Draw Circle over Crosshair, Zachary Kaiser
 	zk_drawCircle();
+	zk_blackbar();
 	renderHealth(g.ship.health);
+	zk_showhealthtext(gl.xres, gl.yres);
 	spawnPowerups(powerups);
 	//Function below used to check renderPowerup functionality
 	//renderPowerup(gl.xres/4,3*gl.yres/4,255);

@@ -70,6 +70,8 @@ extern void zk_showhealthtext(int x, int y);
 extern void zk_savemouse(int x, int y);
 extern void zk_resetpups(int powerups[]);
 extern void zk_blackbar();
+extern void zk_pausetext(int x, int y);
+extern void zk_pausemenu(int x, int y);
 extern void zk_drawCircle();
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
@@ -196,6 +198,7 @@ class Global {
 		int xres, yres;
 		char keys[65536];
 		bool credits;
+		bool pause;
 		bool gameoverScreen = false;
 		bool menuScreen = true;
 		GLuint seahorseTexture;
@@ -214,6 +217,7 @@ class Global {
 			//------------------------------------------------------------------
 			memset(keys, 0, 65536);
 			credits = false;
+			pause = false;
 		}
 } gl;
 
@@ -657,14 +661,14 @@ void check_mouse(XEvent *e)
 	if (e->type == ButtonRelease)
 		return;
 	if (e->type == ButtonPress) {
-		//edited by Zachary Kaiser: Messing around with bullet physics to create new weapons
+		//edited by Zachary Kaiser: Messing around with bullet physics
 		if (e->xbutton.button==1) {
 			//Left button is down
 			//a little time between each bullet
 			struct timespec bt;
 			clock_gettime(CLOCK_REALTIME, &bt);
 			double ts = timeDiff(&g.bulletTimer, &bt);
-			if (ts > 1) {
+			if (ts > 0.7) {
 				timeCopy(&g.bulletTimer, &bt);
 				//shoot a bullet...
 				if (g.nbullets < MAX_BULLETS) {
@@ -684,8 +688,8 @@ void check_mouse(XEvent *e)
 					Flt ydir = sin(rad);
 					b->pos[0] += xdir*20.0f;
 					b->pos[1] += ydir*20.0f;
-					b->vel[0] += xdir*2.0 + rnd()*0.5;
-					b->vel[1] += ydir*2.0 + rnd()*0.5;
+					b->vel[0] += xdir*2 + rnd()*0.2;
+					b->vel[1] += ydir*2 + rnd()*0.2;
 					b->color[0] = 0.0f;
 					b->color[1] = 0.0f;
 					b->color[2] = 1.0f;
@@ -817,7 +821,8 @@ int check_keys(XEvent *e)
 		case XK_c:
 			gl.credits = !gl.credits;
 			break;
-		case XK_a:
+		case XK_p:
+			gl.pause = !gl.pause;
 			break;
 		case XK_d:
 			break;
@@ -912,13 +917,16 @@ void physics()
 		//How long has bullet been alive?
 		//Edited by Zachary Kaiser: decreased amount of time to delete bullet
 		double ts = timeDiff(&b->time, &bt);
-		if (ts > 5.0) {
+		if (ts > 3.5) {
 			//time to delete the bullet.
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
 					sizeof(Bullet));
 			g.nbullets--;
 			//do not increment i.
 			continue;
+		}
+		if(g.roundEnd) {
+			g.nbullets--;
 		}
 		//move the bullet
 		b->pos[0] += b->vel[0];
@@ -1210,6 +1218,11 @@ void render()
 		return;
 	}
 	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	if(gl.pause) {
+		zk_pausemenu(gl.xres, gl.yres);
+		zk_pausetext(gl.xres, gl.yres);
+		return;
+	}
 	if (g.roundEnd) {
 		zk_drawCircle();
 		zw_reset_round();

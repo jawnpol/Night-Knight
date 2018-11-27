@@ -62,7 +62,7 @@ void zk_gameovertext(int x, int y) {
 
 void zk_showhealthtext(int x, int y) {
 	Rect r;
-	r.bot = 175;
+	r.bot = 165;
 	r.left = 25;
 
 	ggprint16(&r, 16, 0x00ffffff, "HP: ");
@@ -76,6 +76,29 @@ void zk_blackbar() {
 	glVertex2f(55, 155);
 	glVertex2f(0, 155);
 	glEnd();
+}
+
+void zk_pausemenu(int x, int y) {
+	glColor3f(0, 0, 0);
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+	glEnd();
+	glPopMatrix();
+}
+
+void zk_pausetext(int x, int y) {
+	Rect r;
+
+	r.bot = y - y/6;
+	r.left = x/2;
+	r.center = x/3;
+
+	ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
 }
 
 void zk_gameoverimage(int x, int y, GLuint texid) {

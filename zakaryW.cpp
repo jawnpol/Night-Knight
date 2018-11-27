@@ -59,6 +59,7 @@ struct Zombie {
 	new_round = false;
     }
 }z[300];
+
 struct Orc {
     float dir[2];
     float pos[2];
@@ -71,6 +72,7 @@ struct Orc {
     void set_up() {
 	if (!new_round)
 	    return;
+	dead = false;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1920;
@@ -108,6 +110,7 @@ struct Vampire {
     void set_up() {
 	if(!new_round)
 	    return;
+	dead = false;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1920;

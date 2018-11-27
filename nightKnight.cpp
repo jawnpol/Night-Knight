@@ -48,7 +48,7 @@ const float TIMESLICE = 1.0f;
 const float GRAVITY = -0.2f;
 #define PI 3.141592653589793
 #define ALPHA 1
-const int MAX_BULLETS = 11;
+const int MAX_BULLETS = 100;
 const Flt MINIMUM_ASTEROID_SIZE = 60.0;
 int powerups[5] = {0,0,0,0,0};
 extern void initSound();
@@ -65,6 +65,9 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 extern void zw_show_credits(Rect &r);
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
+extern void zk_gameovertext(int x, int y);
+extern void zk_savemouse(int x, int y);
+extern void zk_drawCircle();
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
@@ -76,9 +79,10 @@ extern bool spawnChance(int chance);
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
-extern void menuScreenImage(int x, int y, GLuint texid);
 extern void initButtons();
 extern void drawButtons();
+extern void menuScreenImage(int x, int y, GLuint texid);
+extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
 extern float zw_change_angle(double posx, double posy);
@@ -189,6 +193,7 @@ class Global {
 		int xres, yres;
 		char keys[65536];
 		bool credits;
+		bool gameoverScreen = false;
 		bool menuScreen = true;
 		GLuint seahorseTexture;
 		GLuint chowderTexture;
@@ -370,7 +375,7 @@ class X11_wrapper {
 			XConfigureEvent xce = e->xconfigure;
 			if (xce.width != gl.xres || xce.height != gl.yres) {
 				//Window size did change.
-				reshape_window(xce.width, xce.height);
+				reshape_window(gl.xres, gl.yres);
 			}
 		}
 		void reshape_window(int width, int height) {
@@ -408,7 +413,7 @@ class X11_wrapper {
 			}
 			//vars to make blank cursor
 			//Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
-			/*Pixmap blank;
+			Pixmap blank;
 			  XColor dummy;
 			  char data[1] = {0};
 			  Cursor cursor;
@@ -419,7 +424,7 @@ class X11_wrapper {
 			cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
 			XFreePixmap(dpy, blank);
 			//this makes you the cursor. then set it using this function
-			XDefineCursor(dpy, win, cursor);*/
+			XDefineCursor(dpy, win, cursor);
 			//after you do not need the cursor anymore use this function.
 			//it will undo the last change done by XDefineCursor
 			//(thus do only use ONCE XDefineCursor and then XUndefineCursor):
@@ -656,7 +661,7 @@ void check_mouse(XEvent *e)
 			struct timespec bt;
 			clock_gettime(CLOCK_REALTIME, &bt);
 			double ts = timeDiff(&g.bulletTimer, &bt);
-			if (ts > 0.1) {
+			if (ts > 1) {
 				timeCopy(&g.bulletTimer, &bt);
 				//shoot a bullet...
 				if (g.nbullets < MAX_BULLETS) {
@@ -688,7 +693,7 @@ void check_mouse(XEvent *e)
 	}
 	//edited by Zachary Kaiser: Messing around with the bullet physics to create new weapons
 	//Most likely won't use right click as a weapon but just using as a quick way to test
-	if (e->xbutton.button==3) {
+	/*if (e->xbutton.button==3) {
 		//Right button is down
 		struct timespec bt;
 		clock_gettime(CLOCK_REALTIME, &bt);
@@ -719,7 +724,7 @@ void check_mouse(XEvent *e)
 				++g.nbullets;
 			}
 		}
-	}
+	}*/
 	if (e->type == MotionNotify) {
 		//if (savex != e->xbutton.x || savey != e->xbutton.y) {
 		//Mouse moved
@@ -727,9 +732,10 @@ void check_mouse(XEvent *e)
 		//and allow for aiming with mouse. The rest of this usage is found
 		//in physics
 		int x = e->xbutton.x;           //just to save the x position of mouse
-		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
+		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
 		//X11 and OpenGL start (0,0) in opposite
 		//y positions 
+		zk_savemouse(x, y);
 		zw_save_mouse_pos(x, y);        //save this position to be used
 		/*int xdiff = savex - e->xbutton.x;
 		  int ydiff = savey - e->xbutton.y;
@@ -903,7 +909,7 @@ void physics()
 		//How long has bullet been alive?
 		//Edited by Zachary Kaiser: decreased amount of time to delete bullet
 		double ts = timeDiff(&b->time, &bt);
-		if (ts > 2.0) {
+		if (ts > 5.0) {
 			//time to delete the bullet.
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
 					sizeof(Bullet));
@@ -1158,6 +1164,25 @@ void render()
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 		printMenuScreen(gl.xres, gl.yres);
 		//drawButtons();
+		zk_drawCircle();
+		return;
+	}
+	if(g.ship.health <= 0) {
+		Rect r;
+		r.bot = gl.yres - gl.yres/5;
+		r.left = gl.xres/2;
+		r.center = gl.xres/3;
+		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+		zk_gameovertext(gl.xres, gl.yres);
+		if(gl.keys[XK_f]) {
+			gl.menuScreen = true;
+			g.ship.health = 3;
+			g.roundEnd = true;
+			g.round = 0;
+			zw_reset_round();
+		}	
+		zk_drawCircle();
+		//zw_gameover(gl.yres, gl.xres);
 		return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1181,6 +1206,7 @@ void render()
 	}
 	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
 	if (g.roundEnd) {
+		zk_drawCircle();
 		zw_reset_round();
 		Rect s;
 		s.bot = gl.yres - 28;
@@ -1201,11 +1227,6 @@ void render()
 	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
-	if(g.ship.health <= 0) {
-		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-		//zw_gameover(gl.yres, gl.xres);
-		return;
-	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//
 	//Drop Shadow
@@ -1323,6 +1344,8 @@ void render()
 		++b;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+	//Draw Circle over Crosshair, Zachary Kaiser
+	zk_drawCircle();
 	renderHealth(g.ship.health);
 	spawnPowerups(powerups);
 	//Function below used to check renderPowerup functionality

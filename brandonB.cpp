@@ -134,10 +134,10 @@ void menuScreenImage(float x, float y, GLuint texid)
     glTranslatef(fx/2,fy/2,0);
     glBindTexture(GL_TEXTURE_2D, texid);
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-1920, -1080);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-1920, 1080);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(1920, 1080);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(1920, -1080);
     glEnd();
     glPopMatrix();
 

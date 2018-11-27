@@ -1149,9 +1149,27 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(gl.menuScreen) {
-		zk_drawCircle();
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 		printMenuScreen(gl.xres, gl.yres);
+		zk_drawCircle();
+		return;
+	}
+	if(g.ship.health <= 0) {
+		Rect r;
+		r.bot = gl.yres - gl.yres/5;
+		r.left = gl.xres/2;
+		r.center = gl.xres/3;
+		zk_gameoverimage(gl.xres - r.left/1.5, gl.yres - r.center/2.5, gl.gameoverTexture);
+		zk_gameovertext(gl.xres, gl.yres);
+		if(gl.keys[XK_f]) {
+			gl.menuScreen = true;
+			g.ship.health = 3;
+			g.roundEnd = true;
+			g.round = 0;
+			zw_reset_round();
+		}	
+		zk_drawCircle();
+		//zw_gameover(gl.yres, gl.xres);
 		return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -1196,24 +1214,6 @@ void render()
 	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
-	if(g.ship.health <= 0) {
-		Rect r;
-		r.bot = gl.yres - gl.yres/5;
-		r.left = gl.xres/2;
-		r.center = gl.xres/3;
-		gl.gameoverScreen = true;
-		zk_gameoverimage(gl.xres - r.left/1.5, gl.yres - r.center/2.5, gl.gameoverTexture);
-		zk_gameovertext(gl.xres, gl.yres);
-		if(gl.keys[XK_f]) {
-			gl.menuScreen = true;
-			gl.gameoverScreen = false;
-			g.ship.health = 3;
-			zw_reset_round();
-		}	
-		zk_drawCircle();
-		//zw_gameover(gl.yres, gl.xres);
-		return;
-	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//
 	//Drop Shadow

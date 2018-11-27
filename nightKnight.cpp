@@ -1179,69 +1179,66 @@ void render()
 		return;
 	}
 	if(g.ship.health <= 0) {
-		Rect r;
-		r.bot = gl.yres - gl.yres/5;
-		r.left = gl.xres/2;
-		r.center = gl.xres/3;
-		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-		zk_gameovertext(gl.xres, gl.yres);
-		if(gl.keys[XK_f]) {
-			gl.menuScreen = true;
-			g.ship.health = 3;
-			g.roundEnd = true;
-			g.round = 0;
-			zw_reset_round();
-			g.ship.hit_recent = 0;
-			zk_resetpups(powerups);
-		}	
-		zk_drawCircle();
-		//zw_gameover(gl.yres, gl.xres);
-		return;
+	    zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+	    zk_gameovertext(gl.xres, gl.yres);
+	    if(gl.keys[XK_f]) {
+		gl.menuScreen = true;
+		g.ship.health = 3;
+		g.roundEnd = true;
+		g.round = 0;
+		zw_reset_round();
+		g.ship.hit_recent = 0;
+		zk_resetpups(powerups);
+	    }	
+	    zk_drawCircle();
+	    //zw_gameover(gl.yres, gl.xres);
+	    return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	Rect r;
 	if(gl.credits) {
-		Rect n;
-		n.bot = gl.yres - gl.yres/5;
-		n.left = gl.xres/2;
-		n.center = gl.xres/3;
-		zw_show_credits(n);
-		zk_show_credits(n);
-		bb_show_credits(n);
-		jc_show_credits(n);
-		zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-		return;
+	    Rect n;
+	    n.bot = gl.yres - gl.yres/5;
+	    n.left = gl.xres/2;
+	    n.center = gl.xres/3;
+	    zw_show_credits(n);
+	    zk_show_credits(n);
+	    bb_show_credits(n);
+	    jc_show_credits(n);
+	    zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+	    zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+	    bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+	    jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+	    ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+	    return;
 	}
 	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
 	if(gl.pause) {
-		zk_pausemenu(gl.xres, gl.yres);
-		zk_pausetext(gl.xres, gl.yres);
-		return;
+	    zk_pausemenu(gl.xres, gl.yres);
+	    zk_pausetext(gl.xres, gl.yres);
+	    zk_drawCircle();
+	    return;
 	}
 	if (g.roundEnd) {
-		zk_drawCircle();
-		zw_reset_round();
-		Rect s;
-		s.bot = gl.yres - 28;
-		s.left = gl.xres/2 - 10;
-		s.center = gl.xres/2;
-		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
-		renderBoard(gl.xres, gl.yres);
-		if (gl.keys[XK_r]) {
-			g.round++;
-			g.roundEnd = false;
-			g.enemyCount = g.round*2;
-			if (g.round > 4)
-				g.enemyCount += (g.round-4)*2;
-			if (g.round > 9)
-				g.enemyCount += (g.round-9);
-		}
-		return;
+	    zk_drawCircle();
+	    zw_reset_round();
+	    Rect s;
+	    s.bot = gl.yres - 28;
+	    s.left = gl.xres/2 - 10;
+	    s.center = gl.xres/2;
+	    ggprint16(&s, 15, 0x00000000, "Press r to start next round");
+	    renderBoard(gl.xres, gl.yres);
+	    if (gl.keys[XK_r]) {
+		g.round++;
+		g.roundEnd = false;
+		g.enemyCount = g.round*2;
+		if (g.round > 4)
+		    g.enemyCount += (g.round-4)*2;
+		if (g.round > 9)
+		    g.enemyCount += (g.round-9);
+	    }
+	    return;
 	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
@@ -1289,17 +1286,17 @@ void render()
 	glEnd();
 	glPopMatrix();
 	if (g.ship.hit_recent > 0) {
-		glColor3f(1.0f,1.0f,0.0f);
-		glPushMatrix();
-		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_LINE_LOOP);
-		glVertex2f(-30, -40);           
-		glVertex2f(-30, 40);           
-		glVertex2f(30, 40);           
-		glVertex2f(30, -40);           
-		glEnd();
-		glPopMatrix();
+	    glColor3f(1.0f,1.0f,0.0f);
+	    glPushMatrix();
+	    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+	    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+	    glBegin(GL_LINE_LOOP);
+	    glVertex2f(-30, -40);           
+	    glVertex2f(-30, 40);           
+	    glVertex2f(30, 40);           
+	    glVertex2f(30, -40);           
+	    glEnd();
+	    glPopMatrix();
 	}
 	//Draw the asteroids
 	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1]);
@@ -1327,39 +1324,39 @@ void render()
 	//Draw the bullets
 	Bullet *b = &g.barr[0];
 	for (int i=0; i<g.nbullets; i++) {
-		glPushMatrix();
-		//Log("draw bullet...\n");
-		glColor3f(0.5, 0.5, 0.5);
-		glTranslatef(b->pos[0], b->pos[1], 0.0f);
-		glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_QUADS);
-		glVertex2f(-2.0f, -7.0f);
-		glVertex2f(2.0f, -7.0f);
-		glVertex2f(2.0f, -30.0f);
-		glVertex2f(-2.0f, -30.0f);
-		glColor3f(0.5451, 0.2706, 0.0745);
-		glVertex2f(-5.0f, -30.f);
-		glVertex2f(5.0f, -30.f);
-		glVertex2f(5.0f, -32.f);
-		glVertex2f(-5.0f, -32.f);
-		glVertex2f(-1.0f, -32.f);
-		glVertex2f(1.0f, -32.f);
-		glVertex2f(1.0f, -40.f);
-		glVertex2f(-1.0f, -40.f);
-		glEnd();
-		glColor3f(0.5, 0.5, 0.5);
-		glBegin(GL_TRIANGLES);
-		glVertex2f(0.0f,0.0f);
-		glVertex2f(2.0f, -7.0f);
-		glVertex2f(-2.0f, -7.0f);
-		glEnd();
-		glColor3f(0.7, 0.7, 0.7);
-		glBegin(GL_LINES);
-		glVertex2f(0.0f, 0.0f);
-		glVertex2f(0.0f, -30.0f);
-		glEnd();
-		glPopMatrix();
-		++b;
+	    glPushMatrix();
+	    //Log("draw bullet...\n");
+	    glColor3f(0.5, 0.5, 0.5);
+	    glTranslatef(b->pos[0], b->pos[1], 0.0f);
+	    glRotatef(b->angle, 0.0f, 0.0f, 1.0f);
+	    glBegin(GL_QUADS);
+	    glVertex2f(-2.0f, -7.0f);
+	    glVertex2f(2.0f, -7.0f);
+	    glVertex2f(2.0f, -30.0f);
+	    glVertex2f(-2.0f, -30.0f);
+	    glColor3f(0.5451, 0.2706, 0.0745);
+	    glVertex2f(-5.0f, -30.f);
+	    glVertex2f(5.0f, -30.f);
+	    glVertex2f(5.0f, -32.f);
+	    glVertex2f(-5.0f, -32.f);
+	    glVertex2f(-1.0f, -32.f);
+	    glVertex2f(1.0f, -32.f);
+	    glVertex2f(1.0f, -40.f);
+	    glVertex2f(-1.0f, -40.f);
+	    glEnd();
+	    glColor3f(0.5, 0.5, 0.5);
+	    glBegin(GL_TRIANGLES);
+	    glVertex2f(0.0f,0.0f);
+	    glVertex2f(2.0f, -7.0f);
+	    glVertex2f(-2.0f, -7.0f);
+	    glEnd();
+	    glColor3f(0.7, 0.7, 0.7);
+	    glBegin(GL_LINES);
+	    glVertex2f(0.0f, 0.0f);
+	    glVertex2f(0.0f, -30.0f);
+	    glEnd();
+	    glPopMatrix();
+	    ++b;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//Draw Circle over Crosshair, Zachary Kaiser

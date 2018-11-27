@@ -122,22 +122,19 @@ void printMenuScreen(float x, float y)
 
 }
 
-void menuScreenImage(float x, float y, GLuint texid)
+void menuScreenImage(int x, int y, GLuint texid)
 {
     glColor3ub(255,255,255);
     int wid = 525;
 
-    float fx = (float) x;
-    float fy = (float) y;
-
     glPushMatrix();
-    glTranslatef(fx/2,fy/2,0);
+    glTranslatef((float)x/2,(float)y/2,0);
     glBindTexture(GL_TEXTURE_2D, texid);
     glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2i(-1920, -1080);
-    glTexCoord2f(0.0f, 0.0f); glVertex2i(-1920, 1080);
-    glTexCoord2f(1.0f, 0.0f); glVertex2i(1920, 1080);
-    glTexCoord2f(1.0f, 1.0f); glVertex2i(1920, -1080);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-x/2, -y/2);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-x/2, y/2);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(x/2, y/2);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(x/2, -y/2);
     glEnd();
     glPopMatrix();
 

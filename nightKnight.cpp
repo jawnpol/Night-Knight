@@ -75,7 +75,7 @@ extern void bbShowPicture(int x, int y, GLuint texid);
 extern void renderPowerup(int x, int y, int color);
 extern bool powerupChance(int chance);
 extern void printMenuScreen(float x, float y);
-extern void menuScreenImage(float x, float y, GLuint texid);
+extern void menuScreenImage(int x, int y, GLuint texid);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
@@ -369,7 +369,7 @@ class X11_wrapper {
 			XConfigureEvent xce = e->xconfigure;
 			if (xce.width != gl.xres || xce.height != gl.yres) {
 				//Window size did change.
-				reshape_window(xce.width, xce.height);
+				reshape_window(gl.xres, gl.yres);
 			}
 		}
 		void reshape_window(int width, int height) {
@@ -723,7 +723,7 @@ void check_mouse(XEvent *e)
 		//and allow for aiming with mouse. The rest of this usage is found
 		//in physics
 		int x = e->xbutton.x;           //just to save the x position of mouse
-		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because 
+		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
 		//X11 and OpenGL start (0,0) in opposite
 		//y positions 
 		zk_savemouse(x, y);
@@ -1159,7 +1159,7 @@ void render()
 		r.bot = gl.yres - gl.yres/5;
 		r.left = gl.xres/2;
 		r.center = gl.xres/3;
-		zk_gameoverimage(gl.xres - r.left/1.5, gl.yres - r.center/2.5, gl.gameoverTexture);
+		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
 		zk_gameovertext(gl.xres, gl.yres);
 		if(gl.keys[XK_f]) {
 			gl.menuScreen = true;

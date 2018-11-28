@@ -63,6 +63,7 @@ struct Zombie {
 
 
 struct Orc {
+    int health;
     float dir[2];
     float pos[2];
     float vel[2];
@@ -71,16 +72,17 @@ struct Orc {
     int stone = rand()%11;
     bool dead, new_round = true;
     //Arrow
-    	float a_start[2];
-	float a_pos[2];
-	float a_vel[2] = {0};
-	float a_angle;
-	bool a_live = false;
+    float a_start[2];
+    float a_pos[2];
+    float a_vel[2] = {0};
+    float a_angle;
+    bool a_live = false;
 
     void set_up() {
 	if (!new_round)
 	    return;
 	dead = false;
+	health = 2;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1920;
@@ -211,16 +213,16 @@ void zw_z_pos(Zombie *z, int tX, int tY) {
 }
 
 void zw_o_pos(Orc *o, int tX, int tY) {
-	float d0, d1;
+    float d0, d1;
     o->angle = atan2(o->pos[1]-tY, o->pos[0]-tX)*180/PI;
-	if (o->a_live) {
-	    o->a_pos[0] += o->a_vel[0];
-	    o->a_pos[1] += o->a_vel[1];
-	    d0 = o->a_start[0] - o->a_pos[0];
-	    d1 = o->a_start[1] - o->a_pos[1];
-	    if (d0*d0+d1*d1 >= 100000)
-		o->a_live = false;
-	}
+    if (o->a_live) {
+	o->a_pos[0] += o->a_vel[0];
+	o->a_pos[1] += o->a_vel[1];
+	d0 = o->a_start[0] - o->a_pos[0];
+	d1 = o->a_start[1] - o->a_pos[1];
+	if (d0*d0+d1*d1 >= 100000)
+	    o->a_live = false;
+    }
     d0 = o->pos[0]-tX;
     d1 = o->pos[1]-tY;
     if (d0*d0+d1*d1 <= 100000) {
@@ -382,35 +384,37 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 		continue;
 	    o[i].set_up();
 	    if (o[i].a_live) {
+		//draw arrow
 		glPushMatrix();
-		glColor3f(0.5, 0.5, 0.5);
 		glTranslatef(o[i].a_pos[0], o[i].a_pos[1], 0.0f);
 		glRotatef(o[i].a_angle+90, 0.0f, 0.0f, 1.0f);
-		glBegin(GL_QUADS);
-		glVertex2f(-2.0f, -7.0f);
-		glVertex2f(2.0f, -7.0f);
-		glVertex2f(2.0f, -30.0f);
-		glVertex2f(-2.0f, -30.0f);
-		glColor3f(0.5451, 0.2706, 0.0745);
-		glVertex2f(-5.0f, -30.f);
-		glVertex2f(5.0f, -30.f);
-		glVertex2f(5.0f, -32.f);
-		glVertex2f(-5.0f, -32.f);
-		glVertex2f(-1.0f, -32.f);
-		glVertex2f(1.0f, -32.f);
-		glVertex2f(1.0f, -40.f);
-		glVertex2f(-1.0f, -40.f);
-		glEnd();
 		glColor3f(0.5, 0.5, 0.5);
 		glBegin(GL_TRIANGLES);
 		glVertex2f(0.0f,0.0f);
 		glVertex2f(2.0f, -7.0f);
 		glVertex2f(-2.0f, -7.0f);
 		glEnd();
-		glColor3f(0.7, 0.7, 0.7);
+		glColor3f(0.5451, 0.2706, 0.0745);
+		glBegin(GL_QUADS);
+		glVertex2f(-1.0f, -7.0f);
+		glVertex2f(1.0f, -7.0f);
+		glVertex2f(1.0f, -30.0f);
+		glVertex2f(-1.0f, -30.0f);
+		glEnd();
+		glColor3f(0.0, 0.4, 0.4);
 		glBegin(GL_LINES);
-		glVertex2f(0.0f, 0.0f);
+		glVertex2f(-5.0f, -34.0f);
 		glVertex2f(0.0f, -30.0f);
+		glVertex2f(5.0f, -34.f);
+		glVertex2f(0.0f, -30.0f);
+		glVertex2f(-5.0f, -30.0f);
+		glVertex2f(0.0f, -26.0f);
+		glVertex2f(5.0f, -30.0f);
+		glVertex2f(0.0f, -26.0f);
+		glVertex2f(-5.0f, -26.0f);
+		glVertex2f(0.0f, -22.0f);
+		glVertex2f(5.0f, -26.0f);
+		glVertex2f(0.0f, -22.0f);
 		glEnd();
 		glPopMatrix();
 	    }
@@ -525,8 +529,11 @@ bool zw_check_enemy_hit(int round, float x, float y)
 	float d0 = o[i].pos[0] - x;
 	float d1 = o[i].pos[1] - y;
 	if(d0*d0 + d1*d1 <= 324) {
-	    o[i].dead = true;
-	    return 1;
+	    o[i].health--;
+	    if (o[i].health == 0) {
+	    	o[i].dead = true;
+	    	return 1;
+	    }
 	}
     }
     return false;
@@ -541,8 +548,20 @@ bool zw_player_hit(int round, float x, float y)
 	float d0 = z[i].pos[0] - x;
 	float d1 = z[i].pos[1] - y;
 	if(d0*d0 + d1*d1 <= 400) { 
-	    z[i].vel[0] *= -1.0;
-	    z[i].vel[1] *= -1.0;
+	    z[i].vel[0] = -10.0;
+	    z[i].vel[1] = -10.0;
+	    z[i].pos[0] -= 0.01*x;
+	    z[i].pos[1] -= 0.01*y;
+	    return 1;
+	}
+    }
+    for (int i = 0; i < (round-4)*2; i++) {
+	if (!o[i].a_live)
+	    continue;
+	float d0 = o[i].a_pos[0] - x;
+	float d1 = o[i].a_pos[1] - y;
+	if(d0*d0 + d1*d1 <= 400) {
+	    o[i].a_live = false; 
 	    return 1;
 	}
     }

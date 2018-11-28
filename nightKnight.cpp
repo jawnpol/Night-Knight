@@ -408,13 +408,13 @@ class X11_wrapper {
 			//vars to make blank cursor
 			//Zakary Worman: Changed to see mouse, will need to change it to a crosshair later
 			Pixmap blank;
-			  XColor dummy;
-			  char data[1] = {0};
-			  Cursor cursor;
+			XColor dummy;
+			char data[1] = {0};
+			Cursor cursor;
 			//make a blank cursor
 			blank = XCreateBitmapFromData (dpy, win, data, 1, 1);
 			if (blank == None)
-			std::cout << "error: out of memory." << std::endl;
+				std::cout << "error: out of memory." << std::endl;
 			cursor = XCreatePixmapCursor(dpy, blank, blank, &dummy, &dummy, 0, 0);
 			XFreePixmap(dpy, blank);
 			//this makes you the cursor. then set it using this function
@@ -665,7 +665,7 @@ void init_opengl()
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
 			0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
 	//-------------------------------------------------------------------------
-	
+
 	initButtons();
 }
 
@@ -736,36 +736,36 @@ void check_mouse(XEvent *e)
 	//edited by Zachary Kaiser: Messing around with the bullet physics to create new weapons
 	//Most likely won't use right click as a weapon but just using as a quick way to test
 	/*if (e->xbutton.button==3) {
-		//Right button is down
-		struct timespec bt;
-		clock_gettime(CLOCK_REALTIME, &bt);
-		double ts = timeDiff(&g.bulletTimer, &bt);
-		if (ts > 0.1) {
-			timeCopy(&g.bulletTimer, &bt);
-			//shoot a bullet...
-			if (g.nbullets < MAX_BULLETS) {      
-				//playSound();
-				Bullet *b = &g.barr[g.nbullets];
-				timeCopy(&b->time, &bt);
-				b->pos[0] = g.ship.pos[0];
-				b->pos[1] = g.ship.pos[1];
-				b->vel[0] = g.ship.vel[0];
-				b->vel[1] = g.ship.vel[1];
-				//convert ship angle to radians
-				Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-				//convert angle to a vector
-				Flt xdir = cos(rad);
-				Flt ydir = sin(rad);
-				b->pos[0] += xdir*20.0f;
-				b->pos[1] += ydir*20.0f;
-				b->vel[0] += xdir*6.0f + rnd()*0.1;
-				b->vel[1] += ydir*6.0f + rnd()*0.1;
-				b->color[0] = 1.0f;
-				b->color[1] = 1.0f;
-				b->color[2] = 1.0f;
-				++g.nbullets;
-			}
-		}
+	//Right button is down
+	struct timespec bt;
+	clock_gettime(CLOCK_REALTIME, &bt);
+	double ts = timeDiff(&g.bulletTimer, &bt);
+	if (ts > 0.1) {
+	timeCopy(&g.bulletTimer, &bt);
+	//shoot a bullet...
+	if (g.nbullets < MAX_BULLETS) {      
+	//playSound();
+	Bullet *b = &g.barr[g.nbullets];
+	timeCopy(&b->time, &bt);
+	b->pos[0] = g.ship.pos[0];
+	b->pos[1] = g.ship.pos[1];
+	b->vel[0] = g.ship.vel[0];
+	b->vel[1] = g.ship.vel[1];
+	//convert ship angle to radians
+	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+	//convert angle to a vector
+	Flt xdir = cos(rad);
+	Flt ydir = sin(rad);
+	b->pos[0] += xdir*20.0f;
+	b->pos[1] += ydir*20.0f;
+	b->vel[0] += xdir*6.0f + rnd()*0.1;
+	b->vel[1] += ydir*6.0f + rnd()*0.1;
+	b->color[0] = 1.0f;
+	b->color[1] = 1.0f;
+	b->color[2] = 1.0f;
+	++g.nbullets;
+	}
+	}
 	}*/
 	if (e->type == MotionNotify) {
 		//if (savex != e->xbutton.x || savey != e->xbutton.y) {
@@ -1214,66 +1214,66 @@ void render()
 		return;
 	}
 	if(g.ship.health <= 0) {
-	    zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-	    zk_gameovertext(gl.xres, gl.yres);
-	    if(gl.keys[XK_f]) {
-		gl.menuScreen = true;
-		g.ship.health = 3;
-		g.roundEnd = true;
-		g.round = 0;
-		zw_reset_round();
-		g.ship.hit_recent = 0;
-		zk_resetpups(powerups);
-	    }	
-	    zk_drawCircle();
-	    //zw_gameover(gl.yres, gl.xres);
-	    return;
+		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+		zk_gameovertext(gl.xres, gl.yres);
+		if(gl.keys[XK_f]) {
+			gl.menuScreen = true;
+			g.ship.health = 3;
+			g.roundEnd = true;
+			g.round = 0;
+			zw_reset_round();
+			g.ship.hit_recent = 0;
+			zk_resetpups(powerups);
+		}	
+		zk_drawCircle();
+		//zw_gameover(gl.yres, gl.xres);
+		return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
 	gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	Rect r;
 	if(gl.credits) {
-	    Rect n;
-	    n.bot = gl.yres - gl.yres/5;
-	    n.left = gl.xres/2;
-	    n.center = gl.xres/3;
-	    zw_show_credits(n);
-	    zk_show_credits(n);
-	    bb_show_credits(n);
-	    jc_show_credits(n);
-	    zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-	    zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-	    bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-	    jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-	    ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-	    return;
+		Rect n;
+		n.bot = gl.yres - gl.yres/5;
+		n.left = gl.xres/2;
+		n.center = gl.xres/3;
+		zw_show_credits(n);
+		zk_show_credits(n);
+		bb_show_credits(n);
+		jc_show_credits(n);
+		zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+		return;
 	}
 	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
 	if(gl.pause) {
-	    zk_pausemenu(gl.xres, gl.yres);
-	    zk_pausetext(gl.xres, gl.yres);
-	    zk_drawCircle();
-	    return;
+		zk_pausemenu(gl.xres, gl.yres);
+		zk_pausetext(gl.xres, gl.yres);
+		zk_drawCircle();
+		return;
 	}
 	if (g.roundEnd) {
-	    zk_drawCircle();
-	    zw_reset_round();
-	    Rect s;
-	    s.bot = gl.yres - 28;
-	    s.left = gl.xres/2 - 10;
-	    s.center = gl.xres/2;
-	    ggprint16(&s, 15, 0x00000000, "Press r to start next round");
-	    renderBoard(gl.xres, gl.yres);
-	    if (gl.keys[XK_r]) {
-		g.round++;
-		g.roundEnd = false;
-		g.enemyCount = g.round*2;
-		if (g.round > 4)
-		    g.enemyCount += (g.round-4)*2;
-		if (g.round > 9)
-		    g.enemyCount += (g.round-9);
-	    }
-	    return;
+		zk_drawCircle();
+		zw_reset_round();
+		Rect s;
+		s.bot = gl.yres - 28;
+		s.left = gl.xres/2 - 10;
+		s.center = gl.xres/2;
+		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
+		renderBoard(gl.xres, gl.yres);
+		if (gl.keys[XK_r]) {
+			g.round++;
+			g.roundEnd = false;
+			g.enemyCount = g.round*2;
+			if (g.round > 4)
+				g.enemyCount += (g.round-4)*2;
+			if (g.round > 9)
+				g.enemyCount += (g.round-9);
+		}
+		return;
 	}
 	//glClear(GL_COLOR_BUFFER_BIT);
 	//glClear(GL_COLOR_BUFFER_BIT);
@@ -1321,17 +1321,17 @@ void render()
 	glEnd();
 	glPopMatrix();
 	if (g.ship.hit_recent > 0) {
-	    glColor3f(1.0f,1.0f,0.0f);
-	    glPushMatrix();
-	    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	    glBegin(GL_LINE_LOOP);
-	    glVertex2f(-30, -40);           
-	    glVertex2f(-30, 40);           
-	    glVertex2f(30, 40);           
-	    glVertex2f(30, -40);           
-	    glEnd();
-	    glPopMatrix();
+		glColor3f(1.0f,1.0f,0.0f);
+		glPushMatrix();
+		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(-30, -40);           
+		glVertex2f(-30, 40);           
+		glVertex2f(30, 40);           
+		glVertex2f(30, -40);           
+		glEnd();
+		glPopMatrix();
 	}
 	//Draw the asteroids
 	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.zombieTexture);
@@ -1359,8 +1359,8 @@ void render()
 	//Draw the bullets
 	Bullet *b = &g.barr[0];
 	for (int i=0; i<g.nbullets; i++) {
-	    zw_drawSword(b->pos[0], b->pos[1], b->angle);
-	    ++b;
+		zw_drawSword(b->pos[0], b->pos[1], b->angle);
+		++b;
 	}
 	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
 	//Draw Circle over Crosshair, Zachary Kaiser

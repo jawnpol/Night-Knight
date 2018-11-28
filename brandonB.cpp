@@ -21,7 +21,7 @@
 #include<GL/glx.h>
 #include<string.h>
 
-#define MAXBUTTONS 4
+#define MAXBUTTONS 2
 typedef struct t_button {
 	Rect btn;
 	char text[32];
@@ -171,8 +171,9 @@ void printMenuScreen(float x, float y)
         m.bot = y - y/5;
         m.left = x/2;
         m.center = x/3;
-
-        ggprint8b(&m, 16, 0x00ff0000, "Press space to play");
+	
+	//weird error going on with below print. if removed button disappears?
+        ggprint8b(&m, 16, 0x00ff0000, "");
 
 }
 
@@ -210,13 +211,29 @@ void menuScreenImage(int x, int y, GLuint texid1, GLuint texid2)
 
 }
 
+bool menuScreenState = true;
+bool menuScreen()
+{
+    if (menuScreenState == true) {
+	return true;
+    } else {
+	return false;
+    }
+}
+
+void startGame() 
+{
+    menuScreenState = false;
+}
+
+//initializes position and shape of buttons
 void initButtons() 
 {
     glb.numButtons = 0;
-    glb.button[glb.numButtons].btn.width = 240;
-    glb.button[glb.numButtons].btn.height = 120;
-    glb.button[glb.numButtons].btn.left = 180;
-    glb.button[glb.numButtons].btn.bot = 400;
+    glb.button[glb.numButtons].btn.width = 240;  //240->Button Dimensions
+    glb.button[glb.numButtons].btn.height = 120; //120->Saved in case
+    glb.button[glb.numButtons].btn.left = 180;   //180->Changed in 
+    glb.button[glb.numButtons].btn.bot = 400;    //400->Future
     glb.button[glb.numButtons].btn.right =
        glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.width;
     glb.button[glb.numButtons].btn.top =
@@ -238,6 +255,7 @@ void initButtons()
     glb.numButtons++;
 }
 
+//draws buttons and lines around them when mouse hovers/clicks
 void drawButtons()
 {
 	Rect r;
@@ -245,7 +263,7 @@ void drawButtons()
                 if (glb.button[i].over==1) {
                         int w=2;
                         glColor3f(1.0f, 1.0f, 1.0f);
-                        //draw a highlight around button
+                        //button highlight
                         glLineWidth(3);
                         glBegin(GL_LINE_LOOP);
                                 glVertex2i(glb.button[i].btn.left-w,  glb.button[i].btn.bot-w);
@@ -276,23 +294,38 @@ void drawButtons()
 
 void checkButtonClick(XEvent *e)
 {
-    //int lclick = 0;
+	int lclick = 0;
 	int x,y;
+	if (e->type == ButtonPress) {
+		if (e->xbutton.button == 1) {
+			lclick=1;
+			printf("Left click pressed\n");fflush(stdout);
+		}
+	}
 	x = e->xbutton.x;
 	y = e->xbutton.y;
 	//y = (yres) - y
 	y = 1080 - y;
 	//printf("does this get called?%i %i", x, y);fflush(stdout);
-	if (e->type == ButtonPress) {
-		if (e->xbutton.button==1) {
-			for (int i=0; i < glb.numButtons; i++) {
-				glb.button[i].over = 0;
-				if (x >= glb.button[i].btn.left &&
-					x <= glb.button[i].btn.right &&
-					y >= glb.button[i].btn.bot &&
-					y <- glb.button[i].btn.top) {
-					glb.button[i].over=1;
-					//printf("lol\n");fflush(stdout);
+	//if (e->type == ButtonPress) {
+	//if (e->xbutton.button==1) {
+	//lclick=1;
+	for (int i=0; i < glb.numButtons; i++) {
+		glb.button[i].over = 0;
+		if (x >= glb.button[i].btn.left &&
+		    x <= glb.button[i].btn.right &&
+		    y >= glb.button[i].btn.bot &&
+		    y <= glb.button[i].btn.top) {
+			glb.button[i].over=1;
+			//printf("over button %i\n", i);fflush(stdout);
+			if (glb.button[0].over==1) {
+				if (lclick==1) {
+					switch(i) {
+						case 0:
+							//printf("button clicked!\n");fflush(stdout);
+							startGame();
+							break;
+					}
 				}
 			}
 		}
@@ -300,18 +333,12 @@ void checkButtonClick(XEvent *e)
 
 	if (e->type == MotionNotify) {
 		if (x >= glb.button[0].btn.left &&
-			x <= glb.button[0].btn.right &&
-			y >= glb.button[0].btn.bot &&
-			y <= glb.button[0].btn.top) {
+				x <= glb.button[0].btn.right &&
+				y >= glb.button[0].btn.bot &&
+				y <= glb.button[0].btn.top) {
 			glb.button[0].over = 1;
 		} else {
 			glb.button[0].over = 0;
 		}
 	}
 }
-
-/*void startGame() 
-{
-    
-}
-*/

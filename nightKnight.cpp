@@ -84,6 +84,8 @@ extern bool spawnChance(int chance);
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
+extern bool menuScreen();
+extern void startGame();
 extern void initButtons();
 extern void drawButtons();
 extern void checkButtonClick(XEvent *e);
@@ -1153,11 +1155,11 @@ void physics()
 	}
 	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 	if (gl.keys[XK_space]) {
-		if(gl.menuScreen){
-			menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
-			gl.menuScreen = false;
-			return;
-		}
+		//if(gl.menuScreen){
+		//	menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
+		//	gl.menuScreen = false;
+		//	return;
+		//}
 		//a little time between each bullet
 		/*struct timespec bt;
 		  clock_gettime(CLOCK_REALTIME, &bt);
@@ -1203,7 +1205,7 @@ void physics()
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	if(gl.menuScreen) {
+	if(menuScreen()) {
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
 		printMenuScreen(gl.xres, gl.yres);
 		initButtons();

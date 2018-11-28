@@ -86,6 +86,7 @@ extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
 extern void initButtons();
 extern void drawButtons();
+extern void checkButtonClick(XEvent *e);
 extern void menuScreenImage(int x, int y, GLuint texid);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
@@ -445,6 +446,7 @@ int main()
 			XEvent e = x11.getXNextEvent();
 			x11.check_resize(&e);
 			check_mouse(&e);
+			checkButtonClick(&e);
 			done = check_keys(&e);
 		}
 		physics();
@@ -1189,10 +1191,10 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(gl.menuScreen) {
-		drawButtons();
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
 		printMenuScreen(gl.xres, gl.yres);
-		//drawButtons();
+		initButtons();
+		drawButtons();
 		zk_drawCircle();
 		return;
 	}

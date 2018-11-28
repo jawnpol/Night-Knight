@@ -180,7 +180,6 @@ void printMenuScreen(float x, float y)
 void menuScreenImage(int x, int y, GLuint texid)
 {
     glColor3ub(255,255,255);
-    //int wid = 525;
 
     glPushMatrix();
     glTranslatef((float)x/2,(float)y/2,0);
@@ -212,7 +211,7 @@ void initButtons()
        (glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.right) / 2;
     glb.button[glb.numButtons].btn.centery =
        (glb.button[glb.numButtons].btn.bot + glb.button[glb.numButtons].btn.top) / 2;
-    strcpy(glb.button[glb.numButtons].text, "Reset");
+    strcpy(glb.button[glb.numButtons].text, "Start Game");
     glb.button[glb.numButtons].down = 0;
     glb.button[glb.numButtons].click = 0;
     glb.button[glb.numButtons].btnColor[0] = 1.0f;
@@ -227,8 +226,9 @@ void initButtons()
 
 void drawButtons()
 {
+	Rect r;
     for (int i=0; i<glb.numButtons; i++) {
-                if (glb.button[i].over) {
+                if (glb.button[i].over==1) {
                         int w=2;
                         glColor3f(1.0f, 1.0f, 0.0f);
                         //draw a highlight around button
@@ -253,47 +253,51 @@ void drawButtons()
                         glVertex2i(glb.button[i].btn.right, glb.button[i].btn.top);
                         glVertex2i(glb.button[i].btn.right, glb.button[i].btn.bot);
                 glEnd();
-                /*r.left = glb.button[i].btn.centerx;
+                r.left = glb.button[i].btn.centerx;
                 r.bot  = glb.button[i].btn.centery-8;
                 r.center = 1;
-                if (glb.button[i].down) {
-                        ggprint16(&r, 0, g.button[i].text_color, "Pressed!");
-                } else {
-                        ggprint16(&r, 0, g.button[i].text_color, g.button[i].text);
-                }*/
+                ggprint16(&r, 0, glb.button[i].text_color, glb.button[i].text);
         }
+}
+
+void checkButtonClick(XEvent *e)
+{
+    //int lclick = 0;
+	int x,y;
+	x = e->xbutton.x;
+	y = e->xbutton.y;
+	//y = (yres) - y
+	y = 1080 - y;
+	//printf("does this get called?%i %i", x, y);fflush(stdout);
+	if (e->type == ButtonPress) {
+		if (e->xbutton.button==1) {
+			for (int i=0; i < glb.numButtons; i++) {
+				glb.button[i].over = 0;
+				if (x >= glb.button[i].btn.left &&
+					x <= glb.button[i].btn.right &&
+					y >= glb.button[i].btn.bot &&
+					y <- glb.button[i].btn.top) {
+					glb.button[i].over=1;
+					//printf("lol\n");fflush(stdout);
+				}
+			}
+		}
+	}
+
+	if (e->type == MotionNotify) {
+		if (x >= glb.button[0].btn.left &&
+			x <= glb.button[0].btn.right &&
+			y >= glb.button[0].btn.bot &&
+			y <= glb.button[0].btn.top) {
+			glb.button[0].over = 1;
+		} else {
+			glb.button[0].over = 0;
+		}
+	}
 }
 
 /*void startGame() 
 {
     
-}
-*/
-/*void mouseButtons()
-{
-    int i,x,y;
-    int lbutton = 0;
-    int rbutton = 0;
-    for (i=0; i<glb.numButtons; i++) {
-                glb.button[i].over=0;
-                if (x >= glb.button[i].btn.left &&
-                        x <= glb.button[i].btn.right &&
-                        y >= glb.button[i].btn.bot &&
-                        y <= glb.button[i].btn.top) {
-                        glb.button[i].over=1;
-                        if (glb.button[i].over) {
-                                if (lbutton) {
-                                        switch (i) {
-                                                case 0:
-                                                       // startGame();
-                                                        break;
-                                                case 1:
-                                                        printf("Quit was clicked!\n");
-                                                        return 1;
-                                        }
-                                }
-                        }
-                }
-        }
 }
 */

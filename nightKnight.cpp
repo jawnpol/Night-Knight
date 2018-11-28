@@ -87,7 +87,7 @@ extern void storeDeathPosition(float x, float y);
 extern void initButtons();
 extern void drawButtons();
 extern void checkButtonClick(XEvent *e);
-extern void menuScreenImage(int x, int y, GLuint texid);
+extern void menuScreenImage(int x, int y, GLuint texid1, GLuint texid2);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
 extern void zw_save_mouse_pos(int x, int y);
@@ -156,8 +156,8 @@ class Image {
 				unlink(ppmname);
 		}
 };
-Image img[10] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
-	"gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg"};
+Image img[11] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
+    "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png"};
 
 unsigned char *buildAlphaData(Image *img)
 {
@@ -209,6 +209,7 @@ class Global {
 		GLuint menuTexture;
 		GLuint jpcTexture;
 		GLuint gameoverTexture;
+		GLuint NKTitleTexture;
 		GLuint backgroundTexture;
 		GLuint playerTexture;
 		GLuint zombieTexture;
@@ -544,7 +545,19 @@ void init_opengl()
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
 			GL_RGB, GL_UNSIGNED_BYTE, img[6].data);
 	//-------------------------------------------------------------------------
-
+	//Night Knight Title 
+        //
+        glGenTextures(1, &gl.NKTitleTexture);
+        w = img[10].width;
+        h = img[10].height;
+        //
+        glBindTexture(GL_TEXTURE_2D, gl.NKTitleTexture);
+        //
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+                        GL_RGB, GL_UNSIGNED_BYTE, img[10].data);
+        //-------------------------------------------------------------------------	
 
 
 	glViewport(0, 0, gl.xres, gl.yres);
@@ -1141,7 +1154,7 @@ void physics()
 	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 	if (gl.keys[XK_space]) {
 		if(gl.menuScreen){
-			menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
+			menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
 			gl.menuScreen = false;
 			return;
 		}
@@ -1191,7 +1204,7 @@ void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	if(gl.menuScreen) {
-		menuScreenImage(gl.xres, gl.yres, gl.menuTexture);
+		menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
 		printMenuScreen(gl.xres, gl.yres);
 		initButtons();
 		drawButtons();

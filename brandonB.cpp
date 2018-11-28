@@ -172,23 +172,37 @@ void printMenuScreen(float x, float y)
         m.left = x/2;
         m.center = x/3;
 
-        ggprint8b(&m, 16, 0x00ff0000, "Night-Knight");
         ggprint8b(&m, 16, 0x00ff0000, "Press space to play");
 
 }
 
-void menuScreenImage(int x, int y, GLuint texid)
+void menuScreenImage(int x, int y, GLuint texid1, GLuint texid2)
 {
     glColor3ub(255,255,255);
 
     glPushMatrix();
     glTranslatef((float)x/2,(float)y/2,0);
-    glBindTexture(GL_TEXTURE_2D, texid);
+    glBindTexture(GL_TEXTURE_2D, texid1);
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 1.0f); glVertex2i(-x/2, -y/2);
     glTexCoord2f(0.0f, 0.0f); glVertex2i(-x/2, y/2);
     glTexCoord2f(1.0f, 0.0f); glVertex2i(x/2, y/2);
     glTexCoord2f(1.0f, 1.0f); glVertex2i(x/2, -y/2);
+    glEnd();
+    glPopMatrix();
+
+    glColor3ub(255,255,255);
+    
+    int len = 348;//696
+    int wid = 282;//564
+    glPushMatrix();
+    glTranslatef((float)x/4-160,(float)y/4+600,0);
+    glBindTexture(GL_TEXTURE_2D, texid2);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-len, -wid);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-len, wid);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(len, wid);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(len, -wid);
     glEnd();
     glPopMatrix();
 
@@ -199,10 +213,10 @@ void menuScreenImage(int x, int y, GLuint texid)
 void initButtons() 
 {
     glb.numButtons = 0;
-    glb.button[glb.numButtons].btn.width = 140;
-    glb.button[glb.numButtons].btn.height = 60;
-    glb.button[glb.numButtons].btn.left = 20;
-    glb.button[glb.numButtons].btn.bot = 320;
+    glb.button[glb.numButtons].btn.width = 240;
+    glb.button[glb.numButtons].btn.height = 120;
+    glb.button[glb.numButtons].btn.left = 180;
+    glb.button[glb.numButtons].btn.bot = 400;
     glb.button[glb.numButtons].btn.right =
        glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.width;
     glb.button[glb.numButtons].btn.top =
@@ -214,13 +228,13 @@ void initButtons()
     strcpy(glb.button[glb.numButtons].text, "Start Game");
     glb.button[glb.numButtons].down = 0;
     glb.button[glb.numButtons].click = 0;
-    glb.button[glb.numButtons].btnColor[0] = 1.0f;
-    glb.button[glb.numButtons].btnColor[1] = 0.0f;
-    glb.button[glb.numButtons].btnColor[2] = 0.0f;
-    glb.button[glb.numButtons].dwnColor[0] = glb.button[glb.numButtons].btnColor[0] * 0.5f;
-    glb.button[glb.numButtons].dwnColor[1] = glb.button[glb.numButtons].btnColor[1] * 0.5f;
-    glb.button[glb.numButtons].dwnColor[2] = glb.button[glb.numButtons].btnColor[2] * 0.5f;
-    glb.button[glb.numButtons].text_color = 0x00ffffff;
+    glb.button[glb.numButtons].btnColor[0] = 0.5f;
+    glb.button[glb.numButtons].btnColor[1] = 0.5f;
+    glb.button[glb.numButtons].btnColor[2] = 0.5f;
+    glb.button[glb.numButtons].dwnColor[0] = 0.0f;
+    glb.button[glb.numButtons].dwnColor[1] = 0.0f;
+    glb.button[glb.numButtons].dwnColor[2] = 0.0f;
+    glb.button[glb.numButtons].text_color = 0x00000000;
     glb.numButtons++;
 }
 
@@ -230,7 +244,7 @@ void drawButtons()
     for (int i=0; i<glb.numButtons; i++) {
                 if (glb.button[i].over==1) {
                         int w=2;
-                        glColor3f(1.0f, 1.0f, 0.0f);
+                        glColor3f(1.0f, 1.0f, 1.0f);
                         //draw a highlight around button
                         glLineWidth(3);
                         glBegin(GL_LINE_LOOP);

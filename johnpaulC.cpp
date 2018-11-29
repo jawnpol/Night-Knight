@@ -17,37 +17,38 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <X11/Xutil.h>
+#include <iostream>
 //#define USE_OPENAL_SOUND
 //#ifdef USE_OPENAL_SOUND
 #include </usr/include/AL/alut.h>
 //#endif //USE_OPENAL_SOUND
-
+using namespace std;
 void jc_show_credits(Rect &r)
 {
-	ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
+    ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
 }
 
 void jpcShowPicture(int x, int y, GLuint texid)
 {
-	glColor3ub(255,255,255);
-	int wid = 64;
+    glColor3ub(255,255,255);
+    int wid = 64;
 
-	static float angle = 0.0f;
-	float fx = (float) x;
-	float fy = (float) y;
+    static float angle = 0.0f;
+    float fx = (float) x;
+    float fy = (float) y;
 
-	fx += sin(angle) * 10.0f;
-	angle += 0.2f;
-	glPushMatrix();
-	glTranslatef(fx,fy,0);
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
-	glEnd();
-	glPopMatrix();
+    fx += sin(angle) * 10.0f;
+    angle += 0.2f;
+    glPushMatrix();
+    glTranslatef(fx,fy,0);
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+    glEnd();
+    glPopMatrix();
 }
 
 //Declaring the buffer and source
@@ -57,180 +58,309 @@ static ALuint gameSong;
 
 void initSound()
 {
-	//Get started right here.
-	//#ifdef USE_OPENAL_SOUND
-	alutInit(0, NULL);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("ERROR: alutInit()\n");
-		return ;
-	}
-	//Clear error state.
-	alGetError();
+    //Get started right here.
+    //#ifdef USE_OPENAL_SOUND
+    alutInit(0, NULL);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("ERROR: alutInit()\n");
+        return ;
+    }
+    //Clear error state.
+    alGetError();
 
-	//Setup the listener.
-	//Forward and up vectors are used.
-	float vec[6] = {0.0f,0.0f,1.0f, 0.0f,1.0f,0.0f};
-	alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
-	alListenerfv(AL_ORIENTATION, vec);
-	alListenerf(AL_GAIN, 1.0f);
+    //Setup the listener.
+    //Forward and up vectors are used.
+    float vec[6] = {0.0f,0.0f,1.0f, 0.0f,1.0f,0.0f};
+    alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
+    alListenerfv(AL_ORIENTATION, vec);
+    alListenerf(AL_GAIN, 1.0f);
 
 
-	//Buffer holds the sound information.
-	sound  = alutCreateBufferFromFile("./test.wav");
-	//song = alutCreateBufferFromFile("./cartoonsound.wav");
+    //Buffer holds the sound information.
+    sound  = alutCreateBufferFromFile("./test.wav");
+    //song = alutCreateBufferFromFile("./cartoonsound.wav");
 
-	//Generate a source, and store it in a buffer.
-	alGenSources(1, &alSource);
-	//alGenSources(1, &gameSong);
-	//alSourcei(gameSong, AL_BUFFER, song);
-	alSourcei(alSource, AL_BUFFER , sound);
-	//Set volume and pitch to normal, no looping of sound.
-	alSourcef(alSource, AL_GAIN, 1.0f);
-	alSourcef(alSource, AL_PITCH, 1.0f);
-	alSourcei(alSource, AL_LOOPING, AL_FALSE);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("ERROR: setting source\n");
-		return ;
-	}
+    //Generate a source, and store it in a buffer.
+    alGenSources(1, &alSource);
+    //alGenSources(1, &gameSong);
+    //alSourcei(gameSong, AL_BUFFER, song);
+    alSourcei(alSource, AL_BUFFER , sound);
+    //Set volume and pitch to normal, no looping of sound.
+    alSourcef(alSource, AL_GAIN, 1.0f);
+    alSourcef(alSource, AL_PITCH, 1.0f);
+    alSourcei(alSource, AL_LOOPING, AL_FALSE);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("ERROR: setting source\n");
+        return ;
+    }
 
-	//Play a looping sound
-	//For future use as main game sound
-	/*alSourcef(gameSong, AL_GAIN, 0.5f);
-	alSourcef(gameSong, AL_PITCH, 1.0f);
-	alSourcei(gameSong, AL_LOOPING, AL_TRUE);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("Error: setting source\n");
-		return ;
-	}*/
+    //Play a looping sound
+    //For future use as main game sound
+    /*alSourcef(gameSong, AL_GAIN, 0.5f);
+    alSourcef(gameSong, AL_PITCH, 1.0f);
+    alSourcei(gameSong, AL_LOOPING, AL_TRUE);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("Error: setting source\n");
+        return ;
+    }*/
 }
 
 void cleanupSound()
 {
-	//Cleanup.
-	//First delete the source.
-	alDeleteSources(1, &alSource);
-	alDeleteSources(1, &gameSong);
-	//Delete the buffer.
-	alDeleteBuffers(1, &sound);
-	alDeleteBuffers(1, &song);
-	//Close out OpenAL itself.
-	//Get active context.
-	ALCcontext *Context = alcGetCurrentContext();
-	//Get device for active context.
-	ALCdevice *Device = alcGetContextsDevice(Context);
-	//Disable context.
-	alcMakeContextCurrent(NULL);
-	//Release context(s).
-	alcDestroyContext(Context);
-	//Close device.
-	alcCloseDevice(Device);
-	//#endif //USE_OPENAL_SOUND
+    //Cleanup.
+    //First delete the source.
+    alDeleteSources(1, &alSource);
+    alDeleteSources(1, &gameSong);
+    //Delete the buffer.
+    alDeleteBuffers(1, &sound);
+    alDeleteBuffers(1, &song);
+    //Close out OpenAL itself.
+    //Get active context.
+    ALCcontext *Context = alcGetCurrentContext();
+    //Get device for active context.
+    ALCdevice *Device = alcGetContextsDevice(Context);
+    //Disable context.
+    alcMakeContextCurrent(NULL);
+    //Release context(s).
+    alcDestroyContext(Context);
+    //Close device.
+    alcCloseDevice(Device);
+    //#endif //USE_OPENAL_SOUND
 }
 
 void playSound()
 {
-	//#ifdef USE_OPENAL_SOUND
-	alSourcePlay(alSource);
-	//#endif //USE_OPENAL_SOUND
+    //#ifdef USE_OPENAL_SOUND
+    alSourcePlay(alSource);
+    //#endif //USE_OPENAL_SOUND
 }
 
 /*void playGameSound()
 {
-	#ifdef USE_OPENAL_SOUND
-	for (int i = 0; i < 42; i++) {
-		alSourcePlay(gameSong);
-		usleep(54100000);
-	}
-	#endif //USE_OPENAL_SOUND
+    #ifdef USE_OPENAL_SOUND
+    for (int i = 0; i < 42; i++) {
+        alSourcePlay(gameSong);
+        usleep(54100000);
+    }
+    #endif //USE_OPENAL_SOUND
 }*/
 
 
 //Building functionality
 //Shows grid on the game map
 #define MAXGRID 16
+#define XDIM 16
+#define YDIM 9
 
 typedef struct t_grid {
-	int displayState;
-	int status;
-	int over;
-	float color[4];
+    int over;
+    int status = 0;
+    float color[4];
 } Grid;
-Grid buildingGrid[MAXGRID][MAXGRID];
-
+Grid buildingGrid[XDIM][YDIM];
 int gridDim = 120;
-int boardDim;
 int quadSize;
+int boardDimX;
+int boardDimY;
+int leftButton = 0;
 
 void initBoard(void)
 {
-	boardDim = 1920;
-    quadSize = (boardDim / gridDim) / 2 - 1;
-}
+    boardDimX = 1920;
+    boardDimY = 1080;
+    quadSize = 60;
+    leftButton = 0;
+    for (int i = 0; i < XDIM; i++)
+        for (int j = 0; j< YDIM; j++) {
+            buildingGrid[i][j].over = 0;
+            buildingGrid[i][j].status = 0;
+        }
 
-void renderBoard(int xres, int yres)
+}
+//Gets the center of each individual grid
+//
+void gridCenter(const int i, const int j, int cent[2])
 {
-    int boardSize = boardDim/2;
-    int xBorder = xres/2;
-    int yBorder = yres/2;
+    int boardX = boardDimX / 2;
+    int boardY = boardDimY / 2;
+    int screen_center[2] = {1920/2, 1080/2};
     
-    //glClearColor(0.0, 0.0, 0.0, 1.0);
-    //glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glEnable(GL_BLEND);
-    /*glColor3f(0.0f, 0.0f, 0.0f);
-    glBegin(GL_QUADS);
-    	glVertex2i(xBorder-boardSize, yBorder-boardSize);
-        glVertex2i(xBorder-boardSize, yBorder+boardSize);
-        glVertex2i(xBorder+boardSize, yBorder+boardSize);
-        glVertex2i(xBorder+boardSize, yBorder-boardSize);
-    glEnd();*/
-    //glDisable(GL_BLEND);
-	
-    int x0 = xBorder-boardSize;
-    int x1 = xBorder+boardSize;
-    int y0 = yBorder-boardSize;
-    int y1 = yBorder+boardSize;
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glColor3f(0.8f, 0.8f, 0.8f);
-    glBegin(GL_LINES);
-    for (int i=1; i<gridDim; i++) {
-        y0 += gridDim;
-        glVertex2i(x0,y0);
-        glVertex2i(x1,y0);
-    }
-    x0 = xBorder-boardSize;
-    y0 = yBorder-boardSize;
-    y1 = yBorder+boardSize;
-    for (int j=1; j<gridDim; j++) {
-        x0 += gridDim;
-        glVertex2i(x0,y0);
-        glVertex2i(x0,y1);
-    }
-    glEnd();
+    int s0 = screen_center[0];
+    int s1 = screen_center[1];
+
+    int quad[2];
+
+    int gridWidth = 120;
+    
+    quad[0] = s0 - boardX;
+    quad[1] = s1 - boardY;
+    cent[0] = quad[0] + gridWidth;
+    cent[1] = quad[1] + gridWidth;
+    cent[0] += (gridWidth * j);
+    cent[1] += (gridWidth * i);
 }
 
-void gridCenter(int xres, int yres, const int i, const int j, int cent[2])
+
+/*void buildingClick()
 {
-    int quad[2];
-    int xBorder = xres / 2;
-    int yBorder = yres / 2;
+    int i,j;
+    for (i = 0; i < XDIM; i++) {
+        for (j = 0; j < YDIM; j++) {
+            if (leftButton)
+                if (buildingGrid[i][j].over) {
+                    buildingGrid[i][j].status = 1;
+                    break;
+                }
+        cout << "Status at " << i << " && " << j << " == " << buildingGrid[i][j].status << endl;
+        }
+        if (buildingGrid[i][j].over && buildingGrid[i][j].status)
+            break;
+    }
+}*/
 
-    quad[0] = xBorder - (boardDim / 2);
-    quad[1] = yBorder - (boardDim / 2);
-    cent[0] = quad[0] + ((boardDim / gridDim) / 2);
-    cent[1] = quad[1] + ((boardDim / gridDim) / 2);
-    cent[0] += (boardDim / gridDim) * j;
-    cent[1] += (boardDim / gridDim) * i;
+void checkMouseEvent(XEvent *e, bool roundEnd)
+{
+    int x, y;
+    x = e->xbutton.x;
+    y = e->xbutton.y;
+    y = 1080 - y;
+    int i,j;
+    int cent[2];
+    
+    if (e->type == ButtonPress) {
+        if (e->xbutton.button == 1) {
+            if (roundEnd) {
+                leftButton = 1;
+                cout << "Button was pressed" << endl;
+            }
+            
+        }
+    }
 
+    for (i = 0; i < XDIM; i++) {
+        for (j = 0; j < YDIM; j++) {
+            buildingGrid[i][j].over = 0;
+            //buildingGrid[i][j].status = 0;
+        }
+    }
+
+    if (e->type == MotionNotify) {
+        for (i = 0; i < XDIM; i++) {
+            for (j = 0; j < YDIM; j++) {
+                if (roundEnd) {
+                    if (x <= i * gridDim + gridDim &&
+                        x >= i * gridDim - gridDim &&
+                        y <= j * gridDim  + gridDim &&
+                        y >= j * gridDim) {
+
+                        buildingGrid[i][j].over = 1;
+                        //buildingGrid[i][j].status = 0;  
+                        break;
+                    }
+                }
+            }
+            if (buildingGrid[i][j].over == 1)
+                break;
+        }
+    }
+
+    if (roundEnd == 1 && leftButton == 1) {
+        cout << "Does it get here 1?" << endl;
+        for (i = 0; i < XDIM; i++) {
+            for (j = 0; j < YDIM; j++) {
+                if (x <= i * gridDim + gridDim &&
+                    x >= i * gridDim - gridDim &&
+                    y <= j * gridDim + gridDim &&
+                    y >= j * gridDim) {
+                    cout << "i and j status" << buildingGrid[i][j].status << endl;
+                    if (buildingGrid[i][j].over == 1) { 
+                        //if (leftButton == 1) {
+                                cout << "Does it get to here?" << endl;
+                                buildingGrid[i][j].status = 1;
+                                leftButton = 0;
+                                cout << "i and j status 2" << buildingGrid[i][j].status << endl;
+                                break;
+                        //}
+                        //leftButton = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+/*bool menu;
+
+void menuState(bool state)
+{
+    menu = state;
+}*/
+void renderBoard(int xres, int yres, GLuint texture)
+{
+    cout << "Does it get into renderBoard?" << endl;
+    int tileSize = 120;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glClear(GL_COLOR_BUFFER_BIT);
+        //glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+        for (int i = 0; i < xres; i += tileSize) {
+            for (int j = 0; j < yres; j += tileSize) {
+                    //cout << "Does it get here"<< endl;
+                glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+
+                if (buildingGrid[i/120][j/120].over) {
+                    glColor3f(0.3f, 1.0f, 0.3f);
+                    glBindTexture(GL_TEXTURE_2D, texture);
+                }
+                    
+                glBindTexture(GL_TEXTURE_2D, 0);
+                /*if (buildingGrid[i/120][j/120].status == 1) {
+                    glBindTexture(GL_TEXTURE_2D, texture);
+                    cout << "Does it get to the texture" << endl;
+                }*/
+                glBegin(GL_QUADS);
+                    glTexCoord2f(0.0f, 1.0f); glVertex2i(i,j);
+                    glTexCoord2f(0.0f, 0.0f); glVertex2i(i,j + tileSize);
+                    glTexCoord2f(1.0f, 0.0f); glVertex2i(i + tileSize, j + tileSize);
+                    glTexCoord2f(1.0f, 1.0f); glVertex2i(i + tileSize, j);
+                glEnd();
+                //glBindTexture(GL_TEXTURE_2D, 0);
+                }
+            }
+        glDisable(GL_BLEND);
+        glColor3f(0.0f, 0.0f, 0.0f);
+        glBegin(GL_LINES);
+            for (int i = 0; i < xres; i += tileSize) {
+                for (int j = 0; j < yres /*- 120*/; j += tileSize) {
+                    glVertex2i(i, j);
+                    glVertex2i(i, j + tileSize);
+            //glVertex2i(i + tileSize, j + tileSize);
+            //glVertex2i(i + tileSize, j);
+                }
+            }
+        for (int i = 0; i < xres; i += tileSize) {
+            for (int j = 0; j < yres; j += tileSize) {
+                glVertex2i(i, j);
+                glVertex2i(i + tileSize , j);
+            //glVertex2i(i + tileSize, j + tileSize);
+            }
+                }
+        glEnd();  
+    //}  
 }
 
 //Building structures
 //Adding a Materials class to handle building
+
+static int woodMats = 0;
+static int stoneMats = 0;
 typedef struct t_wood {
     int health = 50;
     int repair = 30;
     double buildTime = 1.5;
 } Wood;
+Wood woodStore[XDIM][YDIM];
 
 typedef struct t_stone {
     int health = 150;
@@ -238,38 +368,92 @@ typedef struct t_stone {
     int damageResistance = 10;
     double buildTime = 2.5;
 } Stone;
+Stone stoneStore[XDIM][YDIM];
 
 void renderHealth(int health)
 {
     //int hSize = health * 15;
     glBegin(GL_QUADS);
-    glColor3f(1, 0, 0);
-    glVertex2f(0, 0);
-    glVertex2f(50, 0);
-    glVertex2f(50, health*50);
-    glVertex2f(0, health*50);
+        glColor3f(1, 0, 0);
+        glVertex2f(0, 0);
+        glVertex2f(50, 0);
+        glVertex2f(50, health*50);
+        glVertex2f(0, health*50);
     glEnd();
 }
 
-void gameBackground(int xres, int yres, GLuint texid)
+void buildPlacement(int xres, int yres, GLuint wood)
 {
-    int tileSize = 100;
+    int i, j;
+    int tileSize = 120;
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+    glBegin(GL_QUADS);
+    for (i = 0; i < xres; i+=tileSize) {
+        for (j = 0; j < yres; j+=tileSize) {
+            if (buildingGrid[i/120][j/120].status == 1) {
+                glBindTexture(GL_TEXTURE_2D, wood);
+                glTexCoord2f(0.0f, 0.5f); glVertex2i(i, j);
+                glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
+                glTexCoord2f(0.5f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
+                glTexCoord2f(0.5f, 0.5f); glVertex2i(i+tileSize, j);
+            }
+        }
+    }
+    glEnd();
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_ALPHA_TEST);
+}
+
+void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd)
+{
+    int tileSize = 120;
     glClear(GL_COLOR_BUFFER_BIT);
+
     glColor3f(1.0, 1.0, 1.0);
     glBindTexture(GL_TEXTURE_2D, texid);
-    glBegin(GL_QUADS);
+    //glBegin(GL_QUADS);
     for (int i = 0; i < xres; i+=tileSize) {
         for (int j = 0; j < yres; j +=tileSize) {
+        //cout << "Size of i: " << i << " and j : " << j << endl;
+            //if(buildingGrid[i][j].status
+            glBegin(GL_QUADS);
                 glTexCoord2f(0.0f, 1.0f); glVertex2i(i, j);
                 glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
                 glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
                 glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize, j);
+            glEnd();
+            //glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
-    glEnd();
-    //glBindTexture(GL_TEXTURE_2D, 0);
 
+    //if (roundEnd) {
+        glEnable(GL_ALPHA_TEST);
+        glAlphaFunc(GL_GREATER, 0.0f);
+        glColor4ub(255,255,255,255);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        for (int i = 0; i < xres; i+=tileSize) {
+            for (int j = 0; j < yres; j +=tileSize) {
+            //cout << "Size of i: " << i << " and j : " << j << endl;
+                //if(buildingGrid[i][j].status
+                if (buildingGrid[i/tileSize][j/tileSize].status == 1) {
+                    glBindTexture(GL_TEXTURE_2D, wood);
+                    glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.5f); glVertex2i(i, j);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
+                        glTexCoord2f(1.5f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
+                        glTexCoord2f(1.5f, 1.5f); glVertex2i(i+tileSize, j);
+                    glEnd();
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
+            }
+        }
+        glDisable(GL_ALPHA_TEST);
+    //}
 }
+
 
 void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float angle, GLuint texture)
 {	
@@ -300,33 +484,3 @@ void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float 
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_ALPHA_TEST);
 }
-
-/*void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, GLfloat angle, GLuint texture)
-{
-    float *c = color;
-    //glColor3fv(c);i
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glColor3f(0.0f, 0.0f, 0.0f);
-    //glDisable(GL_TEXTURE_2D);
-    //glEnable(GL_TEXTURE_2D);
-    glPushMatrix();
-    glTranslatef(pos[0], pos[1], pos[2]);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    //glPushMatrix();
-    //glTranslatef(pos[0], pos[1], pos[2]);
-    
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    //This is the drawing ofthe item
-    glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-40);
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 40);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 40);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-40);
-    glEnd();
-    glPopMatrix();
-}*/
-

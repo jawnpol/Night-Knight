@@ -81,9 +81,8 @@ extern void bbShowPicture(int x, int y, GLuint texid);
 extern void renderPowerup(int x, int y, int red, int gre, int blu);
 extern void powerupChance(int powerups[]);
 extern bool spawnChance(int chance);
-extern void heartChance();
 extern void spawnHearts();
-extern void drawHeart(int x, int y);
+extern void drawHeart();
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
@@ -268,7 +267,7 @@ class Game {
 	Ship ship;
 	//Asteroid *ahead;
 	Bullet *barr;
-	int round = 4;
+	int round = 0;
 	int enemyCount;
 	int nasteroids;
 	int nbullets;
@@ -719,7 +718,6 @@ void check_mouse(XEvent *e)
 	}
     }
     if (e->type == MotionNotify) {
-	//if (savex != e->xbutton.x || savey != e->xbutton.y) {
 	//Mouse moved
 	//Changed by Zakary Worman: Changed to remove movement from mouse
 	//and allow for aiming with mouse. The rest of this usage is found
@@ -773,58 +771,6 @@ int check_keys(XEvent *e)
     return 0;
 }
 
-/*void deleteAsteroid(Game *g, Asteroid *node)
-  {
-//Remove a node from doubly-linked list.
-//Must look at 4 special cases below.
-if (node->prev == NULL) {
-if (node->next == NULL) {
-//only 1 item in list.
-g->ahead = NULL;
-} else {
-//at beginning of list.
-node->next->prev = NULL;
-g->ahead = node->next;
-}
-} else {
-if (node->next == NULL) {
-//at end of list.
-node->prev->next = NULL;
-} else {
-//in middle of list.
-node->prev->next = node->next;
-node->next->prev = node->prev;
-}
-}
-delete node;
-node = NULL;
-}*/
-
-/*void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
-  {
-//build ta from a
-ta->nverts = 360;
-ta->radius = a->radius / 2.0;
-Flt r2 = ta->radius / 2.0;
-Flt angle = 0.0f;
-Flt inc = (PI * 2.0) / (Flt)ta->nverts;
-for (int i=0; i<ta->nverts; i++) {
-ta->vert[i][0] = sin(angle) * (r2 + rnd() * ta->radius);
-ta->vert[i][1] = cos(angle) * (r2 + rnd() * ta->radius);
-angle += inc;
-}
-ta->pos[0] = a->pos[0] + rnd()*10.0-5.0;
-ta->pos[1] = a->pos[1] + rnd()*10.0-5.0;
-ta->pos[2] = 0.0f;
-ta->angle = 0.0;
-ta->rotate = a->rotate + (rnd() * 4.0 - 2.0);
-ta->color[0] = 0.8;
-ta->color[1] = 0.8;
-ta->color[2] = 0.7;
-ta->vel[0] = a->vel[0] + (rnd()*2.0-1.0);
-ta->vel[1] = a->vel[1] + (rnd()*2.0-1.0);
-}*/
-
 void physics()
 {
     //Flt d0,d1,dist;
@@ -873,7 +819,6 @@ void physics()
 	    b->vel[0] *= -1;
 	    b->vel[1] *= -1;
 	    memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-	    heartChance();
 	    //powerupChance(powerups);
 	    g.nbullets--;
 	    g.enemyCount--;
@@ -1086,8 +1031,8 @@ void render()
     zk_blackbar();
     renderHealth(g.ship.health);
     zk_showhealthtext(gl.xres, gl.yres);
+    drawHeart();
     //spawnPowerups(powerups);
-    spawnHearts();
     //Function below used to check renderPowerup functionality
     //renderPowerup(gl.xres/4,3*gl.yres/4,255);
 }

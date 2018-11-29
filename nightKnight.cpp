@@ -81,6 +81,9 @@ extern void bbShowPicture(int x, int y, GLuint texid);
 extern void renderPowerup(int x, int y, int red, int gre, int blu);
 extern void powerupChance(int powerups[]);
 extern bool spawnChance(int chance);
+extern void heartChance();
+extern void spawnHearts();
+extern void drawHeart(int x, int y);
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
@@ -870,7 +873,8 @@ void physics()
 	    b->vel[0] *= -1;
 	    b->vel[1] *= -1;
 	    memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-	    powerupChance(powerups);
+	    heartChance();
+	    //powerupChance(powerups);
 	    g.nbullets--;
 	    g.enemyCount--;
 	    if(g.enemyCount == 0)
@@ -1082,7 +1086,8 @@ void render()
     zk_blackbar();
     renderHealth(g.ship.health);
     zk_showhealthtext(gl.xres, gl.yres);
-    spawnPowerups(powerups);
+    //spawnPowerups(powerups);
+    spawnHearts();
     //Function below used to check renderPowerup functionality
     //renderPowerup(gl.xres/4,3*gl.yres/4,255);
 }

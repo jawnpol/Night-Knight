@@ -22,6 +22,7 @@
 #include<string.h>
 
 #define MAXBUTTONS 2
+#define MAXHEARTS 5
 typedef struct t_button {
 	Rect btn;
 	char text[32];
@@ -37,9 +38,16 @@ struct DeathPosition {
     float x, y;
 } d;
 
+struct Heart {
+	float pos[2];
+	float color[3];
+	int value;
+} h[5];
+
 struct Global {
 	Button button[MAXBUTTONS];
 	int numButtons;
+	int numHearts;
 } glb;
 
 void bb_show_credits(Rect &r)
@@ -90,10 +98,59 @@ void renderPowerup(int x, int y, int red, int gre, int blu)
     glPopMatrix();
 }
 
+void drawHeart(float heartX, float heartY)
+{
+    glColor3f(1.0, 0.0, 0.0);
+    glPushMatrix();
+    glTranslatef(heartX, heartY, 0);
+    glBegin(GL_POLYGON);
+        glVertex2i(0,0);
+        glVertex2i(0,15);
+        glVertex2i(7.5,22.5);
+        glVertex2i(15,15);
+        glVertex2i(15, 7.5);
+        glVertex2i(0,-5);
+        glVertex2i(-15,7.5);
+        glVertex2i(-15,15);
+        glVertex2i(-7.5,22.5);
+        glVertex2i(0,15);
+    glEnd();
+    glPopMatrix();
+
+    glColor3f(0.0, 0.0, 0.0);
+    glPushMatrix();
+    glTranslatef(heartX,heartY,0);
+    glLineWidth(2);
+    glBegin(GL_LINE_LOOP);
+        glVertex2i(0,15);
+        glVertex2i(7.5,22.5);
+        glVertex2i(15,15);
+        glVertex2i(15, 7.5);
+        glVertex2i(0,-5);
+        glVertex2i(-15,7.5);
+        glVertex2i(-15,15);
+        glVertex2i(-7.5,22.5);
+        glVertex2i(0,15);
+    glEnd();
+    glPopMatrix();
+
+}
+
+
 void storeDeathPosition(float x, float y)
 {
     d.x = x;
     d.y = y;
+}
+
+void storeHeartPosition(float x, float y)
+ {
+     for (int i = 0; i < glb.numButtons;i++){
+         if ((h[i].pos[0] == 0) && (h[i].pos[1] == 0)) {
+             h[i].pos[0] = x;
+             h[i].pos[1] = y;
+         }
+     }
 }
 
 /*void spawnItem()
@@ -111,6 +168,41 @@ bool spawnChance(int chance)
 		return false;
 	}
 }
+
+void heartChance()
+{
+    if (spawnChance(1) && (h[0].value==0)) {
+        h[0].value = 1;
+        return;
+    }
+    if (spawnChance(1)) {
+        printf("h[1] value is turned on\n");fflush(stdout);
+        h[1].value = 1;
+        return;
+    }
+}
+
+void spawnHearts()
+{
+    for (int i=0;i < MAXHEARTS;i++) {
+        if(h[i].value == 1) {
+            if (i == 0) {
+                drawHeart(h[i].pos[0], h[0].pos[1]);
+                glb.numHearts++;
+	    }
+            if (i == 1) {
+                drawHeart(d.x, d.y);
+                glb.numHearts++;
+            }
+            if (i == 2) {
+                drawHeart(d.x, d.y);
+                glb.numHearts++;
+            }
+
+        }
+    }
+}
+
 
 //function that spawns powerup at specified location
 void powerupChance(int powerups[])
@@ -299,7 +391,7 @@ void checkButtonClick(XEvent *e)
 	if (e->type == ButtonPress) {
 		if (e->xbutton.button == 1) {
 			lclick=1;
-			printf("Left click pressed\n");fflush(stdout);
+			//printf("Left click pressed\n");fflush(stdout);
 		}
 	}
 	x = e->xbutton.x;

@@ -4,16 +4,11 @@
 //Game:   Night Knight:
 //        Top Down 2D Survival Shooter Utilizing C++ and OpenGL
 //	  
-//Current Functions: Show_Credits -> outputs name in credit screen
-//                   showPicture  -> prints picture in credit screen
-//Future additions:  Powerups     -> create powerup to be used in NightKnight
-//			***NOTES*** 
-//			-Powerups currently spawn at random location
-//			will change this to death location of asteroids soon.
-//			-Also, need to implement collision detection of powerups
-//			When this is done, powerups will be given specific 
-//			attributes that affect character.
-//                   Skins?       -> Different cosmetic looks for characters
+//My code includes:  
+//-Powerups: Spawn on enemy death location
+//-Hearts: Heal user on pickup. Spawn on enemy death location. 
+//-Menu Screen: Button functionality and image rendering
+//		*Button functionality modeled after Godon's snake framework*
 
 #include<stdio.h>
 #include<cstdlib>
@@ -153,7 +148,7 @@ void storeHeartPosition(float x, float y)
 		}
 	}
 }
-//function for determining the chances that powerup spawns
+//function for determining the chances whether or not drops spawn
 bool spawnChance(int chance) 
 {
 	int success = rand() % chance;
@@ -166,11 +161,10 @@ bool spawnChance(int chance)
 
 void spawnHearts()
 {
-	for (int i=0; i < 5; i++) {
+	for (int i=0; i < MAXHEARTS; i++) {
 		if (h[i].spawn)
 			continue;
-		int chance = rand()%5;
-		if (chance >= 0) {	//20% chance of spawning
+		if (spawnChance(5)) {	
 			h[i].spawn = true;
 			h[i].pos[0] = d.x;
 			h[i].pos[1] = d.y;

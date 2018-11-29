@@ -357,18 +357,23 @@ static int woodMats = 0;
 static int stoneMats = 0;
 typedef struct t_wood {
     int health = 50;
-    int repair = 30;
-    double buildTime = 1.5;
 } Wood;
 Wood woodStore[XDIM][YDIM];
 
 typedef struct t_stone {
-    int health = 150;
-    int repair = 100;
-    int damageResistance = 10;
-    double buildTime = 2.5;
+    int health = 100;
 } Stone;
 Stone stoneStore[XDIM][YDIM];
+
+void addWood(int wood)
+{
+    woodMats += wood;
+}
+
+void addStone(int stone)
+{
+    stoneMats += stone;
+}
 
 void renderHealth(int health)
 {
@@ -441,10 +446,10 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd
                 if (buildingGrid[i/tileSize][j/tileSize].status == 1) {
                     glBindTexture(GL_TEXTURE_2D, wood);
                     glBegin(GL_QUADS);
-                        glTexCoord2f(0.0f, 1.5f); glVertex2i(i, j);
-                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
-                        glTexCoord2f(1.5f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
-                        glTexCoord2f(1.5f, 1.5f); glVertex2i(i+tileSize, j);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
                     glEnd();
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }

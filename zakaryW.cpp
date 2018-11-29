@@ -82,7 +82,7 @@ struct Orc {
 	if (!new_round)
 	    return;
 	dead = false;
-	health = 2;
+	health = 20;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1920;
@@ -201,6 +201,7 @@ void zwShowPicture(int x, int y, GLuint texid)
 }
 
 void zw_z_pos(Zombie *z, int tX, int tY) {
+    z->angle = atan2(z->pos[1]-tY, z->pos[0]-tX)*180/PI;
     if(z->pos[0] > tX)
 	z->vel[0] -= 0.001*tX;
     else if(z->pos[0] < tX)
@@ -209,7 +210,18 @@ void zw_z_pos(Zombie *z, int tX, int tY) {
 	z->vel[1] -= 0.001*tY;
     else if(z->pos[1] < tY)
 	z->vel[1] += 0.001*tY;
-    z->angle = atan2(z->pos[1]-tY, z->pos[0]-tX)*180/PI;
+}
+
+void zw_v_pos(Vampire *v, int tX, int tY) {
+    v->angle = atan2(v->pos[1]-tY, v->pos[0]-tX)*180/PI;
+    if(v->pos[0] > tX)
+	v->vel[0] -= 0.001*tX;
+    else if(v->pos[0] < tX)
+	v->vel[0] += 0.001*tX;
+    if(v->pos[1] > tY)
+	v->vel[1] -= 0.001*tY;
+    else if(z->pos[1] < tY)
+	v->vel[1] += 0.001*tY;
 }
 
 void zw_o_pos(Orc *o, int tX, int tY) {
@@ -284,6 +296,29 @@ void zw_placeEnemies(GLuint t1, GLuint t2, GLuint t3, int round)
 	    glAlphaFunc(GL_GREATER, 0.0f);
 	    glColor4ub(255, 255, 255, 255);
 	    glBindTexture(GL_TEXTURE_2D, t2);
+	    glBegin(GL_QUADS);
+	    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	    glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
+	    glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
+	    glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
+	    glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
+	    glEnd();
+	    glPopMatrix();
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_ALPHA_TEST);
+	}
+    }
+    if (round > 9) {
+	for (int i = 0; i < round-9; i++) {
+	    if (v[i].dead)
+		continue;
+	    glPushMatrix();
+	    glTranslatef(v[i].pos[0], v[i].pos[1], 0);
+	    glRotatef(v[i].angle-90, 0, 0, 1);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255, 255, 255, 255);
+	    glBindTexture(GL_TEXTURE_2D, t3);
 	    glBegin(GL_QUADS);
 	    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	    glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
@@ -383,6 +418,19 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 	    if (o[i].dead)
 		continue;
 	    o[i].set_up();
+	    if (o[i].health < 10) {
+		glColor3f(1.0, 0.0, 0.0);
+		glPushMatrix();
+		glTranslatef(o[i].pos[0], o[i].pos[1], 0);
+		glBegin(GL_POINTS);
+		for(int j = 0; j < 1000; j++) {
+		    int r = rand()%50-rand()%25;
+		    int r1 = rand()%50-rand()%25;
+		    glVertex2f((float)r, (float)r1);
+		}
+		glEnd();
+		glPopMatrix();
+	    }
 	    if (o[i].a_live) {
 		//draw arrow
 		glPushMatrix();
@@ -401,7 +449,7 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 		glVertex2f(1.0f, -30.0f);
 		glVertex2f(-1.0f, -30.0f);
 		glEnd();
-		glColor3f(0.0, 0.4, 0.4);
+		glColor3f(0.0, 0.3, 0.8);
 		glBegin(GL_LINES);
 		glVertex2f(-5.0f, -34.0f);
 		glVertex2f(0.0f, -30.0f);
@@ -483,7 +531,7 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 		    v[i].pos[1] += v[i].vel[1];
 		}
 	    }
-	    //zw_v_pos(&v[i], tX, tY);
+	    zw_v_pos(&v[i], tX, tY);
 	    if(v[i].vel[0] >= 1)
 		v[i].vel[0] = 1;
 	    if(v[i].vel[0] <= -1)
@@ -494,17 +542,17 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 		v[i].vel[1] = -1;
 	    v[i].pos[0] += v[i].vel[0];
 	    v[i].pos[1] += v[i].vel[1];
-	    glColor3fv(v[i].color);
-	    glPushMatrix();
-	    glTranslatef(v[i].pos[0], v[i].pos[1], 0.0f);
-	    glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
-	    glBegin(GL_LINE_LOOP);
-	    for (float fill = 0; fill < 18; fill += 0.5) {
-		for (int j = 0; j < 360; j++)
-		    glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
-	    }
-	    glEnd();
-	    glPopMatrix();
+	    /*glColor3fv(v[i].color);
+	      glPushMatrix();
+	      glTranslatef(v[i].pos[0], v[i].pos[1], 0.0f);
+	      glRotatef(0.0f, 0.0f, 0.0f, 1.0f);
+	      glBegin(GL_LINE_LOOP);
+	      for (float fill = 0; fill < 18; fill += 0.5) {
+	      for (int j = 0; j < 360; j++)
+	      glVertex2f(fill*sinf(j*3.14/180), fill*cosf(j*3.14/180));
+	      }
+	      glEnd();
+	      glPopMatrix();*/
 	}
     }
     zw_placeEnemies(t1, t2, t3, round);
@@ -531,8 +579,8 @@ bool zw_check_enemy_hit(int round, float x, float y)
 	if(d0*d0 + d1*d1 <= 324) {
 	    o[i].health--;
 	    if (o[i].health == 0) {
-	    	o[i].dead = true;
-	    	return 1;
+		o[i].dead = true;
+		return 1;
 	    }
 	}
     }

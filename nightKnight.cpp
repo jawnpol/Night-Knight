@@ -109,6 +109,7 @@ extern void buildPlacement(int xres, int yres, GLuint wood);
 extern void checkMouseEvent(XEvent *e, bool roundEnd);
 extern void zw_reset_round();
 extern void zw_drawSword(float x, float y, float angle);
+extern bool zw_player_structure_collision(float x, float y);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -894,6 +895,10 @@ void physics()
 	g.ship.vel[0] -= xdir;
 	g.ship.vel[1] -= ydir;
     }
+    else {
+	g.ship.vel[0] *= 0.8;
+	g.ship.vel[1] *= 0.8;
+    }
     //Changed by Zakary Worman: changed to simply reduce the speed
     //to be more characteristic of a human rather than ship
     Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
@@ -904,11 +909,11 @@ void physics()
 	g.ship.vel[0] *= speed;
 	g.ship.vel[1] *= speed;
     }
-    //Added by Zakary Worman: this makes the person slow down as you stop moving
-    else {
-	g.ship.vel[0] *= 0.8;
-	g.ship.vel[1] *= 0.8;
+    if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+	g.ship.vel[0] *= -1;
+	g.ship.vel[1] *= -1;
     }
+    //Added by Zakary Worman: this makes the person slow down as you stop moving
     g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 }
 

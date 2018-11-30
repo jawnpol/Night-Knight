@@ -233,8 +233,6 @@ void zw_z_pos(Zombie *z, int tX, int tY)
 	    structurePlacement(gridX, gridY3)) {
 	z->vel[0] *= -1;
 	z->vel[1] *= -1;
-	//z->pos[0] += (rand()%11 - 10);
-	//z->pos[1] += (rand()%11 - 10);
 	z->collision[gridX][gridY] = true;
 	return;
     }
@@ -703,4 +701,12 @@ void zw_drawSword(float x, float y, float angle)
     glVertex2f(0.0f, -30.0f);
     glEnd();
     glPopMatrix();
+}
+
+bool zw_player_structure_collision(float x, float y) {
+	int gridX = floor(x/120);
+	int gridY = floor(y/120);
+	if (structurePlacement(gridX, gridY))
+	    return true;
+	return false;
 }

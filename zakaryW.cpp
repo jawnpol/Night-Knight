@@ -15,6 +15,7 @@ using namespace std;
 
 #define PI 3.141592653589793
 
+extern bool structurePlacement(int x, int y);
 
 //structure used to allow for mouse aiming
 struct Aim {
@@ -30,6 +31,7 @@ struct Zombie {
     float color[3];
     int wood = rand()%11, blood;
     bool dead, new_round = true;
+    bool collision[16][9] = {false};
 
     void set_up() {
 	if (!new_round)
@@ -77,6 +79,7 @@ struct Orc {
     float a_vel[2] = {0};
     float a_angle;
     bool a_live = false;
+    bool collision[16][9] = {false};
 
     void set_up() {
 	if (!new_round)
@@ -106,7 +109,7 @@ struct Orc {
 	angle = 0.0f;
 	new_round = false;
     }
-}o[292];
+}o[300];
 
 struct Vampire {
     float dir[2];
@@ -145,7 +148,7 @@ struct Vampire {
 	angle = 0;
 	new_round = false;
     }
-}v[141];
+}v[300];
 
 //this is used to save the mouse position from check mouse in main program
 void zw_save_mouse_pos(int x, int y)
@@ -200,31 +203,53 @@ void zwShowPicture(int x, int y, GLuint texid)
     glPopMatrix();
 }
 
-void zw_z_pos(Zombie *z, int tX, int tY) {
+bool structureCollision(int x, int y)
+{
+    	for (int i = 0; i < 300; i++) {
+		if (z[i].collision[x][y]) {
+		    z[i].collision[x][y] = false;
+	    		return true;
+		}
+		if (o[i].collision[x][y]) {
+		    o[i].collision[x][y] = false;
+	    		return true;
+		}
+	}
+	return false;
+}
+
+void zw_z_pos(Zombie *z, int tX, int tY) 
+{
     z->angle = atan2(z->pos[1]-tY, z->pos[0]-tX)*180/PI;
-    if(z->pos[0] > tX)
+    int gridX, gridY, gridX2, gridY2, gridX3, gridY3;
+    gridX = floor(z->pos[0]/120);
+    gridY = floor(z->pos[1]/120);
+    gridX2 = floor((z->pos[0]+25)/120);
+    gridY2 = floor((z->pos[1]+25)/120);
+    gridX3 = floor((z->pos[0]-25)/120);
+    gridY3 = floor((z->pos[1]-25)/120);
+    if (structurePlacement(gridX, gridY) || structurePlacement(gridX2, gridY) ||
+	    structurePlacement(gridX, gridY2) || structurePlacement(gridX3, gridY) ||
+	    structurePlacement(gridX, gridY3)) {
+	z->vel[0] *= -1;
+	z->vel[1] *= -1;
+	//z->pos[0] += (rand()%11 - 10);
+	//z->pos[1] += (rand()%11 - 10);
+	z->collision[gridX][gridY] = true;
+	return;
+    }
+    if (z->pos[0] > tX)
 	z->vel[0] -= 0.001*tX;
-    else if(z->pos[0] < tX)
+    else if (z->pos[0] < tX)
 	z->vel[0] += 0.001*tX;
-    if(z->pos[1] > tY)
+    if (z->pos[1] > tY)
 	z->vel[1] -= 0.001*tY;
-    else if(z->pos[1] < tY)
+    else if (z->pos[1] < tY)
 	z->vel[1] += 0.001*tY;
 }
 
-void zw_v_pos(Vampire *v, int tX, int tY) {
-    v->angle = atan2(v->pos[1]-tY, v->pos[0]-tX)*180/PI;
-    if(v->pos[0] > tX)
-	v->vel[0] -= 0.001*tX;
-    else if(v->pos[0] < tX)
-	v->vel[0] += 0.001*tX;
-    if(v->pos[1] > tY)
-	v->vel[1] -= 0.001*tY;
-    else if(z->pos[1] < tY)
-	v->vel[1] += 0.001*tY;
-}
-
-void zw_o_pos(Orc *o, int tX, int tY) {
+void zw_o_pos(Orc *o, int tX, int tY) 
+{
     float d0, d1;
     o->angle = atan2(o->pos[1]-tY, o->pos[0]-tX)*180/PI;
     if (o->a_live) {
@@ -260,6 +285,19 @@ void zw_o_pos(Orc *o, int tX, int tY) {
 	o->vel[1] -= 0.001*tY;
     else if (o->pos[1] < tY)
 	o->vel[1] += 0.001*tY;
+}
+
+void zw_v_pos(Vampire *v, int tX, int tY) 
+{
+    v->angle = atan2(v->pos[1]-tY, v->pos[0]-tX)*180/PI;
+    if(v->pos[0] > tX)
+	v->vel[0] -= 0.001*tX;
+    else if(v->pos[0] < tX)
+	v->vel[0] += 0.001*tX;
+    if(v->pos[1] > tY)
+	v->vel[1] -= 0.001*tY;
+    else if(z->pos[1] < tY)
+	v->vel[1] += 0.001*tY;
 }
 
 void zw_placeEnemies(GLuint t1, GLuint t2, GLuint t3, int round)

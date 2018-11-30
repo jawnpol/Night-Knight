@@ -18,6 +18,10 @@
 #include <GL/glu.h>
 #include <X11/Xutil.h>
 #include <iostream>
+
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 //#define USE_OPENAL_SOUND
 //#ifdef USE_OPENAL_SOUND
 #include </usr/include/AL/alut.h>
@@ -78,12 +82,12 @@ void initSound()
 
     //Buffer holds the sound information.
     sound  = alutCreateBufferFromFile("./test.wav");
-    //song = alutCreateBufferFromFile("./cartoonsound.wav");
+    song = alutCreateBufferFromFile("./cartoonsound.wav");
 
     //Generate a source, and store it in a buffer.
     alGenSources(1, &alSource);
-    //alGenSources(1, &gameSong);
-    //alSourcei(gameSong, AL_BUFFER, song);
+    alGenSources(1, &gameSong);
+    alSourcei(gameSong, AL_BUFFER, song);
     alSourcei(alSource, AL_BUFFER , sound);
     //Set volume and pitch to normal, no looping of sound.
     alSourcef(alSource, AL_GAIN, 1.0f);
@@ -96,13 +100,13 @@ void initSound()
 
     //Play a looping sound
     //For future use as main game sound
-    /*alSourcef(gameSong, AL_GAIN, 0.5f);
+    alSourcef(gameSong, AL_GAIN, 0.5f);
     alSourcef(gameSong, AL_PITCH, 1.0f);
     alSourcei(gameSong, AL_LOOPING, AL_TRUE);
     if (alGetError() != AL_NO_ERROR) {
         printf("Error: setting source\n");
         return ;
-    }*/
+    }
 }
 
 void cleanupSound()
@@ -135,15 +139,15 @@ void playSound()
     //#endif //USE_OPENAL_SOUND
 }
 
-/*void playGameSound()
+void playGameSound()
 {
-    #ifdef USE_OPENAL_SOUND
-    for (int i = 0; i < 42; i++) {
+    alSourcePlay(gameSong);
+    /*for (int i = 0; i < 42; i++) {
+        cout << "Plays the song!";
         alSourcePlay(gameSong);
-        usleep(54100000);
-    }
-    #endif //USE_OPENAL_SOUND
-}*/
+        usleep(1000000);
+    }*/
+}
 
 
 //Building functionality
@@ -156,6 +160,8 @@ typedef struct t_grid {
     int over;
     int status = 0;
     float color[4];
+    bool woodStatus = true;
+    bool stoneStatus = false;
 } Grid;
 Grid buildingGrid[XDIM][YDIM];
 int gridDim = 120;
@@ -163,6 +169,7 @@ int quadSize;
 int boardDimX;
 int boardDimY;
 int leftButton = 0;
+int rightButton = 0;
 
 void initBoard(void)
 {
@@ -235,6 +242,11 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
             }
             
         }
+        if (e->xbutton.button == 2) {
+            if (roundEnd) {
+                rightButton = 1;
+            }
+        }
     }
 
     for (i = 0; i < XDIM; i++) {
@@ -278,6 +290,30 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
                                 cout << "Does it get to here?" << endl;
                                 buildingGrid[i][j].status = 1;
                                 leftButton = 0;
+                                cout << "i and j status 2" << buildingGrid[i][j].status << endl;
+                                break;
+                        //}
+                        //leftButton = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    if (roundEnd == 1 && rightButton == 1) {
+        cout << "Does it get here 1?" << endl;
+        for (i = 0; i < XDIM; i++) {
+            for (j = 0; j < YDIM; j++) {
+                if (x <= i * gridDim + gridDim &&
+                    x >= i * gridDim - gridDim &&
+                    y <= j * gridDim + gridDim &&
+                    y >= j * gridDim) {
+                    cout << "i and j status" << buildingGrid[i][j].status << endl;
+                    if (buildingGrid[i][j].over == 1) { 
+                        //if (leftButton == 1) {
+                                cout << "Does it get to here?" << endl;
+                                buildingGrid[i][j].status = 1;
+                                rightButton = 0;
                                 cout << "i and j status 2" << buildingGrid[i][j].status << endl;
                                 break;
                         //}
@@ -355,13 +391,16 @@ void renderBoard(int xres, int yres, GLuint texture)
 
 static int woodMats = 0;
 static int stoneMats = 0;
+
 typedef struct t_wood {
     int health = 50;
+    float pos[2];
 } Wood;
 Wood woodStore[XDIM][YDIM];
 
 typedef struct t_stone {
     int health = 100;
+    float pos[0];
 } Stone;
 Stone stoneStore[XDIM][YDIM];
 
@@ -443,7 +482,8 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd
             for (int j = 0; j < yres; j +=tileSize) {
             //cout << "Size of i: " << i << " and j : " << j << endl;
                 //if(buildingGrid[i][j].status
-                if (buildingGrid[i/tileSize][j/tileSize].status == 1) {
+                if (buildingGrid[i/tileSize][j/tileSize].status == 1 && 
+                    buildingGrid[i/tileSize][j/tileSize].woodStatus == 1) {
                     glBindTexture(GL_TEXTURE_2D, wood);
                     glBegin(GL_QUADS);
                         glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
@@ -452,6 +492,24 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd
                         glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
                     glEnd();
                     glBindTexture(GL_TEXTURE_2D, 0);
+                    woodStore[i/tileSize][j/tileSize];
+                    woodStore[i/tileSize][j/tileSize].pos[0] = i + 60;
+                    woodStore[i/tileSize][j/tileSize].pos[1] = j + 60;
+                }
+
+                if (buildingGrid[i/tileSize][j/tileSize].status == 1 && 
+                    buildingGrid[i/tileSize][j/tileSize].stoneStatus == 1) {
+                    glBindTexture(GL_TEXTURE_2D, wood);
+                    glBegin(GL_QUADS);
+                        glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
+                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
+                        glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
+                        glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
+                    glEnd();
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                    woodStore[i/tileSize][j/tileSize];
+                    woodStore[i/tileSize][j/tileSize].pos[0] = i + 60;
+                    woodStore[i/tileSize][j/tileSize].pos[1] = j + 60;
                 }
             }
         }
@@ -488,4 +546,12 @@ void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float 
     glPopMatrix();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_ALPHA_TEST);
+}
+
+bool structurePlacement(int x, int y)
+{
+    if (buildingGrid[x][y].status == 1)
+        return true;
+    else 
+        return false;
 }

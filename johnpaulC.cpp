@@ -29,6 +29,9 @@
 using namespace std;
 
 extern bool structureCollision(int x, int y);
+void buildReset(int x, int y);
+void stoneReset(int x, int y);
+//void structureDamage();
 
 void jc_show_credits(Rect &r)
 {
@@ -163,10 +166,29 @@ typedef struct t_grid {
     int over;
     int status = 0;
     float color[4];
-    bool woodStatus = true;
+    bool woodStatus = false;
     bool stoneStatus = false;
 } Grid;
+
 Grid buildingGrid[XDIM][YDIM];
+
+static int woodMats = 0;
+static int stoneMats = 0;
+
+typedef struct t_wood {
+    float health = 100.0;
+    float pos[2];
+    bool dead = true;
+} Wood;
+Wood woodStore[XDIM][YDIM];
+
+typedef struct t_stone {
+    float health = 200.0;
+    float pos[2];
+    bool dead = false;
+} Stone;
+Stone stoneStore[XDIM][YDIM];
+
 int gridDim = 120;
 int quadSize;
 int boardDimX;
@@ -180,6 +202,7 @@ void initBoard(void)
     boardDimY = 1080;
     quadSize = 60;
     leftButton = 0;
+    rightButton = 0;
     for (int i = 0; i < XDIM; i++)
         for (int j = 0; j< YDIM; j++) {
             buildingGrid[i][j].over = 0;
@@ -187,30 +210,6 @@ void initBoard(void)
         }
 
 }
-//Gets the center of each individual grid
-//
-void gridCenter(const int i, const int j, int cent[2])
-{
-    int boardX = boardDimX / 2;
-    int boardY = boardDimY / 2;
-    int screen_center[2] = {1920/2, 1080/2};
-    
-    int s0 = screen_center[0];
-    int s1 = screen_center[1];
-
-    int quad[2];
-
-    int gridWidth = 120;
-    
-    quad[0] = s0 - boardX;
-    quad[1] = s1 - boardY;
-    cent[0] = quad[0] + gridWidth;
-    cent[1] = quad[1] + gridWidth;
-    cent[0] += (gridWidth * j);
-    cent[1] += (gridWidth * i);
-}
-
-
 /*void buildingClick()
 {
     int i,j;
@@ -241,14 +240,14 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
         if (e->xbutton.button == 1) {
             if (roundEnd) {
                 leftButton = 1;
-                cout << "Button was pressed" << endl;
+                //cout << "Button was pressed" << endl;
             }
             
         }
         if (e->xbutton.button == 3) {
             if (roundEnd) {
                 rightButton = 1;
-                cout << "Right click" << endl;
+                //cout << "Right click" << endl;
             }
         }
     }
@@ -281,22 +280,26 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
     }
 
     if (roundEnd == 1 && leftButton == 1) {
-        cout << "Does it get here 1?" << endl;
+        //cout << "Does it get here 1?" << endl;
         for (i = 0; i < XDIM; i++) {
             for (j = 0; j < YDIM; j++) {
                 if (x <= i * gridDim + gridDim &&
                     x >= i * gridDim - gridDim &&
                     y <= j * gridDim + gridDim &&
                     y >= j * gridDim) {
-                    cout << "i and j status" << buildingGrid[i][j].status << endl;
+                    //cout << "i and j status" << buildingGrid[i][j].status << endl;
                     if (buildingGrid[i][j].over == 1) { 
                         //if (leftButton == 1) {
-                                cout << "Does it get to here?" << endl;
+                                //cout << "Does it get to here?" << endl;
                                 buildingGrid[i][j].status = 1;
                                 buildingGrid[i][j].woodStatus = true;
                                 buildingGrid[i][j].stoneStatus = false;
+                                //woodStore[i][j].health = 100.0;
+                                woodStore[i][j].dead = false;
+                                cout << "Health during placement: " << woodStore[i][j].health;
+                                cout << " Is it dead? " << woodStore[i][j].dead << endl;
                                 leftButton = 0;
-                                cout << "i and j status 2" << buildingGrid[i][j].status << endl;
+                                //cout << "i and j status 2" << buildingGrid[i][j].status << endl;
                                 break;
                         //}
                         //leftButton = 0;
@@ -307,20 +310,22 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
     }
 
     if (roundEnd == 1 && rightButton == 1) {
-        cout << "Does it get here 1?" << endl;
+        //cout << "Does it get here 1?" << endl;
         for (i = 0; i < XDIM; i++) {
             for (j = 0; j < YDIM; j++) {
                 if (x <= i * gridDim + gridDim &&
                     x >= i * gridDim - gridDim &&
                     y <= j * gridDim + gridDim &&
                     y >= j * gridDim) {
-                    cout << "i and j status" << buildingGrid[i][j].status << endl;
+                    //cout << "i and j status" << buildingGrid[i][j].status << endl;
                     if (buildingGrid[i][j].over == 1) { 
                         //if (leftButton == 1) {
                                 cout << "Does it get to here?" << endl;
                                 buildingGrid[i][j].status = 1;
-                                buildingGrid[i][j].woodStatus = false;
                                 buildingGrid[i][j].stoneStatus = true;
+                                buildingGrid[i][j].woodStatus = false;
+                                stoneStore[i][j].dead = false;
+                                stoneStore[i][j].health = 200.0;
                                 rightButton = 0;
                                 cout << "i and j status 2" << buildingGrid[i][j].status << endl;
                                 break;
@@ -342,7 +347,7 @@ void menuState(bool state)
 }*/
 void renderBoard(int xres, int yres, GLuint texture, GLuint stone)
 {
-    cout << "Does it get into renderBoard?" << endl;
+    //cout << "Does it get into renderBoard?" << endl;
     int tileSize = 120;
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -355,12 +360,12 @@ void renderBoard(int xres, int yres, GLuint texture, GLuint stone)
 
                 if (buildingGrid[i/120][j/120].over) {
                     glColor3f(0.3f, 1.0f, 0.3f);
-                    if (buildingGrid[i/120][j/120].woodStatus)
+                    /*if (buildingGrid[i/120][j/120].woodStatus)
                         glBindTexture(GL_TEXTURE_2D, texture);
-                    else {
+                    if (buildingGrid[i/tileSize][j/tileSize].stoneStatus) {
                         glBindTexture(GL_TEXTURE_2D, stone);
                         cout << "It binds stone here!" << endl;
-                    }
+                    }*/
                 }
                     
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -401,23 +406,6 @@ void renderBoard(int xres, int yres, GLuint texture, GLuint stone)
 
 //Building structures
 //Adding a Materials class to handle building
-
-static int woodMats = 0;
-static int stoneMats = 0;
-
-typedef struct t_wood {
-    float health = 100;
-    bool wPlacement = false;
-    float pos[2];
-} Wood;
-Wood woodStore[XDIM][YDIM];
-
-typedef struct t_stone {
-    float health = 200;
-    float pos[0];
-    bool sPlacement = false;
-} Stone;
-Stone stoneStore[XDIM][YDIM];
 
 void addWood(int wood)
 {
@@ -470,7 +458,6 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone,
 {
     int tileSize = 120;
     glClear(GL_COLOR_BUFFER_BIT);
-
     glColor3f(1.0, 1.0, 1.0);
     glBindTexture(GL_TEXTURE_2D, texid);
     //glBegin(GL_QUADS);
@@ -487,79 +474,77 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone,
             //glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
+    //structureRemoval();
 
-    //if (roundEnd) {
-        glEnable(GL_ALPHA_TEST);
-        glAlphaFunc(GL_GREATER, 0.0f);
-        glColor4ub(255,255,255,255);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        for (int i = 0; i < xres; i+=tileSize) {
-            for (int j = 0; j < yres; j +=tileSize) {
-            //cout << "Size of i: " << i << " and j : " << j << endl;
-                //if(buildingGrid[i][j].status
-                if (buildingGrid[i/tileSize][j/tileSize].status == 1 && 
-                    buildingGrid[i/tileSize][j/tileSize].woodStatus == 1) {
-                    glBindTexture(GL_TEXTURE_2D, wood);
-                    glBegin(GL_QUADS);
-                        glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
-                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
-                        glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
-                        glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
-                    glEnd();
-                    glBindTexture(GL_TEXTURE_2D, 0);
-                    woodStore[i/tileSize][j/tileSize];
-                    woodStore[i/tileSize][j/tileSize].pos[0] = i + 60;
-                    woodStore[i/tileSize][j/tileSize].pos[1] = j + 60;
-                    woodStore[i/tileSize][j/tileSize].wPlacement = true;
-                }
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+    //glBindTexture(GL_TEXTURE_2D, 0);
 
-                if (buildingGrid[i/tileSize][j/tileSize].status == 1 && 
-                    buildingGrid[i/tileSize][j/tileSize].stoneStatus == 1) {
-                    glBindTexture(GL_TEXTURE_2D, stone);
-                    glBegin(GL_QUADS);
-                        glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
-                        glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
-                        glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
-                        glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
-                    glEnd();
-                    glBindTexture(GL_TEXTURE_2D, 0);
-                    stoneStore[i/tileSize][j/tileSize];
-                    stoneStore[i/tileSize][j/tileSize].pos[0] = i + 60;
-                    stoneStore[i/tileSize][j/tileSize].pos[1] = j + 60;
-                    stoneStore[i/tileSize][j/tileSize].sPlacement = true;
-                }
+    for (int i = 0; i < xres; i+=tileSize) {
+        for (int j = 0; j < yres; j +=tileSize) {
+            if (woodStore[i/tileSize][j/tileSize].dead //&&
+                /*buildingGrid[i/tileSize][j/tileSize].status == 0*/) {
+                //glBindTexture(GL_TEXTURE_2D, texid);
+                continue;
+            } else {
+                glBindTexture(GL_TEXTURE_2D, wood);
+                //cout << "THIS BLOCK SHOULD BE DEAD: " << i/tileSize << " " << j/tileSize<< endl;
             }
+            
+
+            //glBindTexture(GL_TEXTURE_2D, wood);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
+                glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
+                glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
+                glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
+            glEnd();
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
-        glDisable(GL_ALPHA_TEST);
+    }
+
+    /*for (int i = 0; i < xres; i += tileSize) {
+        for (int j = 0; j < yres; j += tileSize) {
+            if (buildingGrid[i/tileSize][j/tileSize].stoneStatus == false) 
+                continue;
+                glBindTexture(GL_TEXTURE_2D, stone);
+                glBegin(GL_QUADS);
+                    glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
+                    glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
+                    glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
+                    glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
+                glEnd();
+                glBindTexture(GL_TEXTURE_2D, 0);
+                        //stoneStore[i/tileSize][j/tileSize];
+                stoneStore[i/tileSize][j/tileSize].pos[0] = i + 60;
+                stoneStore[i/tileSize][j/tileSize].pos[1] = j + 60;
+            
+        }
+    } */
+    
+    glDisable(GL_ALPHA_TEST);
     //}
 }
 
 
 void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float angle, GLuint texture)
 {	
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_ONE, GL_ONE);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glPushMatrix();
-    //glColor3f(1.0, 1.0, 1.0);
     glTranslatef(pos[0], pos[1], pos[2]);
-    glRotatef(angle-180, 0, 0, 1);
-    //glBindTexture(GL_TEXTURE_2D, texture);
-    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV, GL_REPLACE);
-    //glBindTexture(GL_TEXTURE_2D, texture);    
+    glRotatef(angle-180, 0, 0, 1); 
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.0f);
     glColor4ub(255,255,255,255);
-    //glTranslatef(pos[0], pos[1], pos[2]);
     glBindTexture(GL_TEXTURE_2D, texture);
     glBegin(GL_QUADS);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     	glTexCoord2f(0.0f, 1.0f); glVertex2i(-30,-25);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
+	   glTexCoord2f(0.0f, 0.0f); glVertex2i(-30, 25);
+	   glTexCoord2f(1.0f, 0.0f); glVertex2i(30, 25);
+	   glTexCoord2f(1.0f, 1.0f); glVertex2i(30,-25);
     glEnd();
-    //glDisable(GL_BLEND);
+
     glPopMatrix();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_ALPHA_TEST);
@@ -568,24 +553,80 @@ void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float 
 bool structurePlacement(int x, int y)
 {
     if (buildingGrid[x][y].status == 1)
+    {    
+        //cout << "Checking build Status before return: " << buildingGrid[x][y].status << endl;
         return true;
+    }
     else 
+        //cout << "Checking build Status before return: " << buildingGrid[x][y].status << endl;
         return false;
 }
 
-/*void structureDamage()
+void structureDamage()
 {
-    for (int i = 0; i < XDIM; i ++) {
-        for (int j = 0; j <YDIM; j++) {
+    int i, j;
+    for (i = 0; i < XDIM; i++) {
+        for (j = 0; j < YDIM; j++) {
             if (structureCollision(i,j)) {
+                cout << "Health: " << woodStore[i][j].health << endl;
+                woodStore[i][j].health--;
+                continue;
 
-                if (woodStore[i][j].wPlacement) {
-                    woodStore[i][j].health -= 1 * 1.2;
+                if (woodStore[i][j].health <= 0.0)
+                {
+                    buildingGrid[i][j].status = 0;
+                    woodStore[i][j].dead = true;
+                    //return;
                 }
-                if (stoneStore[i][j].sPlacement)
-                    stoneStore[i][j].health -= 1;
-
             }
         }
     }
-}*/
+    //cout << "Does it get to structureDamage" << endl;
+    /*for (int i = 0; i < XDIM; i ++) {
+        for (int j = 0; j <YDIM; j++) {
+            cout << "Status before Collision: " << buildingGrid[i][j].status << endl;
+            while (structureCollision(i,j)) {
+                if (buildingGrid[i][j].status == 1) {
+                    cout << "Original Health" << woodStore[i][j].health << endl;
+                    woodStore[i][j].health = woodStore[i][j].health - 10.0;
+                    cout << "Collision health: " << woodStore[i][j].health << endl;
+                    cout << "Status in collision? " << buildingGrid[i][j].status << endl;
+                    if (woodStore[i][j].health <=0.0) {
+                        woodStore[i][j].dead = true;
+                        buildingGrid[i][j].status = 0;
+                        cout << "Is it dead?" << woodStore[i][j].dead << endl;
+                        continue;
+                    }
+                    //break;
+                }
+            }
+            //if (woodStore[i][j].dead)
+              //  buildReset(i,j);
+            if (structureCollision(i,j)) {
+                cout << "Does it get to check structureCollision" << endl;
+                if (buildingGrid[i][j].woodStatus == true) {
+                    woodStore[i][j].health -= 60;
+                    cout << "Structure health:" << woodStore[i][j].health << endl;
+                }
+                if (buildingGrid[i][j].stoneStatus == true)
+                    stoneStore[i][j].health -= 1;
+            }
+        //}
+    //}*/
+}
+
+void buildReset(int x, int y)
+{
+    buildingGrid[x][y].woodStatus = false;
+    buildingGrid[x][y].stoneStatus = false;
+    buildingGrid[x][y].status = 0;
+    //woodStore[x][y].health = 100.0;
+}
+
+void stoneReset(int x, int y)
+{
+    //buildingGrid[x][y].woodStatus;
+    //buildingGrid[x][y].stoneStatus;
+    buildingGrid[x][y].status = 0;
+    //stoneStore[x][y].health = 200.0;
+}

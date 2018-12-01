@@ -106,7 +106,8 @@ extern void gameBackground(int xres, int yres, GLuint texid, GLuint woodTexture,
 extern void renderHealth(int health);
 extern void renderBoard(int xres, int yres, GLuint texture, GLuint stone);
 extern void buildPlacement(int xres, int yres, GLuint wood);
-//extern void structureDamage();
+extern void structureDamage();
+//extern void structureRemoval();
 //extern void menuState(bool state);
 extern void checkMouseEvent(XEvent *e, bool roundEnd);
 extern void zw_reset_round();
@@ -276,7 +277,7 @@ class Game {
 	Ship ship;
 	//Asteroid *ahead;
 	Bullet *barr;
-	int round = 0;
+	int round = 1;
 	int enemyCount;
 	int nasteroids;
 	int nbullets;
@@ -820,7 +821,8 @@ int check_keys(XEvent *e)
 
 void physics()
 {
-	//structureDamage();
+	if (!g.roundEnd)
+		structureDamage();
 	//playGameSound();
     //Flt d0,d1,dist;
     //Update ship position
@@ -830,10 +832,10 @@ void physics()
     //Edited by Zachary Kaiser: Forced ship to stay within screen
     //boundaries
     if (g.ship.pos[0] <= 0.0) {
-	g.ship.pos[0] = (float)gl.xres;
+		g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[0] >= (float)gl.xres) {
-	g.ship.pos[0] = (float)gl.xres;
+		g.ship.pos[0] = (float)gl.xres;
     }
     else if (g.ship.pos[1] <= 0.0) {
 	g.ship.pos[1] = (float)gl.yres;

@@ -54,6 +54,7 @@ int powerups[5] = {0,0,0,0,0};
 extern void initSound();
 extern void cleanupSound();
 extern void playSound();
+extern void playGameSound();
 //-----------------------------------------------------------------------------
 //Setup timers
 const double OOBILLION = 1.0 / 1e9;
@@ -101,10 +102,11 @@ extern void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GL
 extern bool zw_check_enemy_hit(int round, float x, float y);
 extern bool zw_player_hit(int round, float x, float y);
 extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, float angle, GLuint texture);
-extern void gameBackground(int xres, int yres, GLuint texid, GLuint woodTexture, bool roundEnd);
+extern void gameBackground(int xres, int yres, GLuint texid, GLuint woodTexture, GLuint stoneTexture, bool roundEnd);
 extern void renderHealth(int health);
-extern void renderBoard(int xres, int yres, GLuint texture);
+extern void renderBoard(int xres, int yres, GLuint texture, GLuint stone);
 extern void buildPlacement(int xres, int yres, GLuint wood);
+//extern void structureDamage();
 //extern void menuState(bool state);
 extern void checkMouseEvent(XEvent *e, bool roundEnd);
 extern void zw_reset_round();
@@ -163,8 +165,9 @@ class Image {
 		unlink(ppmname);
 	}
 };
-Image img[13] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
-    "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png","vampire.png", "./fence.png"};
+Image img[14] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
+    "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png","vampire.png", "./fence.png",
+	"stone.png"};
 
 unsigned char *buildAlphaData(Image *img)
 {
@@ -223,6 +226,7 @@ class Global {
 	GLuint orcTexture;
 	GLuint vampireTexture;
 	GLuint woodTexture;
+	GLuint stoneTexture;
 	Global() {
 	    //Changed by Zakary Worman: Just made this resolution slightly larger
 	    xres = 1920;
@@ -621,6 +625,35 @@ void init_opengl()
                             GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
     free(silhouetteData);
     //-------------------------------------------------------------------------
+
+    //-------------------------------------------------------------------------
+
+	glGenTextures(1, &gl.stoneTexture);
+	w = img[12].width;
+    h = img[12].height;
+
+    glBindTexture(GL_TEXTURE_2D, gl.stoneTexture);
+        
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        //glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
+        //                0, GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+	
+        //Trying to make sprite work - JPC
+	
+	//glGenTextures(1, &gl.playerSilhouette);
+
+	//glBindTexture(GL_TEXTURE_2D, gl.playerSilhouette);
+        //
+        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+        //
+        //must build a new set of data...*/
+    silhouetteData = buildAlphaData(&img[13]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+                            GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+    free(silhouetteData);
+    //-------------------------------------------------------------------------
     //Zombie Sprite - Zakary
     //
     glGenTextures(1, &gl.zombieTexture);
@@ -729,6 +762,7 @@ void check_mouse(XEvent *e)
 		if (g.nbullets < MAX_BULLETS) {
 
 		    playSound();
+		    //playGameSound();
 		    Bullet *b = &g.barr[g.nbullets];
 		    timeCopy(&b->time, &bt);
 		    b->pos[0] = g.ship.pos[0];
@@ -809,6 +843,8 @@ int check_keys(XEvent *e)
 
 void physics()
 {
+	//structureDamage();
+	//playGameSound();
     //Flt d0,d1,dist;
     //Update ship position
     g.ship.pos[0] += g.ship.vel[0];
@@ -938,6 +974,7 @@ void physics()
 
 void render()
 {
+	//playGameSound();
     glClear(GL_COLOR_BUFFER_BIT);
     if(menuScreen()) {
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
@@ -945,6 +982,7 @@ void render()
 		initButtons();
 		drawButtons();
 		zk_drawCircle();
+		playGameSound();
 		return;
     }
     if(g.ship.health <= 0) {
@@ -964,7 +1002,7 @@ void render()
 		return;
     }
     glClear(GL_COLOR_BUFFER_BIT);
-    gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, g.roundEnd);
+    gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture, g.roundEnd);
     //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
     Rect r;
     if(gl.credits) {
@@ -999,7 +1037,7 @@ void render()
 		s.center = gl.xres/2;
 		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
 		if (g.round > 0)
-			renderBoard(gl.xres, gl.yres, gl.woodTexture);
+			renderBoard(gl.xres, gl.yres, gl.woodTexture, gl.stoneTexture);
 		//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
 		if (gl.keys[XK_r]) {
 		    g.round++;

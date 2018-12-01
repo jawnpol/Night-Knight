@@ -27,6 +27,9 @@
 #include </usr/include/AL/alut.h>
 //#endif //USE_OPENAL_SOUND
 using namespace std;
+
+extern bool structureCollision(int x, int y);
+
 void jc_show_credits(Rect &r)
 {
     ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
@@ -242,9 +245,10 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
             }
             
         }
-        if (e->xbutton.button == 2) {
+        if (e->xbutton.button == 3) {
             if (roundEnd) {
                 rightButton = 1;
+                cout << "Right click" << endl;
             }
         }
     }
@@ -289,6 +293,8 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
                         //if (leftButton == 1) {
                                 cout << "Does it get to here?" << endl;
                                 buildingGrid[i][j].status = 1;
+                                buildingGrid[i][j].woodStatus = true;
+                                buildingGrid[i][j].stoneStatus = false;
                                 leftButton = 0;
                                 cout << "i and j status 2" << buildingGrid[i][j].status << endl;
                                 break;
@@ -313,6 +319,8 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
                         //if (leftButton == 1) {
                                 cout << "Does it get to here?" << endl;
                                 buildingGrid[i][j].status = 1;
+                                buildingGrid[i][j].woodStatus = false;
+                                buildingGrid[i][j].stoneStatus = true;
                                 rightButton = 0;
                                 cout << "i and j status 2" << buildingGrid[i][j].status << endl;
                                 break;
@@ -332,7 +340,7 @@ void menuState(bool state)
 {
     menu = state;
 }*/
-void renderBoard(int xres, int yres, GLuint texture)
+void renderBoard(int xres, int yres, GLuint texture, GLuint stone)
 {
     cout << "Does it get into renderBoard?" << endl;
     int tileSize = 120;
@@ -347,7 +355,12 @@ void renderBoard(int xres, int yres, GLuint texture)
 
                 if (buildingGrid[i/120][j/120].over) {
                     glColor3f(0.3f, 1.0f, 0.3f);
-                    glBindTexture(GL_TEXTURE_2D, texture);
+                    if (buildingGrid[i/120][j/120].woodStatus)
+                        glBindTexture(GL_TEXTURE_2D, texture);
+                    else {
+                        glBindTexture(GL_TEXTURE_2D, stone);
+                        cout << "It binds stone here!" << endl;
+                    }
                 }
                     
                 glBindTexture(GL_TEXTURE_2D, 0);
@@ -393,14 +406,16 @@ static int woodMats = 0;
 static int stoneMats = 0;
 
 typedef struct t_wood {
-    int health = 50;
+    float health = 100;
+    bool wPlacement = false;
     float pos[2];
 } Wood;
 Wood woodStore[XDIM][YDIM];
 
 typedef struct t_stone {
-    int health = 100;
+    float health = 200;
     float pos[0];
+    bool sPlacement = false;
 } Stone;
 Stone stoneStore[XDIM][YDIM];
 
@@ -451,7 +466,7 @@ void buildPlacement(int xres, int yres, GLuint wood)
     glDisable(GL_ALPHA_TEST);
 }
 
-void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd)
+void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone, bool roundEnd)
 {
     int tileSize = 120;
     glClear(GL_COLOR_BUFFER_BIT);
@@ -495,11 +510,12 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd
                     woodStore[i/tileSize][j/tileSize];
                     woodStore[i/tileSize][j/tileSize].pos[0] = i + 60;
                     woodStore[i/tileSize][j/tileSize].pos[1] = j + 60;
+                    woodStore[i/tileSize][j/tileSize].wPlacement = true;
                 }
 
                 if (buildingGrid[i/tileSize][j/tileSize].status == 1 && 
                     buildingGrid[i/tileSize][j/tileSize].stoneStatus == 1) {
-                    glBindTexture(GL_TEXTURE_2D, wood);
+                    glBindTexture(GL_TEXTURE_2D, stone);
                     glBegin(GL_QUADS);
                         glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
                         glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
@@ -507,9 +523,10 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, bool roundEnd
                         glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
                     glEnd();
                     glBindTexture(GL_TEXTURE_2D, 0);
-                    woodStore[i/tileSize][j/tileSize];
-                    woodStore[i/tileSize][j/tileSize].pos[0] = i + 60;
-                    woodStore[i/tileSize][j/tileSize].pos[1] = j + 60;
+                    stoneStore[i/tileSize][j/tileSize];
+                    stoneStore[i/tileSize][j/tileSize].pos[0] = i + 60;
+                    stoneStore[i/tileSize][j/tileSize].pos[1] = j + 60;
+                    stoneStore[i/tileSize][j/tileSize].sPlacement = true;
                 }
             }
         }
@@ -555,3 +572,20 @@ bool structurePlacement(int x, int y)
     else 
         return false;
 }
+
+/*void structureDamage()
+{
+    for (int i = 0; i < XDIM; i ++) {
+        for (int j = 0; j <YDIM; j++) {
+            if (structureCollision(i,j)) {
+
+                if (woodStore[i][j].wPlacement) {
+                    woodStore[i][j].health -= 1 * 1.2;
+                }
+                if (stoneStore[i][j].sPlacement)
+                    stoneStore[i][j].health -= 1;
+
+            }
+        }
+    }
+}*/

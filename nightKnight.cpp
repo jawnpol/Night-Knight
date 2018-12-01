@@ -111,6 +111,7 @@ extern void buildPlacement(int xres, int yres, GLuint wood);
 extern void checkMouseEvent(XEvent *e, bool roundEnd);
 extern void zw_reset_round();
 extern void zw_drawSword(float x, float y, float angle);
+extern bool zw_player_structure_collision(float x, float y);
 //-----------------------------------------------------------------------------
 class Image {
     public:
@@ -431,7 +432,7 @@ int main()
 	    checkButtonClick(&e);
 	    done = check_keys(&e);
 	    if (g.round >= 1)
-			checkMouseEvent(&e, g.roundEnd);
+		checkMouseEvent(&e, g.roundEnd);
 	}
 	physics();
 	render();
@@ -576,18 +577,6 @@ void init_opengl()
 
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    //glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-    //                0, GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
-
-    //Trying to make sprite work - JPC
-
-    //glGenTextures(1, &gl.playerSilhouette);
-
-    //glBindTexture(GL_TEXTURE_2D, gl.playerSilhouette);
-    //
-    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    //
     //must build a new set of data...*/
     unsigned char *silhouetteData = buildAlphaData(&img[5]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
@@ -597,32 +586,20 @@ void init_opengl()
 
 
 
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
 
-	glGenTextures(1, &gl.woodTexture);
-	w = img[12].width;
+    glGenTextures(1, &gl.woodTexture);
+    w = img[12].width;
     h = img[12].height;
 
     glBindTexture(GL_TEXTURE_2D, gl.woodTexture);
-        
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        //glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-        //                0, GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
-	
-        //Trying to make sprite work - JPC
-	
-	//glGenTextures(1, &gl.playerSilhouette);
 
-	//glBindTexture(GL_TEXTURE_2D, gl.playerSilhouette);
-        //
-        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-        //
-        //must build a new set of data...*/
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    //must build a new set of data...*/
     silhouetteData = buildAlphaData(&img[12]);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-                            GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+	    GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
     free(silhouetteData);
     //-------------------------------------------------------------------------
 
@@ -954,6 +931,10 @@ void physics()
 	g.ship.vel[0] -= xdir;
 	g.ship.vel[1] -= ydir;
     }
+    else {
+	g.ship.vel[0] *= 0.8;
+	g.ship.vel[1] *= 0.8;
+    }
     //Changed by Zakary Worman: changed to simply reduce the speed
     //to be more characteristic of a human rather than ship
     Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
@@ -964,11 +945,11 @@ void physics()
 	g.ship.vel[0] *= speed;
 	g.ship.vel[1] *= speed;
     }
-    //Added by Zakary Worman: this makes the person slow down as you stop moving
-    else {
-	g.ship.vel[0] *= 0.8;
-	g.ship.vel[1] *= 0.8;
+    if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+	g.ship.vel[0] *= -1;
+	g.ship.vel[1] *= -1;
     }
+    //Added by Zakary Worman: this makes the person slow down as you stop moving
     g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 }
 
@@ -986,47 +967,47 @@ void render()
 		return;
     }
     if(g.ship.health <= 0) {
-		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-		zk_gameovertext(gl.xres, gl.yres);
-		if(gl.keys[XK_f]) {
-		    gl.menuScreen = true;
-		    g.ship.health = 3;
-		    g.roundEnd = true;
-		    g.round = 0;
-		    zw_reset_round();
-		    g.ship.hit_recent = 0;
-		    zk_resetpups(powerups);
-		}	
-		zk_drawCircle();
-		//zw_gameover(gl.yres, gl.xres);
-		return;
+	zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+	zk_gameovertext(gl.xres, gl.yres);
+	if(gl.keys[XK_f]) {
+	    gl.menuScreen = true;
+	    g.ship.health = 3;
+	    g.roundEnd = true;
+	    g.round = 0;
+	    zw_reset_round();
+	    g.ship.hit_recent = 0;
+	    zk_resetpups(powerups);
+	}	
+	zk_drawCircle();
+	//zw_gameover(gl.yres, gl.xres);
+	return;
     }
     glClear(GL_COLOR_BUFFER_BIT);
     gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture, g.roundEnd);
     //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
     Rect r;
     if(gl.credits) {
-		Rect n;
-		n.bot = gl.yres - gl.yres/5;
-		n.left = gl.xres/2;
-		n.center = gl.xres/3;
-		zw_show_credits(n);
-		zk_show_credits(n);
-		bb_show_credits(n);
-		jc_show_credits(n);
-		zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-		return;
+	Rect n;
+	n.bot = gl.yres - gl.yres/5;
+	n.left = gl.xres/2;
+	n.center = gl.xres/3;
+	zw_show_credits(n);
+	zk_show_credits(n);
+	bb_show_credits(n);
+	jc_show_credits(n);
+	zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+	zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+	bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+	jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+	ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+	return;
     }
     playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
     if(gl.pause) {
-		zk_pausemenu(gl.xres, gl.yres);
-		zk_pausetext(gl.xres, gl.yres);
-		zk_drawCircle();
-		return;
+	zk_pausemenu(gl.xres, gl.yres);
+	zk_pausetext(gl.xres, gl.yres);
+	zk_drawCircle();
+	return;
     }
     if (g.roundEnd) {
 		zk_drawCircle();
@@ -1035,7 +1016,7 @@ void render()
 		s.bot = gl.yres - 28;
 		s.left = gl.xres/2 - 10;
 		s.center = gl.xres/2;
-		ggprint16(&s, 15, 0x00000000, "Press r to start next round");
+		ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
 		if (g.round > 0)
 			renderBoard(gl.xres, gl.yres, gl.woodTexture, gl.stoneTexture);
 		//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
@@ -1062,7 +1043,7 @@ void render()
     s.bot = gl.yres - 28;
     s.left = gl.xres/2 - 10;
     s.center = gl.xres/2;
-    ggprint16(&s, 16, 0x00000000, "Round: %i", g.round);
+    ggprint16(&s, 16, 0xcfcfcfcf, "Round: %i", g.round);
     //
     r.bot = gl.yres - 20;
     r.left = 10;
@@ -1092,7 +1073,7 @@ void render()
 	k.bot = gl.yres/1.2;
 	k.left = gl.xres/2 - 10;
 	k.center = gl.xres/2;
-    	ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
+	ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
     }
     //Draw the enemies
     zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.vampireTexture);

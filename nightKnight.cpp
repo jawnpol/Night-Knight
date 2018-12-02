@@ -762,8 +762,8 @@ void check_mouse(XEvent *e)
 					timeCopy(&b->time, &bt);
 					b->pos[0] = g.ship.pos[0];
 					b->pos[1] = g.ship.pos[1];
-					b->vel[0] = g.ship.vel[0];
-					b->vel[1] = g.ship.vel[1];
+					b->vel[0] = 0.5*g.ship.vel[0];
+					b->vel[1] = 0.5*g.ship.vel[1];
 					b->angle = g.ship.angle;
 					//convert ship angle to radians
 					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -772,8 +772,8 @@ void check_mouse(XEvent *e)
 					Flt ydir = sin(rad);
 					b->pos[0] += xdir*20.0f;
 					b->pos[1] += ydir*20.0f;
-					b->vel[0] += xdir*2 + rnd()*0.2;
-					b->vel[1] += ydir*2 + rnd()*0.2;
+					b->vel[0] += xdir*2 + rnd()*0.5;
+					b->vel[1] += ydir*2 + rnd()*0.5;
 					b->color[0] = 0.0f;
 					b->color[1] = 0.0f;
 					b->color[2] = 1.0f;
@@ -969,8 +969,8 @@ void physics()
 		//Changed by Zakary Worman: changed to simply reduce the speed
 		//to be more characteristic of a human rather than ship
 	}
-	//Added by Zakary Worman: this allows for backward movement with s
 	else if (gl.keys[XK_s]) {
+		//Added by Zakary Worman: this allows for backward movement with s
 		g.ship.vel[0] -= xdir;
 		g.ship.vel[1] -= ydir;
 	}

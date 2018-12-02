@@ -707,7 +707,7 @@ void zw_drawSword(float x, float y, float angle)
 bool zw_player_structure_collision(float x, float y) {
 	int gridX = floor(x/120);
 	int gridY = floor(y/120);
-	if (structurePlacement(gridX, gridY))
+	if (structurePlacement(gridX, gridY)) 
 		return true;
 	return false;
 }

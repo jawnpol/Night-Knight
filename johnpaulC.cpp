@@ -559,8 +559,8 @@ bool structurePlacement(int x, int y)
 void structureDamage()
 {
 	int i, j;
-	for (i = 0; i < XDIM; i++) {
-		for (j = 0; j < YDIM; j++) {
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 9; j++) {
 			if (structureCollision(i,j)) {
 				if (woodStore[i][j].health <= 0)
 				{
@@ -570,7 +570,7 @@ void structureDamage()
 					woodStore[i][j].dead = true;
 					return;
 				}
-				if (!woodStore[i][j].dead) {
+				if (buildingGrid[i][j].status == 1) {
 					cout << "Health: " << woodStore[i][j].health << endl;
 					woodStore[i][j].health--;
 

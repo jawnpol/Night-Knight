@@ -235,13 +235,10 @@ void spawnHearts()
 	for (int i=0; i < MAXHEARTS; i++) {
 		if (h[i].spawn)
 			continue;
-		//1/5 chances a heart spawns
-		if (spawnChance(15)) {	
-			h[i].spawn  = true;
-			h[i].pos[0] = d.x;
-			h[i].pos[1] = d.y;
-			break;
-		}
+		h[i].spawn  = true;
+		h[i].pos[0] = d.x;
+		h[i].pos[1] = d.y;
+		break;
 	}
 }
 
@@ -250,20 +247,29 @@ void spawnPowerups()
 	for (int i = 0; i < MAXPOWERUPS; i++) {
 		if (p[i].spawn)
 			continue;
-		if(spawnChance(5)) {
-			p[i].spawn = true;
-			p[i].pos[0] = d.x;
-			p[i].pos[1] = d.y;
-			break;
-		}
+		p[i].spawn = true;
+		p[i].pos[0] = d.x;
+		p[i].pos[1] = d.y;
+		break;
 	}
 }
 void storeDeathPosition(float x, float y)
 {
 	d.x = x;
 	d.y = y;
-	spawnHearts();
-	spawnPowerups();
+	int spawnCounter = 0;
+	if(spawnCounter < 1) {
+		if(spawnChance(10)) {
+			spawnHearts();
+			spawnCounter++;
+			return;
+		}
+		if(spawnChance(1)) {
+			spawnPowerups();
+			spawnCounter++;
+			return;
+		}
+	}
 }
 
 bool heartCollision(float playerx, float playery)

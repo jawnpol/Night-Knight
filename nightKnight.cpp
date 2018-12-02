@@ -845,13 +845,8 @@ void physics()
 	//playGameSound();
 	//Flt d0,d1,dist;
 	//Update ship position
-	if(!gl.shipSpeedBoost) {
-		g.ship.pos[0] += g.ship.vel[0];
-		g.ship.pos[1] += g.ship.vel[1];
-	} else {
-		g.ship.pos[0] += 2*g.ship.vel[0];
-		g.ship.pos[1] += 2*g.ship.vel[1];
-	}
+	g.ship.pos[0] += g.ship.vel[0];
+	g.ship.pos[1] += g.ship.vel[1];
 	//Check for collision with window edges
 	//Edited by Zachary Kaiser: Forced ship to stay within screen
 	//boundaries
@@ -982,18 +977,32 @@ void physics()
 	//to be more characteristic of a human rather than ship
 	Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
 			g.ship.vel[1]*g.ship.vel[1]);
-	if (speed > 2.0f) {
-		speed = 2.0f;
-		normalize2d(g.ship.vel);
-		g.ship.vel[0] *= speed;
-		g.ship.vel[1] *= speed;
+	if(!gl.shipSpeedBoost) {
+		if (speed > 2.0f) {
+			speed = 2.0f;
+			normalize2d(g.ship.vel);
+			g.ship.vel[0] *= speed;
+			g.ship.vel[1] *= speed;
+		}
+		if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+			g.ship.vel[0] *= -1;
+			g.ship.vel[1] *= -1;
+		}
+		//Added by Zakary Worman: this makes the person slow down as you stop moving
+		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+	} else {
+		if (speed > 4.0f) {
+			speed = 4.0f;
+			normalize2d(g.ship.vel);
+			g.ship.vel[0] *= speed;
+			g.ship.vel[1] *= speed;
+		}
+		if(zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+			g.ship.vel[0] *= -1;
+			g.ship.vel[1] *= -1;
+		}
+		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 	}
-	if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
-		g.ship.vel[0] *= -1;
-		g.ship.vel[1] *= -1;
-	}
-	//Added by Zakary Worman: this makes the person slow down as you stop moving
-	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 	if (!g.roundEnd)
 		structureDamage();
 }

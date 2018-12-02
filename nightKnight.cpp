@@ -74,23 +74,30 @@ extern void zk_blackbar();
 extern void zk_pausetext(int x, int y);
 extern void zk_pausemenu(int x, int y);
 extern void zk_drawCircle();
+extern void bbShowPicture(int x, int y, GLuint texid);
 extern void bb_show_credits(Rect &r);
 extern void jc_show_credits(Rect &r);
 extern void zwShowPicture(int x, int y, GLuint texid);
 extern void zkShowPicture(int x, int y, GLuint texid);
-extern void bbShowPicture(int x, int y, GLuint texid);
-extern void renderPowerup(int x, int y, int red, int gre, int blu);
-extern void powerupChance(int powerups[]);
 extern bool spawnChance(int chance);
 extern void spawnHearts();
 extern void drawHeart();
+extern bool heartCollision(float x, float y);
+extern bool powerupCollision(float x, float y);
+extern bool checkSpeed();
+extern bool checkFireRate();
+extern void resetPowerups();
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
 extern void storeDeathPosition(float x, float y);
 extern bool menuScreen();
+extern bool creditsScreen();
+extern void closeCredits();
+extern void openCredits();
 extern void startGame();
 extern void initButtons();
 extern void drawButtons();
+extern void drawPowerups();
 extern void checkButtonClick(XEvent *e);
 extern void menuScreenImage(int x, int y, GLuint texid1, GLuint texid2);
 extern void spawnPowerup(int x_position, int y_position);
@@ -215,6 +222,8 @@ class Global {
 	bool pause;
 	bool gameoverScreen = false;
 	bool menuScreen = true;
+	bool shipSpeedBoost = false;
+	bool fireRateBoost = false;
 	GLuint seahorseTexture;
 	GLuint chowderTexture;
 	GLuint duckTexture;
@@ -430,7 +439,9 @@ int main()
 	    XEvent e = x11.getXNextEvent();
 	    x11.check_resize(&e);
 	    check_mouse(&e);
-	    checkButtonClick(&e);
+	    if(menuScreen()) {
+	    	checkButtonClick(&e);
+	    }
 	    done = check_keys(&e);
 	    if (g.round >= 1)
 		checkMouseEvent(&e, g.roundEnd);
@@ -734,7 +745,13 @@ void check_mouse(XEvent *e)
 	    struct timespec bt;
 	    clock_gettime(CLOCK_REALTIME, &bt);
 	    double ts = timeDiff(&g.bulletTimer, &bt);
-	    if (ts > 0.7) {
+	    double fireRate = 0.7;
+	    if (!gl.fireRateBoost) {
+		fireRate = 0.7;
+	    } else {
+		fireRate = 0.3;
+	    }
+	    if (ts > fireRate) {
 		timeCopy(&g.bulletTimer, &bt);
 		//shoot a bullet...
 		if (g.nbullets < MAX_BULLETS) {
@@ -804,7 +821,11 @@ int check_keys(XEvent *e)
 	    //accelerates the unit as if a sprint
 	    //------------------------------------
 	case XK_c:
-	    gl.credits = !gl.credits;
+	    if (creditsScreen()) {
+		closeCredits();
+	    } else {
+		openCredits();
+	    }
 	    break;
 	case XK_p:
 	    gl.pause = !gl.pause;
@@ -826,8 +847,13 @@ void physics()
 	//playGameSound();
     //Flt d0,d1,dist;
     //Update ship position
-    g.ship.pos[0] += g.ship.vel[0];
-    g.ship.pos[1] += g.ship.vel[1];
+    if(!gl.shipSpeedBoost) {
+    	g.ship.pos[0] += g.ship.vel[0];
+    	g.ship.pos[1] += g.ship.vel[1];
+    } else {
+	g.ship.pos[0] += 2*g.ship.vel[0];
+	g.ship.pos[1] += 2*g.ship.vel[1];
+    }
     //Check for collision with window edges
     //Edited by Zachary Kaiser: Forced ship to stay within screen
     //boundaries
@@ -873,8 +899,12 @@ void physics()
 	    //powerupChance(powerups);
 	    g.nbullets--;
 	    g.enemyCount--;
-	    if(g.enemyCount == 0)
+	    if(g.enemyCount == 0){
+		gl.shipSpeedBoost = false;
+		gl.fireRateBoost = false;
+		resetPowerups();
 		g.roundEnd = true;
+	    }
 	} 
 	//move the bullet
 	b->pos[0] += b->vel[0];
@@ -898,6 +928,19 @@ void physics()
 		    sizeof(Bullet));
 	}
 	i++;
+    }
+    if(heartCollision(g.ship.pos[0], g.ship.pos[1])) {
+	if(g.ship.health<3) {
+	    g.ship.health++;
+	}
+    }
+    if(powerupCollision(g.ship.pos[0], g.ship.pos[1])) {
+	if(checkSpeed()) {
+		gl.shipSpeedBoost = true;
+	}
+	if(checkFireRate()) {
+		gl.fireRateBoost = true;
+	}
     }
     if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
 	g.ship.vel[0] -= 5;
@@ -957,8 +1000,23 @@ void physics()
 
 void render()
 {
-	//playGameSound();
     glClear(GL_COLOR_BUFFER_BIT);
+    if(creditsScreen()) {
+	Rect n;
+	n.bot = gl.yres - gl.yres/5;
+	n.left = gl.xres/2;
+	n.center = gl.xres/3;
+	zw_show_credits(n);
+	zk_show_credits(n);
+	bb_show_credits(n);
+	jc_show_credits(n);
+	zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+	zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+	bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+	jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+	ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+	return;
+    }
     if(menuScreen()) {
 		menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
 		printMenuScreen(gl.xres, gl.yres);
@@ -988,22 +1046,6 @@ void render()
     gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture, g.roundEnd);
     //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
     Rect r;
-    if(gl.credits) {
-	Rect n;
-	n.bot = gl.yres - gl.yres/5;
-	n.left = gl.xres/2;
-	n.center = gl.xres/3;
-	zw_show_credits(n);
-	zk_show_credits(n);
-	bb_show_credits(n);
-	jc_show_credits(n);
-	zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-	zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-	bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-	jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-	ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
-	return;
-    }
     playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
     if(gl.pause) {
 	zk_pausemenu(gl.xres, gl.yres);
@@ -1092,7 +1134,5 @@ void render()
     renderHealth(g.ship.health);
     zk_showhealthtext(gl.xres, gl.yres);
     drawHeart();
-    //spawnPowerups(powerups);
-    //Function below used to check renderPowerup functionality
-    //renderPowerup(gl.xres/4,3*gl.yres/4,255);
+    drawPowerups();
 }

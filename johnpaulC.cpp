@@ -1,3 +1,4 @@
+
 //Author: John Paul Cailing
 //Date: 09/25/2018
 //Purpose: Contains credits and picture
@@ -206,7 +207,6 @@ int rightButton = 0;
   buildingGrid[i][j].over = 0;
   buildingGrid[i][j].status = 0;
   }
-
   }*/
 /*void buildingClick()
   {
@@ -338,7 +338,6 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
 
 
 /*bool menu;
-
   void menuState(bool state)
   {
   menu = state;
@@ -517,7 +516,6 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone,
 	//stoneStore[i/tileSize][j/tileSize];
 	stoneStore[i/tileSize][j/tileSize].pos[0] = i + 60;
 	stoneStore[i/tileSize][j/tileSize].pos[1] = j + 60;
-
 	}
 	} */
 

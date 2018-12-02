@@ -432,7 +432,7 @@ int main()
 	init_opengl();
 	//initButtons();
 	srand(time(NULL));
-	x11.set_mouse_position(100, 100);
+	//x11.set_mouse_position(100, 100);
 	int done=0;
 	while (!done) {
 		while (x11.getXPending()) {
@@ -842,8 +842,6 @@ int check_keys(XEvent *e)
 
 void physics()
 {
-	if (!g.roundEnd)
-		structureDamage();
 	//playGameSound();
 	//Flt d0,d1,dist;
 	//Update ship position
@@ -996,6 +994,8 @@ void physics()
 	}
 	//Added by Zakary Worman: this makes the person slow down as you stop moving
 	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+	if (!g.roundEnd)
+		structureDamage();
 }
 
 void render()

@@ -212,7 +212,7 @@ bool structureCollision(int x, int y)
 			return true;
 		}
 		if (o[i].collision[x][y]) {
-			z[i].collision[x][y] = false;
+			o[i].collision[x][y] = false;
 			return true;
 		}
 	}

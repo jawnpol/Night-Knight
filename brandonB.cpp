@@ -326,6 +326,12 @@ bool checkFireRate() {
 void resetPowerups() {
 	glb.speedBoost = false;
 	glb.fireRateBoost = false;
+	for (int i = 0; i < MAXPOWERUPS; i++) {
+		p[i].spawn = 0;
+	}
+	for (int i = 0; i < MAXHEARTS; i++) {
+		h[i].spawn = 0;
+	}
 }
 
 

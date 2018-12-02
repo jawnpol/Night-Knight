@@ -1014,7 +1014,7 @@ void render()
 		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
 		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
 		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-		ggprint8b(&n, 16, 0x00ff0000, "Credits Shown From Pressing Key: c");
+		ggprint16(&n, 16, 0x00ff0000, "Close this screen by pressing C");
 		return;
 	}
 	if(menuScreen()) {

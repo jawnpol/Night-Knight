@@ -47,7 +47,7 @@ struct Heart {
 	bool spawn = false;
 } h[5];
 
-struct Global {
+struct BBglobal {
 	Button button[MAXBUTTONS];
 	int numButtons;
 	int numHearts = 0;
@@ -326,6 +326,12 @@ bool checkFireRate() {
 void resetPowerups() {
 	glb.speedBoost = false;
 	glb.fireRateBoost = false;
+	for (int i = 0; i < MAXPOWERUPS; i++) {
+		p[i].spawn = 0;
+	}
+	for (int i = 0; i < MAXHEARTS; i++) {
+		h[i].spawn = 0;
+	}
 }
 
 
@@ -541,6 +547,8 @@ int checkButtonClick(XEvent *e)
 							break;
 						case 1:
 							openCredits();
+							break;
+						default:
 							break;
 					}
 				}

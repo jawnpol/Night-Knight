@@ -21,7 +21,7 @@ void Log(const char *fmt, ...)
 	va_list ap;
 	if (fmt == NULL) return;
 	va_start(ap, fmt);
-	vfprintf(fpxx, fmt, ap);
+	//vfprintf(fpxx, fmt, ap);
 	fflush(fpxx);
 	va_end(ap);
 }

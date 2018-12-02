@@ -618,8 +618,8 @@ void init_opengl()
 	//-------------------------------------------------------------------------
 
 	glGenTextures(1, &gl.stoneTexture);
-	w = img[12].width;
-	h = img[12].height;
+	w = img[13].width;
+	h = img[13].height;
 
 	glBindTexture(GL_TEXTURE_2D, gl.stoneTexture);
 

@@ -64,12 +64,16 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 //-----------------------------------------------------------------------------
 //Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
+extern void zk_initializeButtons();
+extern void zk_createButtons();
+extern void zk_checkClick(XEvent *e);
+extern void zk_controls(int x, int y);
+extern void zk_ctext();
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
 extern void zk_gameovertext(int x, int y);
-extern void zk_showhealthtext(int x, int y);
+extern void zk_showhealthtext();
 extern void zk_savemouse(int x, int y);
-extern void zk_resetpups(int powerups[]);
 extern void zk_blackbar();
 extern void zk_pausetext(int x, int y);
 extern void zk_pausemenu(int x, int y);
@@ -1045,7 +1049,6 @@ void render()
 			g.round = 0;
 			zw_reset_round();
 			g.ship.hit_recent = 0;
-			zk_resetpups(powerups);
 		}	
 		zk_drawCircle();
 		//zw_gameover(gl.yres, gl.xres);
@@ -1059,6 +1062,8 @@ void render()
 	if(gl.pause) {
 		zk_pausemenu(gl.xres, gl.yres);
 		zk_pausetext(gl.xres, gl.yres);
+		zk_initializeButtons();
+		zk_createButtons();
 		zk_drawCircle();
 		return;
 	}
@@ -1141,7 +1146,7 @@ void render()
 	zk_drawCircle();
 	zk_blackbar();
 	renderHealth(g.ship.health);
-	zk_showhealthtext(gl.xres, gl.yres);
+	zk_showhealthtext();
 	drawHeart();
 	drawPowerups();
 }

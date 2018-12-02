@@ -286,7 +286,7 @@ class Game {
 		Ship ship;
 		//Asteroid *ahead;
 		Bullet *barr;
-		int round = 0;
+		int round = 1;
 		int enemyCount;
 		int nasteroids;
 		int nbullets;
@@ -618,8 +618,8 @@ void init_opengl()
 	//-------------------------------------------------------------------------
 
 	glGenTextures(1, &gl.stoneTexture);
-	w = img[13].width;
-	h = img[13].height;
+	w = img[12].width;
+	h = img[12].height;
 
 	glBindTexture(GL_TEXTURE_2D, gl.stoneTexture);
 
@@ -731,21 +731,6 @@ void check_mouse(XEvent *e)
 	//static int savey = 0;
 	//static int ct=0;      //changed by Zakary Worman:
 	//these 3 variables not used because of my change of mouse aiming
-	if (e->type == MotionNotify) {
-		//Mouse moved
-		//Changed by Zakary Worman: Changed to remove movement from mouse
-		//and allow for aiming with mouse. The rest of this usage is found
-		//in physics
-		int x = e->xbutton.x;           //just to save the x position of mouse
-		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
-		//X11 and OpenGL start (0,0) in opposite
-		//y positions 
-		zk_savemouse(x, y);
-		zw_save_mouse_pos(x, y);        //save this position to be used
-	}
-	if (gl.menuScreen || gl.credits) {
-		return;
-	}
 	if (e->type != ButtonPress &&
 			e->type != ButtonRelease &&
 			e->type != MotionNotify)
@@ -760,7 +745,13 @@ void check_mouse(XEvent *e)
 			struct timespec bt;
 			clock_gettime(CLOCK_REALTIME, &bt);
 			double ts = timeDiff(&g.bulletTimer, &bt);
-			if (ts > 0.7) {
+			double fireRate = 0.7;
+			if (!gl.fireRateBoost) {
+				fireRate = 0.7;
+			} else {
+				fireRate = 0.3;
+			}
+			if (ts > fireRate) {
 				timeCopy(&g.bulletTimer, &bt);
 				//shoot a bullet...
 				if (g.nbullets < MAX_BULLETS) {
@@ -791,6 +782,18 @@ void check_mouse(XEvent *e)
 			}
 		}
 	}
+	if (e->type == MotionNotify) {
+		//Mouse moved
+		//Changed by Zakary Worman: Changed to remove movement from mouse
+		//and allow for aiming with mouse. The rest of this usage is found
+		//in physics
+		int x = e->xbutton.x;           //just to save the x position of mouse
+		int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
+		//X11 and OpenGL start (0,0) in opposite
+		//y positions 
+		zk_savemouse(x, y);
+		zw_save_mouse_pos(x, y);        //save this position to be used
+	}
 }
 
 int check_keys(XEvent *e)
@@ -811,6 +814,8 @@ int check_keys(XEvent *e)
 		case XK_Escape:
 			return 1;
 		case XK_Shift_L:
+			g.ship.vel[0] *= 1.5;
+			g.ship.vel[1] *= 1.5;
 			break;
 			//Added by Zakary Worman:
 			//accelerates the unit as if a sprint
@@ -837,11 +842,18 @@ int check_keys(XEvent *e)
 
 void physics()
 {
+	if (!g.roundEnd)
+		structureDamage();
 	//playGameSound();
 	//Flt d0,d1,dist;
 	//Update ship position
-	g.ship.pos[0] += g.ship.vel[0];
-	g.ship.pos[1] += g.ship.vel[1];
+	if(!gl.shipSpeedBoost) {
+		g.ship.pos[0] += g.ship.vel[0];
+		g.ship.pos[1] += g.ship.vel[1];
+	} else {
+		g.ship.pos[0] += 2*g.ship.vel[0];
+		g.ship.pos[1] += 2*g.ship.vel[1];
+	}
 	//Check for collision with window edges
 	//Edited by Zachary Kaiser: Forced ship to stay within screen
 	//boundaries
@@ -887,8 +899,12 @@ void physics()
 			//powerupChance(powerups);
 			g.nbullets--;
 			g.enemyCount--;
-			if(g.enemyCount == 0)
+			if(g.enemyCount == 0){
+				gl.shipSpeedBoost = false;
+				gl.fireRateBoost = false;
+				resetPowerups();
 				g.roundEnd = true;
+			}
 		} 
 		//move the bullet
 		b->pos[0] += b->vel[0];
@@ -912,6 +928,19 @@ void physics()
 					sizeof(Bullet));
 		}
 		i++;
+	}
+	if(heartCollision(g.ship.pos[0], g.ship.pos[1])) {
+		if(g.ship.health<3) {
+			g.ship.health++;
+		}
+	}
+	if(powerupCollision(g.ship.pos[0], g.ship.pos[1])) {
+		if(checkSpeed()) {
+			gl.shipSpeedBoost = true;
+		}
+		if(checkFireRate()) {
+			gl.fireRateBoost = true;
+		}
 	}
 	if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
 		g.ship.vel[0] -= 5;
@@ -967,8 +996,6 @@ void physics()
 	}
 	//Added by Zakary Worman: this makes the person slow down as you stop moving
 	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
-	if (!g.roundEnd)
-		structureDamage();
 }
 
 void render()
@@ -1031,11 +1058,12 @@ void render()
 		zw_reset_round();
 		Rect s;
 		s.bot = gl.yres - 28;
-		s.left = 10;
-		s.center = 0;
+		s.left = gl.xres/2 - 10;
+		s.center = gl.xres/2;
 		ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
 		if (g.round > 0)
 			renderBoard(gl.xres, gl.yres, gl.woodTexture, gl.stoneTexture);
+		//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
 		if (gl.keys[XK_r]) {
 			g.round++;
 			g.roundEnd = false;

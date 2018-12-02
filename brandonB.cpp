@@ -47,7 +47,7 @@ struct Heart {
 	bool spawn = false;
 } h[5];
 
-struct Global {
+struct BBglobal {
 	Button button[MAXBUTTONS];
 	int numButtons;
 	int numHearts = 0;
@@ -541,6 +541,8 @@ int checkButtonClick(XEvent *e)
 							break;
 						case 1:
 							openCredits();
+							break;
+						default:
 							break;
 					}
 				}

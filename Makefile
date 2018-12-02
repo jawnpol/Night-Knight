@@ -17,7 +17,10 @@ all: nightKnight
 nightKnight: nightKnight.cpp log.cpp timers.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp 
 	g++ $(CFLAGS) nightKnight.cpp zakaryW.cpp zacharyK.cpp brandonB.cpp johnpaulC.cpp  \
 		log.cpp timers.cpp /usr/lib/x86_64-linux-gnu/libopenal.so \
-    	/usr/lib/x86_64-linux-gnu/libalut.so libggfonts.a -Wall -O $(LFLAGS) -o nightKnight
+    		/usr/lib/x86_64-linux-gnu/libalut.so libggfonts.a -Wall -Wextra -Wredundant-decls \
+		-Winvalid-pch -Wformat=2 -Wmissing-format-attribute \
+		-Wcast-align -Wswitch-enum -Wswitch-default \
+	       	-Wformat-nonliteral -Wodr -flto -O3 $(LFLAGS) -o nightKnight
 
 clean:
 	rm -f nightKnight 

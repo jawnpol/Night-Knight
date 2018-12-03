@@ -293,7 +293,7 @@ void checkMouseEvent(XEvent *e, bool roundEnd)
 	}	
 }
 
-void renderBoard(int xres, int yres, GLuint texture, GLuint stone)
+void renderBoard(int xres, int yres)
 {
 	/*Rect r;
 	r.bot = boardDimY - 20;
@@ -407,7 +407,7 @@ void buildPlacement(int xres, int yres, GLuint wood)
 	glDisable(GL_ALPHA_TEST);
 }
 
-void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone, int round)
+void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 {
 	int tileSize = 120;
 	int health;
@@ -541,7 +541,7 @@ void renderStructureHP()
 }
 
 
-void playerModel(GLfloat color[], int colorSize, GLfloat pos[], int size, float angle, GLuint texture)
+void playerModel(GLfloat pos[], float angle, GLuint texture)
 {	
 	glPushMatrix();
 	glTranslatef(pos[0], pos[1], pos[2]);

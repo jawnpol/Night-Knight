@@ -8,7 +8,7 @@
 #include<cstdlib>
 #include<math.h>
 
-#define MAXBUTTONS 2
+#define MAXBUTTONS 3 
 
 typedef struct buttn {
         Rect btn;
@@ -82,10 +82,10 @@ void zk_initializeButtons() {
         glo.button[glo.nbuts].text_color = 0x000000;
 
         glo.nbuts++;
-	
+
 	/*glo.button[glo.nbuts].btn.width = 240;
         glo.button[glo.nbuts].btn.height = 120;
-        glo.button[glo.nbuts].btn.left = 180;
+        glo.button[glo.nbuts].btn.left = 840;
         glo.button[glo.nbuts].btn.bot = 400;
         glo.button[glo.nbuts].btn.right =
                 glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.width;
@@ -143,18 +143,18 @@ void zk_createButtons() {
         }
 }
 
-void zk_checkClick(XEvent *e)   {
-        int leftclick = 0;
-        int x,y;
-        if (e->type == ButtonPress) {
+void zk_checkHover(XEvent *e)   {
+        //int leftclick = 0;
+        //int x,y;
+        /*if (e->type == ButtonPress) {
                 if (e->xbutton.button == 1) {
                         leftclick = 1;
                 }
         }
         x = e->xbutton.x;
         y = e->xbutton.y;
-        y = 1080 - y;
-        for (int i = 0; i < glo.nbuts; i++) {
+        y = 1080 - y;*/
+        /*for (int i = 0; i < glo.nbuts; i++) {
                 glo.button[i].hover = 0;
                 if (x >= glo.button[i].btn.left &&
                                 x <= glo.button[i].btn.right &&
@@ -173,44 +173,45 @@ void zk_checkClick(XEvent *e)   {
                                 }
                         }
                 }
-        }
-
-        if (e->type == MotionNotify) {
-                if (x >= glo.button[0].btn.left &&
-                                x <= glo.button[0].btn.right &&
-                                y >= glo.button[0].btn.bot &&
-                                y <= glo.button[0].btn.top) {
-                        glo.button[0].hover = 1;
-                        //printf("hovering\n");fflush(stdout);
-                } else {
-                        glo.button[0].hover = 0;
-                }
-        }
+        }*/
+	for(int i = 0; i < glo.nbuts; i++) {
+        	if (e->type == MotionNotify) {
+			if (k.x >= glo.button[i].btn.left &&
+					k.x <= glo.button[i].btn.right &&
+					k.y >= glo.button[i].btn.bot &&
+					k.y <= glo.button[i].btn.top) {
+				glo.button[i].hover = 1;
+				//printf("hovering\n");fflush(stdout);
+			} else {
+				glo.button[i].hover = 0;
+			}
+		}
+	}
 }
 
 
 
 void zk_show_credits(Rect &r) {
-   ggprint16(&r, 150, 0x00fff000, "Zachary Kaiser");  
+	ggprint16(&r, 150, 0x00fff000, "Zachary Kaiser");  
 }
 
 void zkShowPicture(int x, int y, GLuint texid) {
-    glColor3ub(255,255,255);
-    int wid = 64;
+	glColor3ub(255,255,255);
+	int wid = 64;
 
-    float fx = (float) x;
-    float fy = (float) y;
+	float fx = (float) x;
+	float fy = (float) y;
 
-    glPushMatrix();
-    glTranslatef(fx,fy,0);
-    glBindTexture(GL_TEXTURE_2D, texid);
-    glBegin(GL_QUADS);
-    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
-    glEnd();
-    glPopMatrix();
+	glPushMatrix();
+	glTranslatef(fx,fy,0);
+	glBindTexture(GL_TEXTURE_2D, texid);
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+	glEnd();
+	glPopMatrix();
 }
 
 void zk_drawCircle() {
@@ -264,11 +265,25 @@ void zk_pausemenu(int x, int y) {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
 	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
 	glEnd();
 	glPopMatrix();
 }
+
+void zk_controlsmenu(int x, int y) {
+	glColor3f(0, 0, 0);
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+	glEnd();
+	glPopMatrix();
+}
+
 bool zk_continue() {
 	if(k.x >= glo.button[0].btn.left &&
 			k.x <= glo.button[0].btn.right &&
@@ -280,56 +295,43 @@ bool zk_continue() {
 }
 
 bool zk_cState() {
-	if(k.x >= glo.button[2].btn.left &&
-			k.x <= glo.button[2].btn.right &&
-			k.y >= glo.button[2].btn.bot &&
-			k.y <= glo.button[2].btn.top) 
+	if(k.x >= glo.button[1].btn.left &&
+			k.x <= glo.button[1].btn.right &&
+			k.y >= glo.button[1].btn.bot &&
+			k.y <= glo.button[1].btn.top) 
 		return true;
 	return false;
 
 }
 
-void zk_controls (int x, int y) {
-        glColor3f(0, 0, 0);
-
-        glPushMatrix();
-        glBegin(GL_QUADS);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
-        glEnd();
-        glPopMatrix();
-}
-
 void zk_ctext(int x, int y) {
-        Rect r;
+	Rect r;
 
-        r.bot = y - y/3;
-        r.left = x/2;
-        r.center = x/3;
+	r.bot = y - y/3;
+	r.left = x/2;
+	r.center = x/3;
 }
 void zk_pausetext(int x, int y) {
-        Rect r;
+	Rect r;
 
-        r.bot = y - y/5;
-        r.left = x/2;
-        r.center = x/3;
+	r.bot = y - y/5;
+	r.left = x/2;
+	r.center = x/3;
 
-        ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
+	ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
 }
 
 void zk_gameoverimage(int x, int y, GLuint texid) {
-    	glColor3ub(255, 255, 255);
+	glColor3ub(255, 255, 255);
 
-    	//glClear(GL_COLOR_BUFFER_BIT);
+	//glClear(GL_COLOR_BUFFER_BIT);
 	glPushMatrix();
 	glBindTexture(GL_TEXTURE_2D, texid);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
 	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
 	glEnd();
 	glPopMatrix();
 }

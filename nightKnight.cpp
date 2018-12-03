@@ -65,10 +65,11 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 //Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
 extern bool zk_continue();
+extern bool zk_cState();
 extern void zk_initializeButtons();
 extern void zk_createButtons();
-extern void zk_checkClick(XEvent *e);
-extern void zk_controls(int x, int y);
+extern void zk_checkHover(XEvent *e);
+extern void zk_controlsmenu(int x, int y);
 extern void zk_ctext();
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
@@ -230,6 +231,7 @@ class Global {
 		int xres, yres;
 		char keys[65536];
 		bool credits;
+		bool controls;
 		bool pause;
 		bool gameoverScreen = false;
 		bool menuScreen = true;
@@ -257,6 +259,7 @@ class Global {
 			memset(keys, 0, 65536);
 			credits = false;
 			pause = false;
+			controls = false;
 		}
 } gl;
 
@@ -454,7 +457,7 @@ int main()
 				checkButtonClick(&e);
 			}
 			if(gl.pause) {
-				zk_checkClick(&e);
+				zk_checkHover(&e);
 			}
 			done = check_keys(&e);
 			if (g.round >= 1 && g.roundEnd)
@@ -762,6 +765,9 @@ void check_mouse(XEvent *e)
 			if(gl.pause) {
 				if(zk_continue())
 					gl.pause = !gl.pause;
+				return;
+				if(zk_cState())
+					gl.controls = !gl.controls;
 				return;
 			}
 			//a little time between each bullet
@@ -1104,6 +1110,12 @@ void render()
 		zk_createButtons();
 		zk_drawCircle();
 		return;
+	}
+	if(gl.controls) {
+		zk_controlsmenu(gl.xres, gl.yres);
+		zk_initializeButtons();
+		zk_createButtons();
+		zk_drawCircle();
 	}
 	if (g.roundEnd) {
 		zk_drawCircle();

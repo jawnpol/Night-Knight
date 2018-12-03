@@ -93,7 +93,7 @@ void initSound()
 
 	//Buffer holds the sound information.
 	sound  = alutCreateBufferFromFile("./test.wav");
-	song = alutCreateBufferFromFile("./cartoonsound.wav");
+	song = alutCreateBufferFromFile("./game.wav");
 
 	//Generate a source, and store it in a buffer.
 	alGenSources(1, &alSource);
@@ -181,7 +181,7 @@ struct Grid {
 
 int currentRound;
 int woodMats = 5;
-int stoneMats = 10;
+int stoneMats = 1000;
 int woodCost = 10;
 int stoneCost = 20;
 
@@ -204,6 +204,35 @@ int boardDimY = 1080;
 int leftButton = 0;
 int rightButton = 0;
 
+void motionOver(XEvent *e)
+{
+	int i,j;
+	int x, y;
+	x = e->xbutton.x;
+	y = e->xbutton.y;
+	y = 1080 - y;
+	for (i = 0; i < XDIM; i++) {
+		for (j = 0; j < YDIM; j++) {
+			buildingGrid[i][j].over = 0;
+		}
+	}
+	if (e->type == MotionNotify) {
+		for (i = 0; i < XDIM; i++) {
+			for (j =0; j< YDIM; j++) {
+				if (x <= i * gridDim + gridDim &&
+					x >= i * gridDim - gridDim &&
+					y <= j * gridDim  + gridDim &&
+					y >= j * gridDim) {
+					buildingGrid[i][j].over = 1;
+					break;
+				}
+			}
+		if (buildingGrid[i][j].over == 1)
+			break;
+		}
+	}
+}
+
 void checkMouseEvent(int x, int y, int click)
 {
 	x = floor(x/120);
@@ -215,6 +244,7 @@ void checkMouseEvent(int x, int y, int click)
 		woodStore[x][y].dead = false;
 		woodMats = woodMats - woodCost;
 	}
+
 	if (buildingGrid[x][y].status == 0 && click == 3 && stoneMats >= stoneCost) {
 		buildingGrid[x][y].status = 1;
 		buildingGrid[x][y].woodStatus = false;
@@ -252,21 +282,21 @@ void checkMouseEvent(int x, int y, int click)
 	y = e->xbutton.y;
 	y = 1080 - y;
 	for (i = 0; i < XDIM; i++) {
-	for (j = 0; j < YDIM; j++) {
-	if (roundEnd) {
-	if (x <= i * gridDim + gridDim &&
-	x >= i * gridDim - gridDim &&
-	y <= j * gridDim  + gridDim &&
-	y >= j * gridDim) {
+		for (j = 0; j < YDIM; j++) {
+			if (roundEnd) {
+				if (x <= i * gridDim + gridDim &&
+					x >= i * gridDim - gridDim &&
+					y <= j * gridDim  + gridDim &&
+					y >= j * gridDim) {
 
-	buildingGrid[i][j].over = 1;
+					buildingGrid[i][j].over = 1;
 	//buildingGrid[i][j].status = 0;  
-	break;
-	}
-	}
-	}
-	if (buildingGrid[i][j].over == 1)
-	break;
+					break;
+				}
+			}
+		}
+		if (buildingGrid[i][j].over == 1)
+		break;
 	}
 	}
 

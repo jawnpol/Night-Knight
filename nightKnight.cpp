@@ -122,6 +122,7 @@ extern void buildReset();
 extern void renderStructureHP();
 extern void matsChange(int round);
 extern void showMaterials();
+extern void motionOver(XEvent *e);
 //extern void structureRemoval();
 //extern void menuState(bool state);
 extern void checkMouseEvent(int x, int y, int click);
@@ -451,8 +452,8 @@ int main()
 				checkButtonClick(&e);
 			}
 			done = check_keys(&e);
-			//if (g.round >= 1 && g.roundEnd)
-			//	checkMouseEvent(&e, g.roundEnd);
+			if (g.round >= 1 && g.roundEnd)
+				motionOver(&e);
 		}
 		physics();
 		render();

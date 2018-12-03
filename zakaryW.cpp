@@ -222,16 +222,10 @@ bool structureCollision(int x, int y)
 void zw_z_pos(Zombie *z, int tX, int tY) 
 {
 	z->angle = atan2(z->pos[1]-tY, z->pos[0]-tX)*180/PI;
-	int gridX, gridY, gridX2, gridY2, gridX3, gridY3;
+	int gridX, gridY;
 	gridX = floor(z->pos[0]/120);
 	gridY = floor(z->pos[1]/120);
-	//gridX2 = floor((z->pos[0]+25)/120);
-	//gridY2 = floor((z->pos[1]+25)/120);
-	//gridX3 = floor((z->pos[0]-25)/120);
-	//gridY3 = floor((z->pos[1]-25)/120);
-	if (structurePlacement(gridX, gridY) /*|| structurePlacement(gridX2, gridY) ||
-			structurePlacement(gridX, gridY2) || structurePlacement(gridX3, gridY) ||
-			structurePlacement(gridX, gridY3)*/) {
+	if (structurePlacement(gridX, gridY)) {
 		z->vel[0] *= -1;
 		z->vel[1] *= -1;
 		z->collision[gridX][gridY] = true;

@@ -181,7 +181,7 @@ struct Grid {
 
 int currentRound;
 int woodMats = 5;
-int stoneMats = 1000;
+int stoneMats = 10;
 int woodCost = 10;
 int stoneCost = 20;
 
@@ -252,91 +252,6 @@ void checkMouseEvent(int x, int y, int click)
 		stoneStore[x][y].dead = false;
 		stoneMats = stoneMats - stoneCost;
 	}
-	/*int x, y;
-	  int i,j;
-	  if (e->type == ButtonPress) {
-	  if (e->xbutton.button == 1) {
-	  if (roundEnd) {
-	  leftButton = 1;
-	//cout << "Button was pressed" << endl;
-	}
-
-	}
-	if (e->xbutton.button == 3) {
-	if (roundEnd) {
-	rightButton = 1;
-	//cout << "Right click" << endl;
-	}
-	}
-	}
-
-	for (i = 0; i < XDIM; i++) {
-	for (j = 0; j < YDIM; j++) {
-	buildingGrid[i][j].over = 0;
-	//buildingGrid[i][j].status = 0;
-	}
-	}
-
-	if (e->type == MotionNotify) {
-	x = e->xbutton.x;
-	y = e->xbutton.y;
-	y = 1080 - y;
-	for (i = 0; i < XDIM; i++) {
-		for (j = 0; j < YDIM; j++) {
-			if (roundEnd) {
-				if (x <= i * gridDim + gridDim &&
-					x >= i * gridDim - gridDim &&
-					y <= j * gridDim  + gridDim &&
-					y >= j * gridDim) {
-
-					buildingGrid[i][j].over = 1;
-	//buildingGrid[i][j].status = 0;  
-					break;
-				}
-			}
-		}
-		if (buildingGrid[i][j].over == 1)
-		break;
-	}
-	}
-
-	if (roundEnd == 1 && leftButton == 1) {
-	x = floor(x/120);
-	y = floor(y/120);
-	if (buildingGrid[x][y].status == 0) { 
-	//if (leftButton == 1) {
-	//cout << "Does it get to here?" << endl;
-	if (woodMats >= woodCost) {
-	buildingGrid[x][y].status = 1;
-	buildingGrid[x][y].woodStatus = true;
-	buildingGrid[x][y].stoneStatus = false;
-	//woodStore[i][j].health = 100.0;
-	woodStore[x][y].dead = false;
-	cout << "Health during placement: " << woodStore[x][y].health;
-	cout << "At: " << x << " " << y;
-	cout << " Is it dead? " << woodStore[x][y].dead << endl;
-	leftButton = 0;
-	woodMats = woodMats - woodCost;
-	}
-	//cout << "i and j status 2" << buildingGrid[i][j].status << endl;
-	}
-	}
-
-	if (roundEnd == 1 && rightButton == 1) {
-	x = floor(x/120);
-	y = floor(y/120);
-
-	if (buildingGrid[x][y].status == 0) {
-		if (stoneMats >= stoneCost) {
-			buildingGrid[x][y].status = 1;
-			buildingGrid[x][y].woodStatus = false;
-			buildingGrid[x][y].stoneStatus = true;
-			stoneStore[x][y].dead = false;
-			rightButton = 0;
-			stoneMats = stoneMats - stoneCost;
-		}
-	}
-}*/	
 }
 
 void renderBoard(int xres, int yres)

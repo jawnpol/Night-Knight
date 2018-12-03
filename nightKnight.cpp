@@ -300,7 +300,7 @@ class Game {
         Ship ship;
         //Asteroid *ahead;
         Bullet *barr;
-        int round = 0;
+        int round = 9;
         int enemyCount;
         int nasteroids;
         int nbullets;
@@ -453,9 +453,9 @@ int main()
             XEvent e = x11.getXNextEvent();
             x11.check_resize(&e);
             check_mouse(&e);
-	    if (menuScreen()) {
-		checkButtonClick(&e);
-	    }
+            if (menuScreen()) {
+                checkButtonClick(&e);
+            }
             done = check_keys(&e);
             if (g.round >= 1 && g.roundEnd)
                 motionOver(&e);
@@ -746,88 +746,88 @@ void check_mouse(XEvent *e)
     //static int ct=0;      //changed by Zakary Worman:
     //these 3 variables not used because of my change of mouse aiming
     if (e->type != ButtonPress &&
-	    e->type != ButtonRelease &&
-	    e->type != MotionNotify)
-	return;
+            e->type != ButtonRelease &&
+            e->type != MotionNotify)
+        return;
     if (e->type == ButtonRelease)
-	return;
+        return;
     if (e->type == ButtonPress) {
-	if(gl.pause) {
-	    if(zk_continue())
-		gl.pause = !gl.pause;
-	    if(zk_cState())
-		gl.controls = !gl.controls;
-	    return;
-	}
-	if (e->xbutton.button==1) {
-	    if (g.roundEnd && g.round >= 1) {
-		checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
-		return;
-	    }
-	    //a little time between each bullet
-	    struct timespec bt;
-	    clock_gettime(CLOCK_REALTIME, &bt);
-	    double ts = timeDiff(&g.bulletTimer, &bt);
-	    double fireRate = 0.7;
-	    if (!gl.fireRateBoost) {
-		fireRate = 0.7;
-	    } else {
-		fireRate = 0.3;
-	    }
-	    if (ts > fireRate) {
-		timeCopy(&g.bulletTimer, &bt);
-		//shoot a bullet...
-		if (g.nbullets < MAX_BULLETS) {
+        if(gl.pause) {
+            if(zk_continue())
+                gl.pause = !gl.pause;
+            if(zk_cState())
+                gl.controls = !gl.controls;
+            return;
+        }
+        if (e->xbutton.button==1) {
+            if (g.roundEnd && g.round >= 1) {
+                checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+                return;
+            }
+            //a little time between each bullet
+            struct timespec bt;
+            clock_gettime(CLOCK_REALTIME, &bt);
+            double ts = timeDiff(&g.bulletTimer, &bt);
+            double fireRate = 0.7;
+            if (!gl.fireRateBoost) {
+                fireRate = 0.7;
+            } else {
+                fireRate = 0.3;
+            }
+            if (ts > fireRate) {
+                timeCopy(&g.bulletTimer, &bt);
+                //shoot a bullet...
+                if (g.nbullets < MAX_BULLETS) {
 
-		    playSound();
-		    //playGameSound();
-		    Bullet *b = &g.barr[g.nbullets];
-		    timeCopy(&b->time, &bt);
-		    b->pos[0] = g.ship.pos[0];
-		    b->pos[1] = g.ship.pos[1];
-		    if (gl.shipSpeedBoost) {
-			b->vel[0] = g.ship.vel[0];
-			b->vel[1] = g.ship.vel[1];
-		    }
-		    else {
-			b->vel[0] = 0.5*g.ship.vel[0];
-			b->vel[1] = 0.5*g.ship.vel[1];
-		    }
-		    b->angle = g.ship.angle;
-		    //convert ship angle to radians
-		    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		    //convert angle to a vector
-		    Flt xdir = cos(rad);
-		    Flt ydir = sin(rad);
-		    b->pos[0] += xdir*20.0f;
-		    b->pos[1] += ydir*20.0f;
-		    b->vel[0] += xdir*2;
-		    b->vel[1] += ydir*2;
-		    b->color[0] = 0.0f;
-		    b->color[1] = 0.0f;
-		    b->color[2] = 1.0f;
-		    ++g.nbullets;
-		}
-	    }
-	}
-	if (e->xbutton.button==3) {
-	    if (g.roundEnd && g.round >= 1) {
-		checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
-		return;
-	    }
-	}
+                    playSound();
+                    //playGameSound();
+                    Bullet *b = &g.barr[g.nbullets];
+                    timeCopy(&b->time, &bt);
+                    b->pos[0] = g.ship.pos[0];
+                    b->pos[1] = g.ship.pos[1];
+                    if (gl.shipSpeedBoost) {
+                        b->vel[0] = g.ship.vel[0];
+                        b->vel[1] = g.ship.vel[1];
+                    }
+                    else {
+                        b->vel[0] = 0.5*g.ship.vel[0];
+                        b->vel[1] = 0.5*g.ship.vel[1];
+                    }
+                    b->angle = g.ship.angle;
+                    //convert ship angle to radians
+                    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+                    //convert angle to a vector
+                    Flt xdir = cos(rad);
+                    Flt ydir = sin(rad);
+                    b->pos[0] += xdir*20.0f;
+                    b->pos[1] += ydir*20.0f;
+                    b->vel[0] += xdir*2;
+                    b->vel[1] += ydir*2;
+                    b->color[0] = 0.0f;
+                    b->color[1] = 0.0f;
+                    b->color[2] = 1.0f;
+                    ++g.nbullets;
+                }
+            }
+        }
+        if (e->xbutton.button==3) {
+            if (g.roundEnd && g.round >= 1) {
+                checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+                return;
+            }
+        }
     }
     if (e->type == MotionNotify) {
-	//Mouse moved
-	//Changed by Zakary Worman: Changed to remove movement from mouse
-	//and allow for aiming with mouse. The rest of this usage is found
-	//in physics
-	int x = e->xbutton.x;           //just to save the x position of mouse
-	int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
-	//X11 and OpenGL start (0,0) in opposite
-	//y positions 
-	zk_savemouse(x, y);
-	zw_save_mouse_pos(x, y);        //save this position to be used
+        //Mouse moved
+        //Changed by Zakary Worman: Changed to remove movement from mouse
+        //and allow for aiming with mouse. The rest of this usage is found
+        //in physics
+        int x = e->xbutton.x;           //just to save the x position of mouse
+        int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
+        //X11 and OpenGL start (0,0) in opposite
+        //y positions 
+        zk_savemouse(x, y);
+        zw_save_mouse_pos(x, y);        //save this position to be used
     }
 }
 
@@ -836,43 +836,43 @@ int check_keys(XEvent *e)
     //keyboard input?
     //static int shift=0;
     if (e->type != KeyPress && e->type != KeyRelease)
-	return 0;
+        return 0;
     int key = (XLookupKeysym(&e->xkey, 0) & 0x0000ffff);
     //Log("key: %i\n", key);
     if (e->type == KeyRelease) {
-	gl.keys[key]=0;
-	return 0;
+        gl.keys[key]=0;
+        return 0;
     }
     gl.keys[key]=1;
     //Changed by Zakary Worman: Not used for anything
     switch (key) {
-	case XK_Escape:
-	    return 1;
-	case XK_Shift_L:
-	    g.ship.vel[0] *= 1.5;
-	    g.ship.vel[1] *= 1.5;
-	    break;
-	    //Added by Zakary Worman:
-	    //accelerates the unit as if a sprint
-	    //------------------------------------
-	case XK_c:
-	    if (creditsScreen()) {
-		closeCredits();
-	    } else {
-		openCredits();
-	    }
-	    break;
-	case XK_p:
-	    gl.pause = !gl.pause;
-	    break;
-	case XK_d:
-	    break;
-	case XK_equal:
-	    break;
-	case XK_minus:
-	    break;
-	default:
-	    break;
+        case XK_Escape:
+            return 1;
+        case XK_Shift_L:
+            g.ship.vel[0] *= 1.5;
+            g.ship.vel[1] *= 1.5;
+            break;
+            //Added by Zakary Worman:
+            //accelerates the unit as if a sprint
+            //------------------------------------
+        case XK_c:
+            if (creditsScreen()) {
+                closeCredits();
+            } else {
+                openCredits();
+            }
+            break;
+        case XK_p:
+            gl.pause = !gl.pause;
+            break;
+        case XK_d:
+            break;
+        case XK_equal:
+            break;
+        case XK_minus:
+            break;
+        default:
+            break;
     }
     return 0;
 }
@@ -885,16 +885,16 @@ void physics()
     //Edited by Zachary Kaiser: Forced ship to stay within screen
     //boundaries
     if (g.ship.pos[0] <= 0.0) {
-	g.ship.pos[0] = 0; 
+        g.ship.pos[0] = 0; 
     }
     else if (g.ship.pos[0] >= (float)gl.xres) {
-	g.ship.pos[0] = (float)gl.xres;
+        g.ship.pos[0] = (float)gl.xres;
     }
     if (g.ship.pos[1] <= 0.0) {
-	g.ship.pos[1] = 0;
+        g.ship.pos[1] = 0;
     }
     else if (g.ship.pos[1] >= (float)gl.yres) {
-	g.ship.pos[1] = (float)gl.yres;
+        g.ship.pos[1] = (float)gl.yres;
     }
     //
     //Update ship position
@@ -905,84 +905,82 @@ void physics()
     clock_gettime(CLOCK_REALTIME, &bt);
     int i=0;
     while (i < g.nbullets) {
-	Bullet *b = &g.barr[i];
-	//How long has bullet been alive?
-	//Edited by Zachary Kaiser: decreased amount of time to delete bullet
-	double ts = timeDiff(&b->time, &bt);
-	if (ts > 3.5) {
-	    //time to delete the bullet.
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-	    g.nbullets--;
-	    //do not increment i.
-	    continue;
-	}
-	if(g.roundEnd) {
-	    g.nbullets--;
-	}
-	if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
-	    storeDeathPosition(b->pos[0],b->pos[1]);
-	    g.killed++;
-	    b->vel[0] *= -1;
-	    b->vel[1] *= -1;
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-	    g.nbullets--;
-	    g.enemyCount--;
-	    if(g.enemyCount == 0){
-		gl.shipSpeedBoost = false;
-		gl.fireRateBoost = false;
-		resetPowerups();
-		g.roundEnd = true;
-	    }
-	} 
-	//move the bullet
-	b->pos[0] += b->vel[0];
-	b->pos[1] += b->vel[1];
-	//Check for collision with window edges
-	//Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
-	if (b->pos[0] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-	}
-	else if (b->pos[0] > (float)gl.xres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-	}
-	else if (b->pos[1] < 0.0) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-	}
-	else if (b->pos[1] > (float)gl.yres) {
-	    memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		    sizeof(Bullet));
-	}
-	i++;
+        Bullet *b = &g.barr[i];
+        //How long has bullet been alive?
+        //Edited by Zachary Kaiser: decreased amount of time to delete bullet
+        double ts = timeDiff(&b->time, &bt);
+        if (ts > 3.5) {
+            //time to delete the bullet.
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
+            g.nbullets--;
+            //do not increment i.
+            continue;
+        }
+        if(g.roundEnd) {
+            g.nbullets--;
+        }
+        if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
+            storeDeathPosition(b->pos[0],b->pos[1]);
+            g.killed++;
+            b->vel[0] *= -1;
+            b->vel[1] *= -1;
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+            g.nbullets--;
+            g.enemyCount--;
+            if(g.enemyCount == 0){
+                gl.shipSpeedBoost = false;
+                gl.fireRateBoost = false;
+                resetPowerups();
+                g.roundEnd = true;
+            }
+        } 
+        //move the bullet
+        b->pos[0] += b->vel[0];
+        b->pos[1] += b->vel[1];
+        //Check for collision with window edges
+        //Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
+        if (b->pos[0] < 0.0) {
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
+        }
+        else if (b->pos[0] > (float)gl.xres) {
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
+        }
+        else if (b->pos[1] < 0.0) {
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
+        }
+        else if (b->pos[1] > (float)gl.yres) {
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+                    sizeof(Bullet));
+        }
+        i++;
     }
     if(heartCollision(g.ship.pos[0], g.ship.pos[1])) {
-	if(g.ship.health<3) {
-	    g.ship.health++;
-	}
+        if(g.ship.health<3) {
+            g.ship.health++;
+        }
     }
     if(powerupCollision(g.ship.pos[0], g.ship.pos[1])) {
-	if(checkSpeed()) {
-	    gl.shipSpeedBoost = true;
-	}
-	if(checkFireRate()) {
-	    gl.fireRateBoost = true;
-	}
-	if(checkShield()) {
-	    g.ship.hit_recent += 10;	
-	}
+        if(checkSpeed()) {
+            gl.shipSpeedBoost = true;
+        }
+        if(checkFireRate()) {
+            gl.fireRateBoost = true;
+        }
+        if(checkShield()) {
+            g.ship.hit_recent += 10;	
+        }
     }
     if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
-	g.ship.vel[0] -= 5;
-	g.ship.vel[1] -= 5;
-	if(g.ship.hit_recent == 0) {
-	    g.ship.hit_recent = 10;
-	    g.ship.health--;
-	}
-	if(g.ship.hit_recent > 0)
-	    g.ship.hit_recent--;
+        if(g.ship.hit_recent == 0) {
+            g.ship.hit_recent = 10;
+            g.ship.health--;
+        }
+        if(g.ship.hit_recent > 0)
+            g.ship.hit_recent--;
     }
     //convert ship angle to radians
     Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -990,108 +988,108 @@ void physics()
     Flt xdir = cos(rad);
     Flt ydir = sin(rad);
     if (gl.keys[XK_a]) {
-	g.ship.vel[0] -= sin(rad)*2;
-	g.ship.vel[1] += cos(rad)*2;
+        g.ship.vel[0] -= sin(rad)*2;
+        g.ship.vel[1] += cos(rad)*2;
     }
     else if (gl.keys[XK_d]) {
-	g.ship.vel[0] += sin(rad)*2;
-	g.ship.vel[1] -= cos(rad)*2;
+        g.ship.vel[0] += sin(rad)*2;
+        g.ship.vel[1] -= cos(rad)*2;
     }
     if (gl.keys[XK_w]) {
-	g.ship.vel[0] += xdir;
-	g.ship.vel[1] += ydir;
-	//Changed by Zakary Worman: changed to simply reduce the speed
-	//to be more characteristic of a human rather than ship
+        g.ship.vel[0] += xdir;
+        g.ship.vel[1] += ydir;
+        //Changed by Zakary Worman: changed to simply reduce the speed
+        //to be more characteristic of a human rather than ship
     }
     else if (gl.keys[XK_s]) {
-	//Added by Zakary Worman: this allows for backward movement with s
-	g.ship.vel[0] -= xdir;
-	g.ship.vel[1] -= ydir;
+        //Added by Zakary Worman: this allows for backward movement with s
+        g.ship.vel[0] -= xdir;
+        g.ship.vel[1] -= ydir;
     }
     else {
-	g.ship.vel[0] *= 0.8;
-	g.ship.vel[1] *= 0.8;
+        g.ship.vel[0] *= 0.8;
+        g.ship.vel[1] *= 0.8;
     }
     //Changed by Zakary Worman: changed to simply reduce the speed
     //to be more characteristic of a human rather than ship
     Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-	    g.ship.vel[1]*g.ship.vel[1]);
+            g.ship.vel[1]*g.ship.vel[1]);
     if(!gl.shipSpeedBoost) {
-	if (speed > 2.0f) {
-	    speed = 2.0f;
-	    normalize2d(g.ship.vel);
-	    g.ship.vel[0] *= speed;
-	    g.ship.vel[1] *= speed;
-	}
-	if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
-	    g.ship.vel[0] *= -1;
-	    g.ship.vel[1] *= -1;
-	}
-	//Added by Zakary Worman: this makes the person slow down as you stop moving
-	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+        if (speed > 2.0f) {
+            speed = 2.0f;
+            normalize2d(g.ship.vel);
+            g.ship.vel[0] *= speed;
+            g.ship.vel[1] *= speed;
+        }
+        if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+            g.ship.vel[0] *= -1;
+            g.ship.vel[1] *= -1;
+        }
+        //Added by Zakary Worman: this makes the person slow down as you stop moving
+        g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     } else {
-	if (speed > 4.0f) {
-	    speed = 4.0f;
-	    normalize2d(g.ship.vel);
-	    g.ship.vel[0] *= speed;
-	    g.ship.vel[1] *= speed;
-	}
-	if(zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
-	    g.ship.vel[0] *= -1;
-	    g.ship.vel[1] *= -1;
-	}
-	g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+        if (speed > 4.0f) {
+            speed = 4.0f;
+            normalize2d(g.ship.vel);
+            g.ship.vel[0] *= speed;
+            g.ship.vel[1] *= speed;
+        }
+        if(zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+            g.ship.vel[0] *= -1;
+            g.ship.vel[1] *= -1;
+        }
+        g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
     }
     if (!g.roundEnd)
-	structureDamage();
+        structureDamage();
 }
 
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
     if(creditsScreen()) {
-	Rect n;
-	n.bot = gl.yres - gl.yres/5;
-	n.left = gl.xres/2;
-	n.center = gl.xres/3;
-	zw_show_credits(n);
-	zk_show_credits(n);
-	bb_show_credits(n);
-	jc_show_credits(n);
-	zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-	zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-	bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-	jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-	ggprint16(&n, 16, 0x00ff0000, "Close this screen by pressing C");
-	return;
+        Rect n;
+        n.bot = gl.yres - gl.yres/5;
+        n.left = gl.xres/2;
+        n.center = gl.xres/3;
+        zw_show_credits(n);
+        zk_show_credits(n);
+        bb_show_credits(n);
+        jc_show_credits(n);
+        zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+        zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+        bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+        jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+        ggprint16(&n, 16, 0x00ff0000, "Close this screen by pressing C");
+        return;
     }
     if(menuScreen()) {
-	menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
-	printMenuScreen(gl.xres, gl.yres);
-	initButtons();
-	drawButtons();
-	zk_drawCircle();
-	playGameSound();
-	return;
+        menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
+        printMenuScreen(gl.xres, gl.yres);
+        initButtons();
+        drawButtons();
+        zk_drawCircle();
+        playGameSound();
+        return;
     }
     if(g.ship.health <= 0) {
-	resetPowerups();
-	gl.shipSpeedBoost = false;
-	gl.fireRateBoost = false;
-	zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-	zk_gameovertext(gl.xres, gl.yres);
-	if(gl.keys[XK_f]) {
-	    gl.menuScreen = true;
-	    g.ship.health = 3;
-	    g.roundEnd = true;
-	    g.round = 0;
-	    zw_reset_round();
-	    buildReset();
-	    g.ship.hit_recent = 0;
-	}	
-	zk_drawCircle();
-	//zw_gameover(gl.yres, gl.xres);
-	return;
+        resetPowerups();
+        gl.shipSpeedBoost = false;
+        gl.fireRateBoost = false;
+        zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+        zk_gameovertext(gl.xres, gl.yres);
+        if(gl.keys[XK_f]) {
+            gl.menuScreen = true;
+            g.ship.health = 3;
+            g.roundEnd = true;
+            g.round = 0;
+            zw_reset_round();
+            buildReset();
+            g.ship.hit_recent = 0;
+        }	
+        zk_drawCircle();
+        //zw_gameover(gl.yres, gl.xres);
+        return;
     }
     glClear(GL_COLOR_BUFFER_BIT);
     gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture);
@@ -1100,43 +1098,43 @@ void render()
     Rect r;
     playerModel(g.ship.pos, g.ship.angle, gl.playerTexture);
     if(gl.pause) {
-	zk_pausemenu(gl.xres, gl.yres);
-	zk_pausetext(gl.xres, gl.yres);
-	zk_initializeButtons();
-	zk_createButtons();
-	zk_drawCircle();
-	zk_checkHover();
-	return;
+        zk_pausemenu(gl.xres, gl.yres);
+        zk_pausetext(gl.xres, gl.yres);
+        zk_initializeButtons();
+        zk_createButtons();
+        zk_drawCircle();
+        zk_checkHover();
+        return;
     }
     if(gl.controls) {
-	zk_controlsmenu(gl.xres, gl.yres);
-	zk_initializeButtons();
-	zk_createButtons();
-	zk_drawCircle();
-	return;
+        zk_controlsmenu(gl.xres, gl.yres);
+        zk_initializeButtons();
+        zk_createButtons();
+        zk_drawCircle();
+        return;
     }
     if (g.roundEnd) {
-	zk_drawCircle();
-	zw_reset_round();
-	Rect s;
-	s.bot = gl.yres - 28;
-	s.left = gl.xres/2 - 10;
-	s.center = gl.xres/2;
-	ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
-	if (g.round > 0)
-	    renderBoard(gl.xres, gl.yres);
-	//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
-	if (gl.keys[XK_r]) {
-	    g.round++;
-	    matsChange(g.round);
-	    g.roundEnd = false;
-	    g.enemyCount = g.round*2;
-	    if (g.round > 4)
-		g.enemyCount += (g.round-4)*2;
-	    if (g.round > 9)
-		g.enemyCount += (g.round-9);
-	}
-	return;
+        zk_drawCircle();
+        zw_reset_round();
+        Rect s;
+        s.bot = gl.yres - 28;
+        s.left = gl.xres/2 - 10;
+        s.center = gl.xres/2;
+        ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
+        if (g.round > 0)
+            renderBoard(gl.xres, gl.yres);
+        //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
+        if (gl.keys[XK_r]) {
+            g.round++;
+            matsChange(g.round);
+            g.roundEnd = false;
+            g.enemyCount = g.round*2;
+            if (g.round > 4)
+                g.enemyCount += (g.round-4)*2;
+            if (g.round > 9)
+                g.enemyCount += (g.round-9);
+        }
+        return;
     }
     //Drop Shadow
     Rect s;
@@ -1165,30 +1163,30 @@ void render()
     glPopMatrix();
     //draw shield
     if (g.ship.hit_recent > 0) {
-	glColor3f(1.0f,1.0f,0.0f);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_LINE_LOOP);
-	glVertex2f(-30, -40);           
-	glVertex2f(-30, 40);           
-	glVertex2f(30, 40);           
-	glVertex2f(30, -40);           
-	glEnd();
-	glPopMatrix();
-	Rect k;
-	k.bot = gl.yres/1.2;
-	k.left = gl.xres/2 - 10;
-	k.center = gl.xres/2;
-	ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
+        glColor3f(1.0f,1.0f,0.0f);
+        glPushMatrix();
+        glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+        glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(-30, -40);           
+        glVertex2f(-30, 40);           
+        glVertex2f(30, 40);           
+        glVertex2f(30, -40);           
+        glEnd();
+        glPopMatrix();
+        Rect k;
+        k.bot = gl.yres/1.2;
+        k.left = gl.xres/2 - 10;
+        k.center = gl.xres/2;
+        ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
     }
     //Draw the enemies
     zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.vampireTexture);
     //Draw the bullets
     Bullet *b = &g.barr[0];
     for (int i=0; i<g.nbullets; i++) {
-	zw_drawSword(b->pos[0], b->pos[1], b->angle);
-	++b;
+        zw_drawSword(b->pos[0], b->pos[1], b->angle);
+        ++b;
     }
     //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
     //Draw Circle over Crosshair, Zachary Kaiser

@@ -426,7 +426,6 @@ void buildPlacement(int xres, int yres, GLuint wood)
 void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 {
 	int tileSize = 120;
-	int health;
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 	glBindTexture(GL_TEXTURE_2D, texid);
@@ -557,7 +556,8 @@ void renderStructureHP()
 }
 
 
-void playerModel(GLfloat pos[], float angle, GLuint texture)
+
+void playerModel(GLfloat pos[3], float angle, GLuint texture)
 {	
 	glPushMatrix();
 	glTranslatef(pos[0], pos[1], pos[2]);

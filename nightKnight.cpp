@@ -124,7 +124,7 @@ extern void matsChange(int round);
 extern void showMaterials();
 //extern void structureRemoval();
 //extern void menuState(bool state);
-extern void checkMouseEvent(XEvent *e, bool roundEnd);
+extern void checkMouseEvent(int x, int y, int click);
 extern void zw_reset_round();
 extern void zw_drawSword(float x, float y, float angle);
 extern bool zw_player_structure_collision(float x, float y);
@@ -451,8 +451,8 @@ int main()
 				checkButtonClick(&e);
 			}
 			done = check_keys(&e);
-			if (g.round >= 1 && g.roundEnd)
-				checkMouseEvent(&e, g.roundEnd);
+			//if (g.round >= 1 && g.roundEnd)
+			//	checkMouseEvent(&e, g.roundEnd);
 		}
 		physics();
 		render();
@@ -748,6 +748,10 @@ void check_mouse(XEvent *e)
 	if (e->type == ButtonPress) {
 		//edited by Zachary Kaiser: Messing around with bullet physics
 		if (e->xbutton.button==1) {
+			if (g.roundEnd && g.round >= 1) {
+				checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+				return;
+			}
 			//Left button is down
 			//a little time between each bullet
 			struct timespec bt;
@@ -787,6 +791,12 @@ void check_mouse(XEvent *e)
 					b->color[2] = 1.0f;
 					++g.nbullets;
 				}
+			}
+		}
+		if (e->xbutton.button==3) {
+			if (g.roundEnd && g.round >= 1) {
+				checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+				return;
 			}
 		}
 	}
@@ -852,25 +862,29 @@ void physics()
 {
 	//playGameSound();
 	//Flt d0,d1,dist;
-	//Update ship position
-	g.ship.pos[0] += g.ship.vel[0];
-	g.ship.pos[1] += g.ship.vel[1];
 	//Check for collision with window edges
 	//Edited by Zachary Kaiser: Forced ship to stay within screen
 	//boundaries
 	if (g.ship.pos[0] <= 0.0) {
 		g.ship.pos[0] = (float)gl.xres;
+		g.ship.vel[0] = 0;
 	}
 	else if (g.ship.pos[0] >= (float)gl.xres) {
 		g.ship.pos[0] = (float)gl.xres;
+		g.ship.vel[0] = 0;
 	}
-	else if (g.ship.pos[1] <= 0.0) {
+	if (g.ship.pos[1] <= 0.0) {
 		g.ship.pos[1] = (float)gl.yres;
+		g.ship.vel[1] = 0;
 	}
 	else if (g.ship.pos[1] >= (float)gl.yres) {
 		g.ship.pos[1] = (float)gl.yres;
+		g.ship.vel[1] = 0;
 	}
 	//
+	//Update ship position
+	g.ship.pos[0] += g.ship.vel[0];
+	g.ship.pos[1] += g.ship.vel[1];
 	//Update bullet positions
 	struct timespec bt;
 	clock_gettime(CLOCK_REALTIME, &bt);

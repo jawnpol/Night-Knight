@@ -204,157 +204,173 @@ int boardDimY = 1080;
 int leftButton = 0;
 int rightButton = 0;
 
-void checkMouseEvent(XEvent *e, bool roundEnd)
+void checkMouseEvent(int x, int y, int click)
 {
-	int x, y;
-	int i,j;
-	if (e->type == ButtonPress) {
-		if (e->xbutton.button == 1) {
-			if (roundEnd) {
-				leftButton = 1;
-				//cout << "Button was pressed" << endl;
-			}
+	x = floor(x/120);
+	y = floor(y/120);
+	if (buildingGrid[x][y].status == 0 && click == 1 && woodMats >= woodCost) {
+		buildingGrid[x][y].status = 1;
+		buildingGrid[x][y].woodStatus = true;
+		buildingGrid[x][y].stoneStatus = false;
+		woodStore[x][y].dead = false;
+		woodMats = woodMats - woodCost;
+	}
+	if (buildingGrid[x][y].status == 0 && click == 3 && stoneMats >= stoneCost) {
+		buildingGrid[x][y].status = 1;
+		buildingGrid[x][y].woodStatus = false;
+		buildingGrid[x][y].stoneStatus = true;
+		stoneStore[x][y].dead = false;
+		stoneMats = stoneMats - stoneCost;
+	}
+	/*int x, y;
+	  int i,j;
+	  if (e->type == ButtonPress) {
+	  if (e->xbutton.button == 1) {
+	  if (roundEnd) {
+	  leftButton = 1;
+	//cout << "Button was pressed" << endl;
+	}
 
-		}
-		if (e->xbutton.button == 3) {
-			if (roundEnd) {
-				rightButton = 1;
-				//cout << "Right click" << endl;
-			}
-		}
+	}
+	if (e->xbutton.button == 3) {
+	if (roundEnd) {
+	rightButton = 1;
+	//cout << "Right click" << endl;
+	}
+	}
 	}
 
 	for (i = 0; i < XDIM; i++) {
-		for (j = 0; j < YDIM; j++) {
-			buildingGrid[i][j].over = 0;
-			//buildingGrid[i][j].status = 0;
-		}
+	for (j = 0; j < YDIM; j++) {
+	buildingGrid[i][j].over = 0;
+	//buildingGrid[i][j].status = 0;
+	}
 	}
 
 	if (e->type == MotionNotify) {
-		x = e->xbutton.x;
-		y = e->xbutton.y;
-		y = 1080 - y;
-		for (i = 0; i < XDIM; i++) {
-			for (j = 0; j < YDIM; j++) {
-				if (roundEnd) {
-					if (x <= i * gridDim + gridDim &&
-							x >= i * gridDim - gridDim &&
-							y <= j * gridDim  + gridDim &&
-							y >= j * gridDim) {
+	x = e->xbutton.x;
+	y = e->xbutton.y;
+	y = 1080 - y;
+	for (i = 0; i < XDIM; i++) {
+	for (j = 0; j < YDIM; j++) {
+	if (roundEnd) {
+	if (x <= i * gridDim + gridDim &&
+	x >= i * gridDim - gridDim &&
+	y <= j * gridDim  + gridDim &&
+	y >= j * gridDim) {
 
-						buildingGrid[i][j].over = 1;
-						//buildingGrid[i][j].status = 0;  
-						break;
-					}
-				}
-			}
-			if (buildingGrid[i][j].over == 1)
-				break;
-		}
+	buildingGrid[i][j].over = 1;
+	//buildingGrid[i][j].status = 0;  
+	break;
+	}
+	}
+	}
+	if (buildingGrid[i][j].over == 1)
+	break;
+	}
 	}
 
 	if (roundEnd == 1 && leftButton == 1) {
-		x = floor(x/120);
-		y = floor(y/120);
-		if (buildingGrid[x][y].status == 0) { 
-			//if (leftButton == 1) {
-			//cout << "Does it get to here?" << endl;
-			if (woodMats >= woodCost) {
-				buildingGrid[x][y].status = 1;
-				buildingGrid[x][y].woodStatus = true;
-				buildingGrid[x][y].stoneStatus = false;
-				//woodStore[i][j].health = 100.0;
-				woodStore[x][y].dead = false;
-				cout << "Health during placement: " << woodStore[x][y].health;
-				cout << "At: " << x << " " << y;
-				cout << " Is it dead? " << woodStore[x][y].dead << endl;
-				leftButton = 0;
-				woodMats = woodMats - woodCost;
-			}
-			//cout << "i and j status 2" << buildingGrid[i][j].status << endl;
-		}
+	x = floor(x/120);
+	y = floor(y/120);
+	if (buildingGrid[x][y].status == 0) { 
+	//if (leftButton == 1) {
+	//cout << "Does it get to here?" << endl;
+	if (woodMats >= woodCost) {
+	buildingGrid[x][y].status = 1;
+	buildingGrid[x][y].woodStatus = true;
+	buildingGrid[x][y].stoneStatus = false;
+	//woodStore[i][j].health = 100.0;
+	woodStore[x][y].dead = false;
+	cout << "Health during placement: " << woodStore[x][y].health;
+	cout << "At: " << x << " " << y;
+	cout << " Is it dead? " << woodStore[x][y].dead << endl;
+	leftButton = 0;
+	woodMats = woodMats - woodCost;
+	}
+	//cout << "i and j status 2" << buildingGrid[i][j].status << endl;
+	}
 	}
 
 	if (roundEnd == 1 && rightButton == 1) {
-		x = floor(x/120);
-		y = floor(y/120);
+	x = floor(x/120);
+	y = floor(y/120);
 
-		if (buildingGrid[x][y].status == 0) {
-			if (stoneMats >= stoneCost) {
-				buildingGrid[x][y].status = 1;
-				buildingGrid[x][y].woodStatus = false;
-				buildingGrid[x][y].stoneStatus = true;
-				stoneStore[x][y].dead = false;
-				rightButton = 0;
-				stoneMats = stoneMats - stoneCost;
-			}
+	if (buildingGrid[x][y].status == 0) {
+		if (stoneMats >= stoneCost) {
+			buildingGrid[x][y].status = 1;
+			buildingGrid[x][y].woodStatus = false;
+			buildingGrid[x][y].stoneStatus = true;
+			stoneStore[x][y].dead = false;
+			rightButton = 0;
+			stoneMats = stoneMats - stoneCost;
 		}
-	}	
+	}
+}*/	
 }
 
 void renderBoard(int xres, int yres)
 {
 	/*Rect r;
-	r.bot = boardDimY - 20;
-	r.left = boardDimX - 50;
-	r.center = boardDimX/2;
-	ggprint8b(&r, 16, 0x00000000, "Materials");
-	ggprint8b(&r, 16, 0x00000000, "Wood: %i", woodMats);
-	ggprint8b(&r, 16, 0x00000000, "Stone: %i", stoneMats);*/
+	  r.bot = boardDimY - 20;
+	  r.left = boardDimX - 50;
+	  r.center = boardDimX/2;
+	  ggprint8b(&r, 16, 0x00000000, "Materials");
+	  ggprint8b(&r, 16, 0x00000000, "Wood: %i", woodMats);
+	  ggprint8b(&r, 16, 0x00000000, "Stone: %i", stoneMats);*/
 	//cout << "Does it get into renderBoard?" << endl;
 	int tileSize = 120;
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glClear(GL_COLOR_BUFFER_BIT);
-		//glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+	//glClear(GL_COLOR_BUFFER_BIT);
+	//glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 	for (int i = 0; i < xres; i += tileSize) {
 		for (int j = 0; j < yres; j += tileSize) {
-				//cout << "Does it get here"<< endl;
+			//cout << "Does it get here"<< endl;
 			glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 
 			if (buildingGrid[i/120][j/120].over && matsCheck()) {
 				glColor3f(0.3f, 1.0f, 0.3f);
 				/*if (buildingGrid[i/120][j/120].woodStatus)
-					glBindTexture(GL_TEXTURE_2D, texture);
-				if (buildingGrid[i/tileSize][j/tileSize].stoneStatus)
-					glBindTexture(GL_TEXTURE_2D, stone);
-					 */
+				  glBindTexture(GL_TEXTURE_2D, texture);
+				  if (buildingGrid[i/tileSize][j/tileSize].stoneStatus)
+				  glBindTexture(GL_TEXTURE_2D, stone);
+				  */
 			} 
 			if (buildingGrid[i/120][j/120].over && !matsCheck())
 				glColor3f(0.72f, 0.0f, 0.0f);
 
 			glBindTexture(GL_TEXTURE_2D, 0);
-				/*if (buildingGrid[i/120][j/120].status == 1) {
-				  glBindTexture(GL_TEXTURE_2D, texture);
-				  cout << "Does it get to the texture" << endl;
-				  }*/
+			/*if (buildingGrid[i/120][j/120].status == 1) {
+			  glBindTexture(GL_TEXTURE_2D, texture);
+			  cout << "Does it get to the texture" << endl;
+			  }*/
 			glBegin(GL_QUADS);
-				glTexCoord2f(0.0f, 1.0f); glVertex2i(i,j);
-				glTexCoord2f(0.0f, 0.0f); glVertex2i(i,j + tileSize);
-				glTexCoord2f(1.0f, 0.0f); glVertex2i(i + tileSize, j + tileSize);
-				glTexCoord2f(1.0f, 1.0f); glVertex2i(i + tileSize, j);
+			glTexCoord2f(0.0f, 1.0f); glVertex2i(i,j);
+			glTexCoord2f(0.0f, 0.0f); glVertex2i(i,j + tileSize);
+			glTexCoord2f(1.0f, 0.0f); glVertex2i(i + tileSize, j + tileSize);
+			glTexCoord2f(1.0f, 1.0f); glVertex2i(i + tileSize, j);
 			glEnd();
-				//glBindTexture(GL_TEXTURE_2D, 0);
+			//glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
-		glDisable(GL_BLEND);
-		glColor3f(0.0f, 0.0f, 0.0f);
-		glBegin(GL_LINES);
-		for (int i = 0; i < xres; i += tileSize) {
-			for (int j = 0; j < yres /*- 120*/; j += tileSize) {
-				glVertex2i(i, j);
-				glVertex2i(i, j + tileSize);
-			}
+	glDisable(GL_BLEND);
+	glColor3f(0.0f, 0.0f, 0.0f);
+	glBegin(GL_LINES);
+	for (int i = 0; i < xres; i += tileSize) {
+		for (int j = 0; j < yres /*- 120*/; j += tileSize) {
+			glVertex2i(i, j);
+			glVertex2i(i, j + tileSize);
 		}
-		for (int i = 0; i < xres; i += tileSize) {
-			for (int j = 0; j < yres; j += tileSize) {
-				glVertex2i(i, j);
-				glVertex2i(i + tileSize , j);
-			}
+	}
+	for (int i = 0; i < xres; i += tileSize) {
+		for (int j = 0; j < yres; j += tileSize) {
+			glVertex2i(i, j);
+			glVertex2i(i + tileSize , j);
 		}
-		glEnd();  
-	  
+	}
+	glEnd();  
+
 }
 
 //Building structures
@@ -439,7 +455,7 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 				continue;
 			else 
 				glBindTexture(GL_TEXTURE_2D, wood);
-				//cout << "THIS BLOCK SHOULD BE DEAD: " << i/tileSize << " " << j/tileSize<< endl;
+			//cout << "THIS BLOCK SHOULD BE DEAD: " << i/tileSize << " " << j/tileSize<< endl;
 			glBegin(GL_QUADS);
 			glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
 			glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
@@ -451,25 +467,25 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 	}
 
 	for (int i = 0; i < xres; i += tileSize) {
-	  	for (int j = 0; j < yres; j += tileSize) {
-	  		if (stoneStore[i/tileSize][j/tileSize].dead) {
-	  			continue;
-	  		} else {
-	  			glBindTexture(GL_TEXTURE_2D, stone);
-	  		}
-	  		glBegin(GL_QUADS);
-	  		glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
-	  		glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
-	  		glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
-	  		glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
-	  		glEnd();
-	  		glBindTexture(GL_TEXTURE_2D, 0);
+		for (int j = 0; j < yres; j += tileSize) {
+			if (stoneStore[i/tileSize][j/tileSize].dead) {
+				continue;
+			} else {
+				glBindTexture(GL_TEXTURE_2D, stone);
+			}
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 1.0f); glVertex2i(i + 30, j);
+			glTexCoord2f(0.0f, 0.0f); glVertex2i(i + 30, j+tileSize);
+			glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize - 30, j+tileSize);
+			glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize - 30, j);
+			glEnd();
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 	}
 
 	glDisable(GL_ALPHA_TEST);
 	//}
-}
+	}
 void showMaterials()
 {
 	Rect r;
@@ -501,17 +517,17 @@ void renderStructureHP()
 				y = j * 120;
 				glColor3f(0.0f, 0.0f, 0.0f);
 				glBegin(GL_QUADS);
-					glVertex2i(x + 50 - 1, y + 50 - 1);
-					glVertex2i(x + 50 - 1, y + 55 + 1);
-					glVertex2i(x + 50 + health + 1, y + 55 + 1);
-					glVertex2i(x + 50 + health + 1, y + 50 - 1);
+				glVertex2i(x + 50 - 1, y + 50 - 1);
+				glVertex2i(x + 50 - 1, y + 55 + 1);
+				glVertex2i(x + 50 + health + 1, y + 55 + 1);
+				glVertex2i(x + 50 + health + 1, y + 50 - 1);
 				glEnd();
 				glColor3f(1.0f, 0.0f, 0.0f);
 				glBegin(GL_QUADS);
-					glVertex2i(x + 50, y + 50);
-					glVertex2i(x + 50, y + 55);
-					glVertex2i(x + 50 + health, y + 55);
-					glVertex2i(x + 50 + health, y + 50);
+				glVertex2i(x + 50, y + 50);
+				glVertex2i(x + 50, y + 55);
+				glVertex2i(x + 50 + health, y + 55);
+				glVertex2i(x + 50 + health, y + 50);
 				glEnd();
 
 			}
@@ -522,18 +538,18 @@ void renderStructureHP()
 				y = j * 120;
 				glColor3f(0.0f, 0.0f, 0.0f);
 				glBegin(GL_QUADS);
-					glVertex2i(x + 50 - 1, y + 50 - 1);
-					glVertex2i(x + 50 - 1, y + 55 + 1);
-					glVertex2i(x + 50 + health + 1, y + 55 + 1);
-					glVertex2i(x + 50 + health + 1, y + 50 - 1);
+				glVertex2i(x + 50 - 1, y + 50 - 1);
+				glVertex2i(x + 50 - 1, y + 55 + 1);
+				glVertex2i(x + 50 + health + 1, y + 55 + 1);
+				glVertex2i(x + 50 + health + 1, y + 50 - 1);
 				glEnd();
 
 				glColor3f(1.0f, 0.0f, 0.0f);
 				glBegin(GL_QUADS);
-					glVertex2i(x + 50, y + 50);
-					glVertex2i(x + 50, y + 55);
-					glVertex2i(x + 50 + health, y + 55);
-					glVertex2i(x + 50 + health, y + 50);
+				glVertex2i(x + 50, y + 50);
+				glVertex2i(x + 50, y + 55);
+				glVertex2i(x + 50 + health, y + 55);
+				glVertex2i(x + 50 + health, y + 50);
 				glEnd();
 			}
 		}

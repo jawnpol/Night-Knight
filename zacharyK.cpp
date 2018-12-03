@@ -35,7 +35,7 @@ void zk_initializeButtons() {
         glo.nbuts = 0;
         glo.button[glo.nbuts].btn.width = 240;
         glo.button[glo.nbuts].btn.height = 120;
-        glo.button[glo.nbuts].btn.left = 180;
+        glo.button[glo.nbuts].btn.left = 840;
         glo.button[glo.nbuts].btn.bot = 400;
         glo.button[glo.nbuts].btn.right =
                 glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.width;
@@ -60,7 +60,7 @@ void zk_initializeButtons() {
 
         glo.button[glo.nbuts].btn.width = 240;
         glo.button[glo.nbuts].btn.height = 120;
-        glo.button[glo.nbuts].btn.left = 180;
+        glo.button[glo.nbuts].btn.left = 840;
         glo.button[glo.nbuts].btn.bot = 600;
         glo.button[glo.nbuts].btn.right =
                 glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.width;
@@ -82,6 +82,31 @@ void zk_initializeButtons() {
         glo.button[glo.nbuts].text_color = 0x000000;
 
         glo.nbuts++;
+	
+	/*glo.button[glo.nbuts].btn.width = 240;
+        glo.button[glo.nbuts].btn.height = 120;
+        glo.button[glo.nbuts].btn.left = 180;
+        glo.button[glo.nbuts].btn.bot = 400;
+        glo.button[glo.nbuts].btn.right =
+                glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.width;
+        glo.button[glo.nbuts].btn.top =
+                glo.button[glo.nbuts].btn.bot + glo.button[glo.nbuts].btn.height;
+        glo.button[glo.nbuts].btn.centerx =
+                (glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.right) / 2;
+        glo.button[glo.nbuts].btn.centery =
+                (glo.button[glo.nbuts].btn.bot + glo.button[glo.nbuts].btn.top) / 2;
+        strcpy(glo.button[glo.nbuts].text, "Return");
+        glo.button[glo.nbuts].pressed = 0;
+        glo.button[glo.nbuts].click = 0;
+        glo.button[glo.nbuts].btnColor[0] = 0.5f;
+        glo.button[glo.nbuts].btnColor[1] = 0.5f;
+        glo.button[glo.nbuts].btnColor[2] = 0.5f;
+        glo.button[glo.nbuts].pColor[0] = 1.0f;
+          glo.button[glo.nbuts].pColor[1] = 1.0f;
+          glo.button[glo.nbuts].pColor[2] = 1.0f;
+        glo.button[glo.nbuts].text_color = 0x000000;
+
+        glo.nbuts++;*/
 }
 
 void zk_createButtons() {
@@ -119,7 +144,7 @@ void zk_createButtons() {
 }
 
 void zk_checkClick(XEvent *e)   {
-        static int leftclick = 0;
+        int leftclick = 0;
         int x,y;
         if (e->type == ButtonPress) {
                 if (e->xbutton.button == 1) {
@@ -243,6 +268,25 @@ void zk_pausemenu(int x, int y) {
         glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
 	glEnd();
 	glPopMatrix();
+}
+bool zk_continue() {
+	if(k.x >= glo.button[0].btn.left &&
+			k.x <= glo.button[0].btn.right &&
+			k.y >= glo.button[0].btn.bot &&
+			k.y <= glo.button[0].btn.top) {
+		return true;
+	}
+	return false;	
+}
+
+bool zk_cState() {
+	if(k.x >= glo.button[2].btn.left &&
+			k.x <= glo.button[2].btn.right &&
+			k.y >= glo.button[2].btn.bot &&
+			k.y <= glo.button[2].btn.top) 
+		return true;
+	return false;
+
 }
 
 void zk_controls (int x, int y) {

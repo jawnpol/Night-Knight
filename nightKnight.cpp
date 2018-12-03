@@ -64,6 +64,7 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 //-----------------------------------------------------------------------------
 //Group extern includes to use personal files
 extern void zw_show_credits(Rect &r);
+extern bool zk_continue();
 extern void zk_initializeButtons();
 extern void zk_createButtons();
 extern void zk_checkClick(XEvent *e);
@@ -451,6 +452,9 @@ int main()
 			if(menuScreen()) {
 				checkButtonClick(&e);
 			}
+			if(gl.pause) {
+				zk_checkClick(&e);
+			}
 			done = check_keys(&e);
 			//if (g.round >= 1 && g.roundEnd)
 			//	checkMouseEvent(&e, g.roundEnd);
@@ -754,6 +758,11 @@ void check_mouse(XEvent *e)
 				return;
 			}
 			//Left button is down
+			if(gl.pause) {
+				if(zk_continue())
+					gl.pause = !gl.pause;
+				return;
+			}
 			//a little time between each bullet
 			struct timespec bt;
 			clock_gettime(CLOCK_REALTIME, &bt);
@@ -791,8 +800,8 @@ void check_mouse(XEvent *e)
 					Flt ydir = sin(rad);
 					b->pos[0] += xdir*20.0f;
 					b->pos[1] += ydir*20.0f;
-					b->vel[0] += xdir*2 + rnd()*0.5;
-					b->vel[1] += ydir*2 + rnd()*0.5;
+					b->vel[0] += xdir*2;
+					b->vel[1] += ydir*2;
 					b->color[0] = 0.0f;
 					b->color[1] = 0.0f;
 					b->color[2] = 1.0f;

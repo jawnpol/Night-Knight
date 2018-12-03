@@ -774,8 +774,14 @@ void check_mouse(XEvent *e)
 					timeCopy(&b->time, &bt);
 					b->pos[0] = g.ship.pos[0];
 					b->pos[1] = g.ship.pos[1];
-					b->vel[0] = 0.5*g.ship.vel[0];
-					b->vel[1] = 0.5*g.ship.vel[1];
+					if (gl.shipSpeedBoost) {
+						b->vel[0] = g.ship.vel[0];
+						b->vel[1] = g.ship.vel[1];
+					}
+					else {
+						b->vel[0] = 0.5*g.ship.vel[0];
+						b->vel[1] = 0.5*g.ship.vel[1];
+					}
 					b->angle = g.ship.angle;
 					//convert ship angle to radians
 					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -866,20 +872,16 @@ void physics()
 	//Edited by Zachary Kaiser: Forced ship to stay within screen
 	//boundaries
 	if (g.ship.pos[0] <= 0.0) {
-		g.ship.pos[0] = (float)gl.xres;
-		g.ship.vel[0] = 0;
+		g.ship.pos[0] = 0; 
 	}
 	else if (g.ship.pos[0] >= (float)gl.xres) {
 		g.ship.pos[0] = (float)gl.xres;
-		g.ship.vel[0] = 0;
 	}
 	if (g.ship.pos[1] <= 0.0) {
-		g.ship.pos[1] = (float)gl.yres;
-		g.ship.vel[1] = 0;
+		g.ship.pos[1] = 0;
 	}
 	else if (g.ship.pos[1] >= (float)gl.yres) {
 		g.ship.pos[1] = (float)gl.yres;
-		g.ship.vel[1] = 0;
 	}
 	//
 	//Update ship position

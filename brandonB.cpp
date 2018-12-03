@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define MAXBUTTONS 2
+#define MAXBUTTONS 3
 #define MAXHEARTS 5
 #define MAXPOWERUPS 3
 typedef struct t_button {
@@ -53,6 +53,7 @@ struct BBglobal {
 	int numHearts = 0;
 	bool speedBoost = false;
 	bool fireRateBoost = false;
+	bool shieldBoost = false;
 } glb;
 
 void bb_show_credits(Rect &r)
@@ -205,6 +206,56 @@ void drawPowerups()
 
 			}
 		}
+		if(i == 2) {
+			if(p[2].spawn) {
+				//Drawns and outlines Shield Powerup
+				glColor3f(0.0,0.0,1.0);
+				glPushMatrix();
+				//glTranslatef(960,540,-1);
+				glTranslatef(p[i].pos[0], p[i].pos[1], -1);
+				glBegin(GL_POLYGON);
+				glVertex2f(0,0);
+				glVertex2f(-10, 0);
+				glVertex2f(-10,-17.5);
+				glVertex2f(0,-25);
+				glVertex2f(10,-17.5);
+				glVertex2f(10,0);
+				glEnd();
+				glPopMatrix();
+				//Inner shield
+				glColor3f(0.0,1.0,1.0);
+				glPushMatrix();
+				//glTranslatef(960,535,0);
+				glTranslatef(p[i].pos[0], p[i].pos[1]-5, 0);
+				glBegin(GL_POLYGON);
+				glVertex2f(0,0);
+				glVertex2f(-5,0);
+				glVertex2f(-5, -8.25);
+				glVertex2f(0, -13.5);
+				glVertex2f(5, -8.25);
+				glVertex2f(5, 0);
+				glVertex2f(0,0);
+				glEnd();
+				glPopMatrix();
+				//Shield Outline
+				glLineWidth(2);
+				glColor3f(0.0,0.0,0.0);
+				glPushMatrix();
+				//glTranslatef(960,540,0);
+				glTranslatef(p[i].pos[0], p[i].pos[1], 0);
+				glBegin(GL_LINE_LOOP);
+				glVertex2f(0,0);
+				glVertex2f(-10, 0);
+				glVertex2f(-10,-17.5);
+				glVertex2f(0,-25);
+				glVertex2f(10,-17.5);
+				glVertex2f(10,0);
+				glVertex2f(0,0);
+				glEnd();
+				glPopMatrix();
+
+			}
+		}
 	}
 }
 
@@ -303,6 +354,10 @@ bool powerupCollision(float playerx, float playery)
 			if (i == 1) {
 				printf("Grabbed Fire Rate boost\n");fflush(stdout);
 				glb.fireRateBoost = true;
+			}
+			if (i == 2) {
+				printf("Grabbed Shield Powerup\n");fflush(stdout);
+				glb.shieldBoost = true;
 			}		
 			p[i].spawn=0;
 			p[i].pos[0] = -1;
@@ -329,6 +384,15 @@ bool checkFireRate() {
 	}
 }
 
+bool checkShield() 
+{
+	if (glb.shieldBoost) {
+		glb.shieldBoost=false;
+		return true;
+	} else {
+		return false;
+	}
+}
 void resetPowerups() {
 	glb.speedBoost = false;
 	glb.fireRateBoost = false;
@@ -426,6 +490,7 @@ void closeCredits()
 //initializes position and shape of buttons
 void initButtons() 
 {
+	//Start Game Button
 	glb.numButtons = 0;
 	glb.button[glb.numButtons].btn.width = 240;  //240->Button Dimensions
 	glb.button[glb.numButtons].btn.height = 120; //120->Saved in case
@@ -450,10 +515,35 @@ void initButtons()
 	glb.button[glb.numButtons].dwnColor[2] = 0.0f;
 	glb.button[glb.numButtons].text_color = 0x00000000;
 	glb.numButtons++;
+	//Control Screen Button
 	glb.button[glb.numButtons].btn.width = 240;  //240->Button Dimensions
         glb.button[glb.numButtons].btn.height = 120; //120->Saved in case
         glb.button[glb.numButtons].btn.left = 180;   //180->Changed in
-        glb.button[glb.numButtons].btn.bot = 300;    //400->Future
+        glb.button[glb.numButtons].btn.bot = 400;    //400->Future
+        glb.button[glb.numButtons].btn.right =
+                glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.width;
+        glb.button[glb.numButtons].btn.top =
+                glb.button[glb.numButtons].btn.bot + glb.button[glb.numButtons].btn.height;
+        glb.button[glb.numButtons].btn.centerx =
+                (glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.right) / 2;
+        glb.button[glb.numButtons].btn.centery =
+                (glb.button[glb.numButtons].btn.bot + glb.button[glb.numButtons].btn.top) / 2;
+        strcpy(glb.button[glb.numButtons].text, "Controls");
+        glb.button[glb.numButtons].down = 0;
+        glb.button[glb.numButtons].click = 0;
+        glb.button[glb.numButtons].btnColor[0] = 0.5f;
+        glb.button[glb.numButtons].btnColor[1] = 0.5f;
+        glb.button[glb.numButtons].btnColor[2] = 0.5f;
+        glb.button[glb.numButtons].dwnColor[0] = 0.0f;
+        glb.button[glb.numButtons].dwnColor[1] = 0.0f;
+        glb.button[glb.numButtons].dwnColor[2] = 0.0f;
+        glb.button[glb.numButtons].text_color = 0x00000000;
+	glb.numButtons++;
+	//Credits Screen Button
+	glb.button[glb.numButtons].btn.width = 240;  //240->Button Dimensions
+        glb.button[glb.numButtons].btn.height = 120; //120->Saved in case
+        glb.button[glb.numButtons].btn.left = 180;   //180->Changed in
+        glb.button[glb.numButtons].btn.bot = 200;    //400->Future
         glb.button[glb.numButtons].btn.right =
                 glb.button[glb.numButtons].btn.left + glb.button[glb.numButtons].btn.width;
         glb.button[glb.numButtons].btn.top =
@@ -556,6 +646,9 @@ int checkButtonClick(XEvent *e)
 							startGame();
 							break;
 						case 1:
+							//controlsScreen();
+							break;
+						case 2:
 							openCredits();
 							break;
 						default:

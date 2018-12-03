@@ -90,6 +90,7 @@ extern bool heartCollision(float x, float y);
 extern bool powerupCollision(float x, float y);
 extern bool checkSpeed();
 extern bool checkFireRate();
+extern bool checkShield();
 extern void resetPowerups();
 extern void spawnPowerups(int powerups[]);
 extern void printMenuScreen(float x, float y);
@@ -913,7 +914,6 @@ void physics()
 			b->vel[0] *= -1;
 			b->vel[1] *= -1;
 			memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-			//powerupChance(powerups);
 			g.nbullets--;
 			g.enemyCount--;
 			if(g.enemyCount == 0){
@@ -957,6 +957,9 @@ void physics()
 		}
 		if(checkFireRate()) {
 			gl.fireRateBoost = true;
+		}
+		if(checkShield()) {
+			g.ship.hit_recent += 10;	
 		}
 	}
 	if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {

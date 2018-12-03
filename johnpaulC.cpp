@@ -540,6 +540,7 @@ void renderStructureHP()
 }
 
 
+
 void playerModel(GLfloat pos[3], float angle, GLuint texture)
 {	
 	glPushMatrix();

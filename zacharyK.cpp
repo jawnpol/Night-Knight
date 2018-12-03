@@ -143,7 +143,7 @@ void zk_createButtons() {
         }
 }
 
-void zk_checkHover(XEvent *e)   {
+void zk_checkHover()   {
         //int leftclick = 0;
         //int x,y;
         /*if (e->type == ButtonPress) {
@@ -170,174 +170,172 @@ void zk_checkHover(XEvent *e)   {
                                                         glo.pause = !glo.pause;
                                                         break;
                                         }
-                                }
-                        }
-                }
-        }*/
-	for(int i = 0; i < glo.nbuts; i++) {
-        	if (e->type == MotionNotify) {
-			if (k.x >= glo.button[i].btn.left &&
-					k.x <= glo.button[i].btn.right &&
-					k.y >= glo.button[i].btn.bot &&
-					k.y <= glo.button[i].btn.top) {
-				glo.button[i].hover = 1;
-				//printf("hovering\n");fflush(stdout);
-			} else {
-				glo.button[i].hover = 0;
-			}
-		}
+					}
+					}
+					}
+					}*/
+    for(int i = 0; i < glo.nbuts; i++) {
+	if (k.x >= glo.button[i].btn.left &&
+		k.x <= glo.button[i].btn.right &&
+		k.y >= glo.button[i].btn.bot &&
+		k.y <= glo.button[i].btn.top) {
+	    glo.button[i].hover = 1;
+	    //printf("hovering\n");fflush(stdout);
+	} else {
+	    glo.button[i].hover = 0;
 	}
+    }
 }
 
 
 
 void zk_show_credits(Rect &r) {
-	ggprint16(&r, 150, 0x00fff000, "Zachary Kaiser");  
+    ggprint16(&r, 150, 0x00fff000, "Zachary Kaiser");  
 }
 
 void zkShowPicture(int x, int y, GLuint texid) {
-	glColor3ub(255,255,255);
-	int wid = 64;
+    glColor3ub(255,255,255);
+    int wid = 64;
 
-	float fx = (float) x;
-	float fy = (float) y;
+    float fx = (float) x;
+    float fy = (float) y;
 
-	glPushMatrix();
-	glTranslatef(fx,fy,0);
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
-	glEnd();
-	glPopMatrix();
+    glPushMatrix();
+    glTranslatef(fx,fy,0);
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+    glEnd();
+    glPopMatrix();
 }
 
 void zk_drawCircle() {
-	glColor3f(1.0f, 1.0f, 1.0f);
-	glPushMatrix();
-	glTranslatef(k.x, k.y, 0.0f);
-	glBegin(GL_LINE_LOOP);
-	for(int i = 0; i < 360; i++) {
-		glVertex2f(10*sinf(i*3.14/180), 10*cosf(i*3.14/180));
-	}
-	glEnd();
-	glColor3f(1.0f,0.0f,0.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(0.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glPushMatrix();
+    glTranslatef(k.x, k.y, 0.0f);
+    glBegin(GL_LINE_LOOP);
+    for(int i = 0; i < 360; i++) {
+	glVertex2f(10*sinf(i*3.14/180), 10*cosf(i*3.14/180));
+    }
+    glEnd();
+    glColor3f(1.0f,0.0f,0.0f);
+    glBegin(GL_POINTS);
+    glVertex2f(0.0f, 0.0f);
+    glEnd();
+    glPopMatrix();
 }
 
 void zk_gameovertext(int x, int y) {
-	Rect r;
-	r.bot = y - y/6;
-	r.left = x/2;
-	r.center = x/3;
+    Rect r;
+    r.bot = y - y/6;
+    r.left = x/2;
+    r.center = x/3;
 
-	ggprint16(&r, 16, 0x00ff0000, "Night Night Knight.");
-	ggprint16(&r, 16, 0x00ff0000, "Press F to pay respects, and also play again.");
+    ggprint16(&r, 16, 0x00ff0000, "Night Night Knight.");
+    ggprint16(&r, 16, 0x00ff0000, "Press F to pay respects, and also play again.");
 }
 
 void zk_showhealthtext() {
-	Rect r;
-	r.bot = 165;
-	r.left = 25;
+    Rect r;
+    r.bot = 165;
+    r.left = 25;
 
-	ggprint16(&r, 16, 0x00ffffff, "HP: ");
+    ggprint16(&r, 16, 0x00ffffff, "HP: ");
 }
 
 void zk_blackbar() {
-	glBegin(GL_QUADS);
-	glColor3f(0, 0, 0);
-	glVertex2f(0, 0);
-	glVertex2f(55, 0);
-	glVertex2f(55, 155);
-	glVertex2f(0, 155);
-	glEnd();
+    glBegin(GL_QUADS);
+    glColor3f(0, 0, 0);
+    glVertex2f(0, 0);
+    glVertex2f(55, 0);
+    glVertex2f(55, 155);
+    glVertex2f(0, 155);
+    glEnd();
 }
 
 void zk_pausemenu(int x, int y) {
-	glColor3f(0, 0, 0);
+    glColor3f(0, 0, 0);
 
-	glPushMatrix();
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
-	glEnd();
-	glPopMatrix();
+    glPushMatrix();
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+    glEnd();
+    glPopMatrix();
 }
 
 void zk_controlsmenu(int x, int y) {
-	glColor3f(0, 0, 0);
+    glColor3f(0, 0, 0);
 
-	glPushMatrix();
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
-	glEnd();
-	glPopMatrix();
+    glPushMatrix();
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+    glEnd();
+    glPopMatrix();
 }
 
 bool zk_continue() {
-	if(k.x >= glo.button[0].btn.left &&
-			k.x <= glo.button[0].btn.right &&
-			k.y >= glo.button[0].btn.bot &&
-			k.y <= glo.button[0].btn.top) {
-		return true;
-	}
-	return false;	
+    if(k.x >= glo.button[0].btn.left &&
+	    k.x <= glo.button[0].btn.right &&
+	    k.y >= glo.button[0].btn.bot &&
+	    k.y <= glo.button[0].btn.top) {
+	return true;
+    }
+    return false;	
 }
 
 bool zk_cState() {
-	if(k.x >= glo.button[1].btn.left &&
-			k.x <= glo.button[1].btn.right &&
-			k.y >= glo.button[1].btn.bot &&
-			k.y <= glo.button[1].btn.top) 
-		return true;
-	return false;
+    if(k.x >= glo.button[1].btn.left &&
+	    k.x <= glo.button[1].btn.right &&
+	    k.y >= glo.button[1].btn.bot &&
+	    k.y <= glo.button[1].btn.top) 
+	return true;
+    return false;
 
 }
 
 void zk_ctext(int x, int y) {
-	Rect r;
+    Rect r;
 
-	r.bot = y - y/3;
-	r.left = x/2;
-	r.center = x/3;
+    r.bot = y - y/3;
+    r.left = x/2;
+    r.center = x/3;
 }
 void zk_pausetext(int x, int y) {
-	Rect r;
+    Rect r;
 
-	r.bot = y - y/5;
-	r.left = x/2;
-	r.center = x/3;
+    r.bot = y - y/5;
+    r.left = x/2;
+    r.center = x/3;
 
-	ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
+    ggprint16(&r, 16, 0x00ff0000, "Press P to continue.");
 }
 
 void zk_gameoverimage(int x, int y, GLuint texid) {
-	glColor3ub(255, 255, 255);
+    glColor3ub(255, 255, 255);
 
-	//glClear(GL_COLOR_BUFFER_BIT);
-	glPushMatrix();
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
-	glEnd();
-	glPopMatrix();
+    //glClear(GL_COLOR_BUFFER_BIT);
+    glPushMatrix();
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, y);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(x, y);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(x, 0);
+    glEnd();
+    glPopMatrix();
 }
 
 
 void zk_savemouse(int x, int y) {
-	k.x = x;
-	k.y = y;
+    k.x = x;
+    k.y = y;
 }

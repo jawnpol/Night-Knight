@@ -42,20 +42,20 @@ struct Zombie {
 	blood = 50;
 	int num = rand()%2;
 	if (num == 0) {
-	    pos[0] = rand()%1920;
+	    pos[0] = rand()%1900+10;
 	    num = rand()%2;
 	    if  (num == 0)
-		pos[1] = 0;
+		pos[1] = 10;
 	    else
-		pos[1] = 1080;
+		pos[1] = 1070;
 	}
 	else {
-	    pos[1] = rand()%1080;
+	    pos[1] = rand()%1060+10;
 	    num = rand()%2;
 	    if (num == 0)
-		pos[0] = 0;
+		pos[0] = 10;
 	    else
-		pos[0] = 1920;
+		pos[0] = 1910;
 	}
 	color[0] = 0.0f;
 	color[1] = 0.5f;
@@ -91,20 +91,20 @@ struct Orc {
 	health = 20;
 	int num = rand()%2;
 	if (num == 0) {
-	    pos[0] = rand()%1920;
+	    pos[0] = rand()%1900+10;
 	    num = rand()%2;
 	    if  (num == 0)
-		pos[1] = 0;
+		pos[1] = 10;
 	    else
-		pos[1] = 1080;
+		pos[1] = 1070;
 	}
 	else {
-	    pos[1] = rand()%1080;
+	    pos[1] = rand()%1060+10;
 	    num = rand()%2;
 	    if (num == 0)
-		pos[0] = 0;
+		pos[0] = 10;
 	    else
-		pos[1] = 1920;
+		pos[1] = 1910;
 	}
 	color[0] = 0.0;
 	color[1] = 1.0;
@@ -131,20 +131,20 @@ struct Vampire {
 	dead = false;
 	int num = rand()%2;
 	if (num == 0) {
-	    pos[0] = rand()%1920;
+	    pos[0] = rand()%1900+10;
 	    num = rand()%2;
 	    if  (num == 0)
-		pos[1] = 0;
+		pos[1] = 10;
 	    else
-		pos[1] = 1080;
+		pos[1] = 1070;
 	}
 	else {
-	    pos[1] = rand()%1080;
+	    pos[1] = rand()%1060+10;
 	    num = rand()%2;
 	    if (num == 0)
-		pos[0] = 0;
+		pos[0] = 10;
 	    else
-		pos[1] = 1920;
+		pos[1] = 1910;
 	}
 	color[0] = 1.0;
 	color[1] = 0.5;
@@ -637,14 +637,31 @@ bool zw_player_hit(int round, float x, float y)
 	    return 1;
 	}
     }
-    for (int i = 0; i < (round-4)*2; i++) {
-	if (!o[i].a_live)
-	    continue;
-	float d0 = o[i].a_pos[0] - x;
-	float d1 = o[i].a_pos[1] - y;
-	if (d0*d0 + d1*d1 <= 400) {
-	    o[i].a_live = false; 
-	    return 1;
+    if (round > 5) {
+	for (int i = 0; i < (round-4)*2; i++) {
+	    if (!o[i].a_live)
+		continue;
+	    float d0 = o[i].a_pos[0] - x;
+	    float d1 = o[i].a_pos[1] - y;
+	    if (d0*d0 + d1*d1 <= 400) {
+		o[i].a_live = false; 
+		return 1;
+	    }
+	}
+    }
+    if (round > 9) {
+	for (int i = 0; i < round-9; i++) {
+	    if (v[i].dead)
+		continue;
+	    float d0 = v[i].pos[0] - x;
+	    float d1 = v[i].pos[1] - y;
+	    if (d0*d0 + d1*d1 <= 400) { 
+		v[i].vel[0] = -10.0;
+		v[i].vel[1] = -10.0;
+		v[i].pos[0] -= 0.01*x;
+		v[i].pos[1] -= 0.01*y;
+		return 1;
+	    }
 	}
     }
     return false;
@@ -656,11 +673,11 @@ void zw_reset_round()
 	z[i].new_round = true;
 	z[i].set_up();
     }
-    for (int i = 0; i < 292; i++) {
+    for (int i = 0; i < 300; i++) {
 	o[i].new_round = true;
 	o[i].set_up();
     }
-    for (int i = 0; i < 141; i++) {
+    for (int i = 0; i < 300; i++) {
 	v[i].new_round = true;
 	v[i].set_up();
     }

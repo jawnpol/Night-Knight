@@ -40,30 +40,30 @@ void showMaterials();
 
 void jc_show_credits(Rect &r)
 {
-	ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
+    ggprint16(&r, 150, 0x00fff000, "John Paul Cailing");
 }
 
 void jpcShowPicture(int x, int y, GLuint texid)
 {
-	glColor3ub(255,255,255);
-	int wid = 64;
+    glColor3ub(255,255,255);
+    int wid = 64;
 
-	static float angle = 0.0f;
-	float fx = (float) x;
-	float fy = (float) y;
+    static float angle = 0.0f;
+    float fx = (float) x;
+    float fy = (float) y;
 
-	fx += sin(angle) * 10.0f;
-	angle += 0.2f;
-	glPushMatrix();
-	glTranslatef(fx,fy,0);
-	glBindTexture(GL_TEXTURE_2D, texid);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
-	glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-	glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
-	glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
-	glEnd();
-	glPopMatrix();
+    fx += sin(angle) * 10.0f;
+    angle += 0.2f;
+    glPushMatrix();
+    glTranslatef(fx,fy,0);
+    glBindTexture(GL_TEXTURE_2D, texid);
+    glBegin(GL_QUADS);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -wid);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, wid);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -wid);
+    glEnd();
+    glPopMatrix();
 }
 
 //Declaring the buffer and source
@@ -73,58 +73,58 @@ static ALuint gameSong;
 
 void initSound()
 {
-	//Get started right here.
-	//#ifdef USE_OPENAL_SOUND
-	alutInit(0, NULL);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("ERROR: alutInit()\n");
-		return ;
-	}
-	//Clear error state.
-	alGetError();
+    //Get started right here.
+    //#ifdef USE_OPENAL_SOUND
+    alutInit(0, NULL);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("ERROR: alutInit()\n");
+        return ;
+    }
+    //Clear error state.
+    alGetError();
 
-	//Setup the listener.
-	//Forward and up vectors are used.
-	float vec[6] = {0.0f,0.0f,1.0f, 0.0f,1.0f,0.0f};
-	alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
-	alListenerfv(AL_ORIENTATION, vec);
-	alListenerf(AL_GAIN, 1.0f);
+    //Setup the listener.
+    //Forward and up vectors are used.
+    float vec[6] = {0.0f,0.0f,1.0f, 0.0f,1.0f,0.0f};
+    alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
+    alListenerfv(AL_ORIENTATION, vec);
+    alListenerf(AL_GAIN, 1.0f);
 
 
-	//Buffer holds the sound information.
-	sound  = alutCreateBufferFromFile("./test.wav");
-	song = alutCreateBufferFromFile("./game.wav");
+    //Buffer holds the sound information.
+    sound  = alutCreateBufferFromFile("./test.wav");
+    song = alutCreateBufferFromFile("./game.wav");
 
-	//Generate a source, and store it in a buffer.
-	alGenSources(1, &alSource);
-	alGenSources(1, &gameSong);
-	alSourcei(gameSong, AL_BUFFER, song);
-	alSourcei(alSource, AL_BUFFER , sound);
-	//Set volume and pitch to normal, no looping of sound.
-	alSourcef(alSource, AL_GAIN, 1.0f);
-	alSourcef(alSource, AL_PITCH, 1.0f);
-	alSourcei(alSource, AL_LOOPING, AL_FALSE);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("ERROR: setting source\n");
-		return ;
-	}
+    //Generate a source, and store it in a buffer.
+    alGenSources(1, &alSource);
+    alGenSources(1, &gameSong);
+    alSourcei(gameSong, AL_BUFFER, song);
+    alSourcei(alSource, AL_BUFFER , sound);
+    //Set volume and pitch to normal, no looping of sound.
+    alSourcef(alSource, AL_GAIN, 1.0f);
+    alSourcef(alSource, AL_PITCH, 1.0f);
+    alSourcei(alSource, AL_LOOPING, AL_FALSE);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("ERROR: setting source\n");
+	return ;
+    }
 
-	//Play a looping sound
-	//For future use as main game sound
-	alSourcef(gameSong, AL_GAIN, 0.5f);
-	alSourcef(gameSong, AL_PITCH, 1.0f);
-	alSourcei(gameSong, AL_LOOPING, AL_TRUE);
-	if (alGetError() != AL_NO_ERROR) {
-		printf("Error: setting source\n");
-		return ;
-	}
+    //Play a looping sound
+    //For future use as main game sound
+    alSourcef(gameSong, AL_GAIN, 0.5f);
+    alSourcef(gameSong, AL_PITCH, 1.0f);
+    alSourcei(gameSong, AL_LOOPING, AL_TRUE);
+    if (alGetError() != AL_NO_ERROR) {
+        printf("Error: setting source\n");
+	return ;
+    }
 }
 
 void cleanupSound()
 {
-	//Cleanup.
-	//First delete the source.
-	alDeleteSources(1, &alSource);
+    //Cleanup.
+    //First delete the source.
+    alDeleteSources(1, &alSource);
 	alDeleteSources(1, &gameSong);
 	//Delete the buffer.
 	alDeleteBuffers(1, &sound);

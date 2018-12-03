@@ -1060,6 +1060,9 @@ void render()
 		return;
 	}
 	if(g.ship.health <= 0) {
+		resetPowerups();
+		gl.shipSpeedBoost = false;
+		gl.fireRateBoost = false;
 		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
 		zk_gameovertext(gl.xres, gl.yres);
 		if(gl.keys[XK_f]) {

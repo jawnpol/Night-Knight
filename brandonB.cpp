@@ -334,9 +334,13 @@ void resetPowerups() {
 	glb.fireRateBoost = false;
 	for (int i = 0; i < MAXPOWERUPS; i++) {
 		p[i].spawn = 0;
+		p[i].pos[0] = -1;
+		p[i].pos[1] = -1;
 	}
 	for (int i = 0; i < MAXHEARTS; i++) {
 		h[i].spawn = 0;
+		h[i].pos[0] = -1;
+		h[i].pos[1] = -1;
 	}
 }
 

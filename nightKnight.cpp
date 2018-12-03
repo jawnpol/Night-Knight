@@ -112,12 +112,16 @@ extern void zw_gameover(double yres, double xres);
 extern void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3);
 extern bool zw_check_enemy_hit(int round, float x, float y);
 extern bool zw_player_hit(int round, float x, float y);
-extern void playerModel(GLfloat color[],int cSize, GLfloat pos[], int size, float angle, GLuint texture);
-extern void gameBackground(int xres, int yres, GLuint texid, GLuint woodTexture, GLuint stoneTexture, bool roundEnd);
+extern void playerModel(GLfloat pos[3], float angle, GLuint texture);
+extern void gameBackground(int xres, int yres, GLuint texid, GLuint woodTexture, GLuint stoneTexture);
 extern void renderHealth(int health);
-extern void renderBoard(int xres, int yres, GLuint texture, GLuint stone);
+extern void renderBoard(int xres, int yres);
 extern void buildPlacement(int xres, int yres, GLuint wood);
 extern void structureDamage();
+extern void buildReset();
+extern void renderStructureHP();
+extern void matsChange(int round);
+extern void showMaterials();
 //extern void structureRemoval();
 //extern void menuState(bool state);
 extern void checkMouseEvent(XEvent *e, bool roundEnd);
@@ -290,7 +294,7 @@ class Game {
 		Ship ship;
 		//Asteroid *ahead;
 		Bullet *barr;
-		int round = 1;
+		int round = 0;
 		int enemyCount;
 		int nasteroids;
 		int nbullets;
@@ -447,7 +451,7 @@ int main()
 				checkButtonClick(&e);
 			}
 			done = check_keys(&e);
-			if (g.round >= 1)
+			if (g.round >= 1 && g.roundEnd)
 				checkMouseEvent(&e, g.roundEnd);
 		}
 		physics();
@@ -1048,6 +1052,7 @@ void render()
 			g.roundEnd = true;
 			g.round = 0;
 			zw_reset_round();
+			buildReset();
 			g.ship.hit_recent = 0;
 		}	
 		zk_drawCircle();
@@ -1055,10 +1060,11 @@ void render()
 		return;
 	}
 	glClear(GL_COLOR_BUFFER_BIT);
-	gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture, g.roundEnd);
+	gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture);
+	showMaterials();
 	//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
 	Rect r;
-	playerModel(g.ship.color, 3, g.ship.pos, 3, g.ship.angle, gl.playerTexture);
+	playerModel(g.ship.pos, g.ship.angle, gl.playerTexture);
 	if(gl.pause) {
 		zk_pausemenu(gl.xres, gl.yres);
 		zk_pausetext(gl.xres, gl.yres);
@@ -1076,10 +1082,11 @@ void render()
 		s.center = gl.xres/2;
 		ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
 		if (g.round > 0)
-			renderBoard(gl.xres, gl.yres, gl.woodTexture, gl.stoneTexture);
+			renderBoard(gl.xres, gl.yres);
 		//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
 		if (gl.keys[XK_r]) {
 			g.round++;
+			matsChange(g.round);
 			g.roundEnd = false;
 			g.enemyCount = g.round*2;
 			if (g.round > 4)
@@ -1146,6 +1153,7 @@ void render()
 	zk_drawCircle();
 	zk_blackbar();
 	renderHealth(g.ship.health);
+	renderStructureHP();
 	zk_showhealthtext();
 	drawHeart();
 	drawPowerups();

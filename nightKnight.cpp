@@ -819,11 +819,11 @@ void check_mouse(XEvent *e)
 	    struct timespec bt;
 	    clock_gettime(CLOCK_REALTIME, &bt);
 	    double ts = timeDiff(&g.bulletTimer, &bt);
-	    double fireRate = 0.7;
+	    double fireRate = 1.0;
 	    if (!gl.fireRateBoost) {
-		    fireRate = 0.7;
+		    fireRate = 1.0;
 	    } else {
-		    fireRate = 0.3;
+		    fireRate = 0.5;
 	    }
 	    if (ts > fireRate) {
 		    timeCopy(&g.bulletTimer, &bt);
@@ -837,8 +837,8 @@ void check_mouse(XEvent *e)
 			    b->pos[0] = g.ship.pos[0];
 			    b->pos[1] = g.ship.pos[1];
 			    if (gl.shipSpeedBoost) {
-				    b->vel[0] = g.ship.vel[0];
-				    b->vel[1] = g.ship.vel[1];
+				    b->vel[0] = 0.8*g.ship.vel[0];
+				    b->vel[1] = 0.8*g.ship.vel[1];
 			    }
 			    else {
 				    b->vel[0] = 0.5*g.ship.vel[0];
@@ -852,8 +852,8 @@ void check_mouse(XEvent *e)
 			    Flt ydir = sin(rad);
 			    b->pos[0] += xdir*20.0f;
 			    b->pos[1] += ydir*20.0f;
-			    b->vel[0] += xdir*2;
-			    b->vel[1] += ydir*2;
+			    b->vel[0] += xdir*2.5;
+			    b->vel[1] += ydir*2.5;
 			    b->color[0] = 0.0f;
 			    b->color[1] = 0.0f;
 			    b->color[2] = 1.0f;
@@ -1086,8 +1086,8 @@ void physics()
 		//Added by Zakary Worman: this makes the person slow down as you stop moving
 		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
 	} else{
-		if (speed > 4.0f) {
-			speed = 4.0f;
+		if (speed > 3.0f) {
+			speed = 3.0f;
 			normalize2d(g.ship.vel);
 			g.ship.vel[0] *= speed;
 			g.ship.vel[1] *= speed;

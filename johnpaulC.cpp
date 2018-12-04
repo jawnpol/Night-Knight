@@ -265,11 +265,6 @@ void renderBoard(int xres, int yres)
 
 			if (buildingGrid[i/120][j/120].over && matsCheck()) {
 				glColor3f(0.3f, 1.0f, 0.3f);
-				/*if (buildingGrid[i/120][j/120].woodStatus)
-				  glBindTexture(GL_TEXTURE_2D, texture);
-				  if (buildingGrid[i/tileSize][j/tileSize].stoneStatus)
-				  glBindTexture(GL_TEXTURE_2D, stone);
-				  */
 			} 
 			if (buildingGrid[i/120][j/120].over && !matsCheck())
 				glColor3f(0.72f, 0.0f, 0.0f);
@@ -324,11 +319,11 @@ void renderHealth(int health)
 {
 	//int hSize = health * 15;
 	glBegin(GL_QUADS);
-	glColor3f(1, 0, 0);
-	glVertex2f(0, 0);
-	glVertex2f(50, 0);
-	glVertex2f(50, health*50);
-	glVertex2f(0, health*50);
+	    glColor3f(1, 0, 0);
+	    glVertex2f(0, 0);
+	    glVertex2f(50, 0);
+	    glVertex2f(50, health*50);
+	    glVertex2f(0, health*50);
 	glEnd();
 }
 
@@ -359,28 +354,46 @@ void buildPlacement(int xres, int yres, GLuint wood)
 
 void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 {
+	float xC = 0.0625;
+	float yC = 0.1111111;
+	//int tileSize = 120;
+	int ix, iy = 0;
 	int tileSize = 120;
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
+	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texid);
 	//glBegin(GL_QUADS);
-	for (int i = 0; i < xres; i+=tileSize) {
-		for (int j = 0; j < yres; j +=tileSize) {
+	for (int i = 0; i <= xres; i+=tileSize) {
+        ix = (i / 120) % 16;
+		for (int j = 0; j < yres; j += tileSize) {
+			iy = (1080 - j - 120)/120  % 9;
+			float xChange = (float) ix * xC;
+			float yChange = (float) iy * yC;
 			glBegin(GL_QUADS);
+			glTexCoord2f(xChange , yChange + yC); glVertex2i(i, j);
+			glTexCoord2f(xChange, yChange); glVertex2i(i, j+tileSize);
+			glTexCoord2f(xChange + xC, yChange); glVertex2i(i+tileSize, j+tileSize);
+			glTexCoord2f(xChange + xC, yChange + yC); glVertex2i(i+tileSize, j);
+			glEnd();
+			/*glBegin(GL_QUADS);
+			glTexCoord2f(xChange, yChange + yC); glVertex2i(i, j);
+			glTexCoord2f(xChange, yChange); glVertex2i(i, j+98);
+			glTexCoord2f(xChange + xC, yChange); glVertex2i(i+tileSize, j+98);
+			glTexCoord2f(xChange + xC , yChange + yC); glVertex2i(i+tileSize, j);
+			glEnd();*/
+			/*glBegin(GL_QUADS);
 			glTexCoord2f(0.0f, 1.0f); glVertex2i(i, j);
 			glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
 			glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
 			glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize, j);
-			glEnd();
-			//glBindTexture(GL_TEXTURE_2D, 0);
+			glEnd();*/
 		}
 	}
-	//structureRemoval();
 
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.0f);
 	glColor4ub(255,255,255,255);
-	//glBindTexture(GL_TEXTURE_2D, 0);
 
 	for (int i = 0; i < xres; i+= tileSize) {
 		for (int j = 0; j < yres; j += tileSize) {

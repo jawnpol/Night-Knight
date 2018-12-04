@@ -187,7 +187,7 @@ class Image {
 		unlink(ppmname);
 	}
 };
-Image img[16] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
+Image img[16] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./MEP.png", "./knight.png",
     "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png","vampire.png", "./fence.png",
     "stone.png", "./wood.jpeg", "./stoneDrop.png"};
 
@@ -747,10 +747,10 @@ void init_opengl()
     glGenTextures(1, &gl.backgroundTexture);
     w = img[4].width;
     h = img[4].height;
-
     glBindTexture(GL_TEXTURE_2D, gl.backgroundTexture);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
 	    0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
     //-------------------------------------------------------------------------

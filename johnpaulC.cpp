@@ -175,8 +175,8 @@ struct Grid {
 }buildingGrid[16][9];
 
 int currentRound;
-int woodMats = 5;
-int stoneMats = 10;
+int woodMats = 0;
+int stoneMats = 0;
 int woodCost = 10;
 int stoneCost = 20;
 
@@ -356,14 +356,14 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 {
 	float xC = 0.0625;
 	float yC = 0.1111111;
-	//int tileSize = 120;
+
 	int ix, iy = 0;
 	int tileSize = 120;
+
 	glClear(GL_COLOR_BUFFER_BIT);
 	glColor3f(1.0, 1.0, 1.0);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texid);
-	//glBegin(GL_QUADS);
 	for (int i = 0; i <= xres; i+=tileSize) {
         ix = (i / 120) % 16;
 		for (int j = 0; j < yres; j += tileSize) {
@@ -376,18 +376,7 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 			glTexCoord2f(xChange + xC, yChange); glVertex2i(i+tileSize, j+tileSize);
 			glTexCoord2f(xChange + xC, yChange + yC); glVertex2i(i+tileSize, j);
 			glEnd();
-			/*glBegin(GL_QUADS);
-			glTexCoord2f(xChange, yChange + yC); glVertex2i(i, j);
-			glTexCoord2f(xChange, yChange); glVertex2i(i, j+98);
-			glTexCoord2f(xChange + xC, yChange); glVertex2i(i+tileSize, j+98);
-			glTexCoord2f(xChange + xC , yChange + yC); glVertex2i(i+tileSize, j);
-			glEnd();*/
-			/*glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 1.0f); glVertex2i(i, j);
-			glTexCoord2f(0.0f, 0.0f); glVertex2i(i, j+tileSize);
-			glTexCoord2f(1.0f, 0.0f); glVertex2i(i+tileSize, j+tileSize);
-			glTexCoord2f(1.0f, 1.0f); glVertex2i(i+tileSize, j);
-			glEnd();*/
+
 		}
 	}
 
@@ -526,8 +515,7 @@ void playerModel(GLfloat pos[3], float angle, GLuint texture)
 bool structurePlacement(int x, int y)
 {
 	if (buildingGrid[x][y].status == 1)
-	{
-		cout << x << " " << y << endl;	
+	{	
 		return true;
 	}
 	return false;
@@ -539,19 +527,15 @@ void structureDamage()
 	for (i = 0; i < 16; i++) {
 		for (j = 0; j < 9; j++) {
 			if (structureCollision(i,j)) {
-				cout << i << " " << j << " " << buildingGrid[i][j].status << endl;
 				if (buildingGrid[i][j].woodStatus) {
 					if (woodStore[i][j].health <= 0)
 					{
-						cout << i << " " << j << endl;
 						buildingGrid[i][j].status = 0;
-						cout << buildingGrid[i][j].status << endl;
 						woodStore[i][j].dead = true;
 						buildingGrid[i][j].woodStatus = false;
 						return;
 					}
 					if (buildingGrid[i][j].status == 1) {
-						cout << "Health: " << woodStore[i][j].health << endl;
 						woodStore[i][j].health--;
 					}
 				}
@@ -582,8 +566,8 @@ void buildReset()
 			stoneStore[i][j].dead = true;
 		}
 	}
-	woodMats = 5;
-	stoneMats = 10;
+	woodMats = 0;
+	stoneMats = 0;
 }
 
 bool matsCheck()
@@ -599,6 +583,8 @@ bool matsCheck()
 
 void matsChange(int round)
 {
+	if (round == 1)
+		return;
 	woodMats += ceil(round * 7.5);
 	stoneMats += round * 10;
 }

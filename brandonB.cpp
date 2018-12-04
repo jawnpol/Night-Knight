@@ -8,7 +8,7 @@
 //-Powerups: Spawn on enemy death location
 //-Hearts: Heal user on pickup. Spawn on enemy death location. 
 //-Menu Screen: Button functionality and image rendering
-//		*Button functionality modeled after Godon's snake framework*
+//		*Buttons modeled after Godon's snake framework*
 
 #include<stdio.h>
 #include<cstdlib>
@@ -295,12 +295,13 @@ void spawnHearts()
 
 void spawnPowerups()
 {
+	int powerup = rand() % 3;
 	for (int i = 0; i < MAXPOWERUPS; i++) {
-		if (p[i].spawn)
+		if (p[powerup].spawn)
 			continue;
-		p[i].spawn = true;
-		p[i].pos[0] = d.x;
-		p[i].pos[1] = d.y;
+		p[powerup].spawn = true;
+		p[powerup].pos[0] = d.x;
+		p[powerup].pos[1] = d.y;
 		break;
 	}
 }
@@ -310,12 +311,12 @@ void storeDeathPosition(float x, float y)
 	d.y = y;
 	int spawnCounter = 0;
 	if(spawnCounter < 1) {
-		if(spawnChance(10)) {
+		if(spawnChance(7)) {
 			spawnHearts();
 			spawnCounter++;
 			return;
 		}
-		if(spawnChance(1)) {
+		if(spawnChance(2)) {
 			spawnPowerups();
 			spawnCounter++;
 			return;
@@ -348,15 +349,15 @@ bool powerupCollision(float playerx, float playery)
 		float powerupy = p[i].pos[1] - playery;
 		if (powerupx*powerupx + powerupy*powerupy <= 800) {
 			if (i == 0){
-				printf("Grabbed Speed Boost\n");fflush(stdout);
+				//printf("Grabbed Speed Boost\n");fflush(stdout);
 				glb.speedBoost = true;
 			}
 			if (i == 1) {
-				printf("Grabbed Fire Rate boost\n");fflush(stdout);
+				//printf("Grabbed Fire Rate boost\n");fflush(stdout);
 				glb.fireRateBoost = true;
 			}
 			if (i == 2) {
-				printf("Grabbed Shield Powerup\n");fflush(stdout);
+				//printf("Grabbed Shield Powerup\n");fflush(stdout);
 				glb.shieldBoost = true;
 			}		
 			p[i].spawn=0;

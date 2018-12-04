@@ -1105,10 +1105,11 @@ void physics()
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	if(controlsScreen()) {
+	if(controlsScreen()) {	
 		zk_controlsmenu(gl.xres, gl.yres);
 		zk_drawCircle();
-		controlsInstructions();	
+		controlsInstructions();
+		zk_ctext(gl.xres, gl.yres);	
 		return;
 	}
 	if(creditsScreen()) {

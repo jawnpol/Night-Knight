@@ -487,6 +487,38 @@ void closeCredits()
 	creditsScreenState = false;
 }
 
+
+bool controlsScreenState = false;
+bool controlsScreen()
+{
+	if(controlsScreenState == true) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void openControls() 
+{
+	controlsScreenState = true;
+}
+
+void closeControls()
+{
+	controlsScreenState = false;
+}
+
+void controlsInstructions()
+{	
+	Rect m;
+	m.bot = 880;
+	m.left = 955;
+	m.center = 880;
+
+	//weird error going on with below print. if removed button disappears?
+	ggprint16(&m, 16, 0x00ff0000, "Press P to Close");
+}
+
 //initializes position and shape of buttons
 void initButtons() 
 {
@@ -606,68 +638,49 @@ void drawButtons()
 	}
 }
 
-int checkButtonClick(XEvent *e)
+void checkButtonClick(int x, int y, int click)
 {
-	int lclick = 0;
-	int x,y;
-	if (e->type == ButtonRelease){
-		lclick = 0;
-		//printf("lclick released\n");fflush(stdout);
-		return 0;
-	}
-	if (e->type == ButtonPress) {
-		if (e->xbutton.button == 1) {
-			lclick = 1;
-			//printf("Left click pressed\n");fflush(stdout);
-		}
-	}
-	x = e->xbutton.x;
-	y = e->xbutton.y;
-	//y = (yres) - y
-	y = 1080 - y;
-	//printf("does this get called?%i %i", x, y);fflush(stdout);
-	//if (e->type == ButtonPress) {
-	//if (e->xbutton.button==1) {
-	//lclick=1;
 	for (int i=0; i < glb.numButtons; i++) {
-		glb.button[i].over = 0;
-		if (x >= glb.button[i].btn.left &&
-				x <= glb.button[i].btn.right &&
-				y >= glb.button[i].btn.bot &&
-				y <= glb.button[i].btn.top) {
-			glb.button[i].over=1;
-			//printf("over button %i\n", i);fflush(stdout);
-			if (glb.button[i].over==1) {
-				printf("over button %i\n", i);fflush(stdout);
-				if (lclick) {
-					switch(i) {
-						case 0:
-							//printf("button clicked!\n");fflush(stdout);
-							startGame();
-							break;
-						case 1:
-							//controlsScreen();
-							break;
-						case 2:
-							openCredits();
-							break;
-						default:
-							break;
-					}
-				}
-			}
-		}
-	}
+                glb.button[i].over = 0;
+                if (x >= glb.button[i].btn.left &&
+                                x <= glb.button[i].btn.right &&
+                                y >= glb.button[i].btn.bot &&
+                                y <= glb.button[i].btn.top) {
+                        glb.button[i].over=1;
+                        //printf("over button %i\n", i);fflush(stdout);
+                        if (glb.button[i].over==1) {
+                                //printf("over button %i\n", i);fflush(stdout);
+                                if (click == 1) {
+                                        switch(i) {
+                                                case 0:
+                                                        //printf("button clicked!\n");fflush(stdout);
+                                                        startGame();
+                                                        break;
+                                                case 1:
+                                                        openControls();
+                                                        break;
+                                                case 2:
+                                                        openCredits();
+                                                        break;
+                                                default:
+                                                        break;
+                                        }
+                                }
+                        }
+                }
+        } 
+}
 
-	if (e->type == MotionNotify) {
-		if (x >= glb.button[0].btn.left &&
-				x <= glb.button[0].btn.right &&
-				y >= glb.button[0].btn.bot &&
-				y <= glb.button[0].btn.top) {
-			glb.button[0].over = 1;
-		} else {
-			glb.button[0].over = 0;
-		}
-	}
-	return 0;
+void checkMouseOver(int x, int y)
+{
+	for (int i = 0; i < MAXBUTTONS; i++) {
+                if (x >= glb.button[i].btn.left &&
+                        x <= glb.button[i].btn.right &&
+                        y >= glb.button[i].btn.bot &&
+                        y <= glb.button[i].btn.top) {
+                                glb.button[i].over = 1;
+                } else {
+                        glb.button[i].over = 0;
+                }
+        } 
 }

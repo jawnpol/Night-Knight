@@ -104,11 +104,15 @@ extern bool menuScreen();
 extern bool creditsScreen();
 extern void closeCredits();
 extern void openCredits();
+extern bool controlsScreen();
+extern void closeControls();
+extern void controlsInstructions();
 extern void startGame();
 extern void initButtons();
 extern void drawButtons();
 extern void drawPowerups();
-extern void checkButtonClick(XEvent *e);
+extern void checkButtonClick(int x, int y, int click);
+extern void checkMouseOver(int x, int y);
 extern void menuScreenImage(int x, int y, GLuint texid1, GLuint texid2);
 extern void spawnPowerup(int x_position, int y_position);
 extern void jpcShowPicture(int x, int y, GLuint texid);
@@ -463,9 +467,6 @@ int main()
 			XEvent e = x11.getXNextEvent();
 			x11.check_resize(&e);
 			check_mouse(&e);
-			if (menuScreen()) {
-				checkButtonClick(&e);
-			}
 			done = check_keys(&e);
 			if (g.round >= 1 && g.roundEnd)
 				motionOver(&e);
@@ -831,6 +832,10 @@ void check_mouse(XEvent *e)
 			return;
 		}
 		if (e->xbutton.button==1) {
+			if(gl.menuScreen) {
+				checkButtonClick(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+				return;
+			}
 			if (g.roundEnd && g.round >= 1) {
 				checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
 				return;
@@ -899,6 +904,7 @@ void check_mouse(XEvent *e)
 		//y positions 
 		zk_savemouse(x, y);
 		zw_save_mouse_pos(x, y);        //save this position to be used
+		checkMouseOver(e->xbutton.x, gl.yres-e->xbutton.y);
 	}
 }
 
@@ -934,6 +940,11 @@ int check_keys(XEvent *e)
 			}
 			break;
 		case XK_p:
+			if(controlsScreen()) {
+				closeControls();
+				gl.menuScreen=true;
+				break;
+			}
 			gl.pause = !gl.pause;
 			gl.controls = false;
 			break;
@@ -1099,7 +1110,7 @@ void physics()
 		}
 		//Added by Zakary Worman: this makes the person slow down as you stop moving
 		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
-	} else {
+	} else{
 		if (speed > 4.0f) {
 			speed = 4.0f;
 			normalize2d(g.ship.vel);
@@ -1119,6 +1130,14 @@ void physics()
 void render()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+	if(controlsScreen()) {
+		zk_controlsmenu(gl.xres, gl.yres);
+		zk_keyboardimage(gl.xres, gl.yres, gl.keyboardTexture);
+		zk_mouseimage(gl.xres, gl.yres, gl.mouseTexture);
+		zk_drawCircle();
+		controlsInstructions();	
+		return;
+	}
 	if(creditsScreen()) {
 		Rect n;
 		n.bot = gl.yres - gl.yres/5;
@@ -1143,6 +1162,8 @@ void render()
 		zk_drawCircle();
 		playGameSound();
 		return;
+	} else {
+		gl.menuScreen = false;
 	}
 	if(g.ship.health <= 0) {
 		resetPowerups();

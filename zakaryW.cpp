@@ -16,11 +16,29 @@ using namespace std;
 #define PI 3.141592653589793
 
 extern bool structurePlacement(int x, int y);
+extern struct timespec timeStart, timeCurrent;
+extern double timeDiff(struct timespec *start, struct timespec *end);
+extern void timeCopy(struct timespec *dest, struct timespec *source);
+extern void addWood(int amount);
+extern void addStone(int amount);
 
 //structure used to allow for mouse aiming
 struct Aim {
     double x, y;
 } m;
+
+//struct to drop materials for building
+struct wood {
+    int amount;
+    float pos[2];
+    bool placed = false;
+}w[600];
+
+struct stone {
+    int amount;
+    float pos[2];
+    bool placed = false;
+}s[600];
 
 //Set of Structures for Unique Enemies
 struct Zombie {
@@ -88,7 +106,7 @@ struct Orc {
 	if (!new_round)
 	    return;
 	dead = false;
-	health = 20;
+	health = 2;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1900+10;
@@ -120,15 +138,20 @@ struct Vampire {
     float vel[2];
     float angle;
     float color[3];
+    int health;
     int wood = rand()%21;
     int stone = rand()%21;
-    bool dead, new_round = true;;
+    bool dead, new_round = true;
+    bool teleport = false;
+    struct timespec time;
 
     void set_up() 
     {
 	if (!new_round)
 	    return;
+	teleport = false;
 	dead = false;
+	health = 5;
 	int num = rand()%2;
 	if (num == 0) {
 	    pos[0] = rand()%1900+10;
@@ -255,6 +278,12 @@ void zw_o_pos(Orc *o, int tX, int tY)
 	d1 = o->a_start[1] - o->a_pos[1];
 	if (d0*d0+d1*d1 >= 100000)
 	    o->a_live = false;
+	int gridX = floor(o->a_pos[0]/120);
+	int gridY = floor(o->a_pos[1]/120);
+	if (structurePlacement(gridX, gridY)) {
+	    o->a_live = false;
+	    o->collision[gridX][gridY] = true;
+	}
     }
     d0 = o->pos[0]-tX;
     d1 = o->pos[1]-tY;
@@ -286,6 +315,28 @@ void zw_o_pos(Orc *o, int tX, int tY)
 void zw_v_pos(Vampire *v, int tX, int tY) 
 {
     v->angle = atan2(v->pos[1]-tY, v->pos[0]-tX)*180/PI;
+    if (v->teleport) {
+	v->vel[0] = 0;
+	v->vel[1] = 0;
+	struct timespec tp;
+	clock_gettime(CLOCK_REALTIME, &tp);
+	double t = timeDiff(&v->time, &tp);
+	if (t >= 1) {
+	    v->pos[0] = rand()%1900 + 10;
+	    v->pos[1] = rand()%1060 + 10;
+	    int gridX = v->pos[0]/120;
+	    int gridY = v->pos[1]/120;
+	    while (structurePlacement(gridX, gridY)) {
+		v->pos[0] = rand()%1900 + 10;
+		v->pos[1] = rand()%1060 + 10;
+		gridX = v->pos[0]/120;
+		gridY = v->pos[1]/120;
+	    }
+	    v->health += 1;
+	    v->teleport = false;
+	}
+	return;
+    }
     if (v->pos[0] > tX)
 	v->vel[0] -= 0.001*tX;
     else if (v->pos[0] < tX)
@@ -452,19 +503,18 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 	    if (o[i].dead)
 		continue;
 	    o[i].set_up();
-	    if (o[i].health < 10) {
-		glColor3f(1.0, 0.0, 0.0);
-		glPushMatrix();
-		glTranslatef(o[i].pos[0], o[i].pos[1], 0);
-		glBegin(GL_POINTS);
-		for (int j = 0; j < 1000; j++) {
-		    int r = rand()%50-rand()%25;
-		    int r1 = rand()%50-rand()%25;
-		    glVertex2f((float)r, (float)r1);
-		}
-		glEnd();
-		glPopMatrix();
+	    int blood = 2 - o[i].health; 
+	    glColor3f(1.0, 0.0, 0.0);
+	    glPushMatrix();
+	    glTranslatef(o[i].pos[0], o[i].pos[1], 0);
+	    glBegin(GL_POINTS);
+	    for (int j = 0; j < blood*500; j++) {
+		int r = rand()%50-rand()%25;
+		int r1 = rand()%50-rand()%25;
+		glVertex2f((float)r, (float)r1);
 	    }
+	    glEnd();
+	    glPopMatrix();
 	    if (o[i].a_live) {
 		//draw arrow
 		glPushMatrix();
@@ -553,6 +603,29 @@ void zw_spawn_enemies(int round, int tX, int tY, GLuint t1, GLuint t2, GLuint t3
 	    if (v[i].dead)
 		continue;
 	    v[i].set_up();
+	    if (v[i].teleport) {
+		glPushMatrix();
+		glTranslatef(v[i].pos[0], v[i].pos[1], 0.0f);
+		glColor3f(1.0f, 1.0f, 1.0f);
+		glBegin(GL_POLYGON);
+		for (int line = 0; line < 360; line++) {
+		    glVertex2f(60*sinf(line*3.14/180), 60*cosf(line*3.14/180));
+		}
+		glEnd();
+		glPopMatrix();
+	    }
+	    int blood = 5 - v[i].health; 
+	    glColor3f(0.0, 0.0, 0.0);
+	    glPushMatrix();
+	    glTranslatef(v[i].pos[0], v[i].pos[1], 0);
+	    glBegin(GL_POINTS);
+	    for (int j = 0; j < blood*500; j++) {
+		int r = rand()%50-rand()%25;
+		int r1 = rand()%50-rand()%25;
+		glVertex2f((float)r, (float)r1);
+	    }
+	    glEnd();
+	    glPopMatrix();
 	    for (int k = i+1; k < round-9; k++) {
 		if (v[k].dead)
 		    continue;
@@ -602,19 +675,72 @@ bool zw_check_enemy_hit(int round, float x, float y)
 	float d1 = z[i].pos[1] - y;
 	if (d0*d0 + d1*d1 <= 324) {
 	    z[i].dead = true;
-	    return 1;
+	    for (int mats = 0; mats < 600; mats++) {
+		if (!w[mats].placed) {
+		    w[mats].pos[0] = z[i].pos[0];
+		    w[mats].pos[1] = z[i].pos[1];
+		    w[mats].placed = true;
+		    w[mats].amount = z[i].wood;
+		    break;
+		}
+	    }
+	    return true;
 	}
     }
-    for (int i = 0; i < round*2; i++) {
-	if (o[i].dead)
-	    continue;
-	float d0 = o[i].pos[0] - x;
-	float d1 = o[i].pos[1] - y;
-	if (d0*d0 + d1*d1 <= 324) {
-	    o[i].health--;
-	    if (o[i].health == 0) {
-		o[i].dead = true;
-		return 1;
+    if (round > 4) {
+	for (int i = 0; i < (round-4)*2; i++) {
+	    if (o[i].dead)
+		continue;
+	    float d0 = o[i].pos[0] - x;
+	    float d1 = o[i].pos[1] - y;
+	    if (d0*d0 + d1*d1 <= 324) {
+		o[i].health--;
+		if (o[i].health == 0) { 
+		    o[i].dead = true;
+		    for (int mats = 0; mats < 600; mats++) {
+			if (!s[mats].placed) {
+			    s[mats].pos[0] = o[i].pos[0];
+			    s[mats].pos[1] = o[i].pos[1];
+			    s[mats].placed = true;
+			    s[mats].amount = o[i].stone;
+			    break;
+			}
+		    }
+		}
+		return true;
+	    }
+	}
+    }
+    if (round > 9) {
+	for (int i = 0; i < round-9; i++) {
+	    if (v[i].dead)
+		continue;
+	    float d0 = v[i].pos[0] - x;
+	    float d1 = v[i].pos[1] - y;
+	    if (d0*d0 + d1*d1 <= 324) {
+		v[i].health--;
+		if (v[i].health == 0) {
+		    v[i].dead = true;
+		    for (int mats = 0; mats < 600; mats++) {
+			if (!w[mats].placed) {
+			    w[mats].pos[0] = v[i].pos[0];
+			    w[mats].pos[1] = v[i].pos[1];
+			    w[mats].placed = true;
+			    w[mats].amount = v[i].wood;
+			    break;
+			}
+		    }
+		    for (int mats = 0; mats < 600; mats++) {
+			if (!s[mats].placed) {
+			    s[mats].pos[0] = v[i].pos[0];
+			    s[mats].pos[1] = v[i].pos[1];
+			    s[mats].placed = true;
+			    s[mats].amount = v[i].stone;
+			    break;
+			}
+		    }
+		}
+		return true;
 	    }
 	}
     }
@@ -634,7 +760,7 @@ bool zw_player_hit(int round, float x, float y)
 	    z[i].vel[1] = -10.0;
 	    z[i].pos[0] -= 0.01*x;
 	    z[i].pos[1] -= 0.01*y;
-	    return 1;
+	    return true;
 	}
     }
     if (round > 5) {
@@ -645,7 +771,7 @@ bool zw_player_hit(int round, float x, float y)
 	    float d1 = o[i].a_pos[1] - y;
 	    if (d0*d0 + d1*d1 <= 400) {
 		o[i].a_live = false; 
-		return 1;
+		return true;
 	    }
 	}
     }
@@ -655,12 +781,14 @@ bool zw_player_hit(int round, float x, float y)
 		continue;
 	    float d0 = v[i].pos[0] - x;
 	    float d1 = v[i].pos[1] - y;
-	    if (d0*d0 + d1*d1 <= 400) { 
+	    if (d0*d0 + d1*d1 <= 400 && !v[i].teleport) { 
 		v[i].vel[0] = -10.0;
 		v[i].vel[1] = -10.0;
 		v[i].pos[0] -= 0.01*x;
 		v[i].pos[1] -= 0.01*y;
-		return 1;
+		v[i].teleport = true;
+		clock_gettime(CLOCK_REALTIME, &v[i].time);
+		return true;
 	    }
 	}
     }
@@ -725,4 +853,57 @@ bool zw_player_structure_collision(float x, float y)
     if (structurePlacement(gridX, gridY)) 
 	return true;
     return false;
+}
+
+void zw_spawn_drops(GLuint wood, GLuint stone, float x, float y) {
+    for (int i = 0; i < 600; i++) {
+	if (w[i].placed) {
+	    glPushMatrix();
+	    glTranslatef(w[i].pos[0], w[i].pos[1], 0);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255, 255, 255, 255);
+	    glBindTexture(GL_TEXTURE_2D, wood);
+	    glBegin(GL_QUADS);
+	    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	    glTexCoord2f(0.0f, 1.0f); glVertex2i(-15,-12);
+	    glTexCoord2f(0.0f, 0.0f); glVertex2i(-15, 12);
+	    glTexCoord2f(1.0f, 0.0f); glVertex2i(15, 12);
+	    glTexCoord2f(1.0f, 1.0f); glVertex2i(15,-12);
+	    glEnd();
+	    glPopMatrix();
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_ALPHA_TEST);
+	    float d0 = w[i].pos[0] - x;
+	    float d1 = w[i].pos[1] - y;
+	    if (d0*d0+d1*d1 < 200) {
+		addWood(w[i].amount);
+		w[i].placed = false;
+	    }
+	}
+	if (s[i].placed) {
+	    glPushMatrix();
+	    glTranslatef(s[i].pos[0], s[i].pos[1], 0);
+	    glEnable(GL_ALPHA_TEST);
+	    glAlphaFunc(GL_GREATER, 0.0f);
+	    glColor4ub(255, 255, 255, 255);
+	    glBindTexture(GL_TEXTURE_2D, stone);
+	    glBegin(GL_QUADS);
+	    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	    glTexCoord2f(0.0f, 1.0f); glVertex2i(-15,-12);
+	    glTexCoord2f(0.0f, 0.0f); glVertex2i(-15, 12);
+	    glTexCoord2f(1.0f, 0.0f); glVertex2i(15, 12);
+	    glTexCoord2f(1.0f, 1.0f); glVertex2i(15,-12);
+	    glEnd();
+	    glPopMatrix();
+	    glBindTexture(GL_TEXTURE_2D, 0);
+	    glDisable(GL_ALPHA_TEST);
+	    float d0 = s[i].pos[0] - x;
+	    float d1 = s[i].pos[1] - y;
+	    if (d0*d0+d1*d1 < 200) {
+		addStone(s[i].amount);
+		s[i].placed = false;
+	    }
+	}
+    }
 }

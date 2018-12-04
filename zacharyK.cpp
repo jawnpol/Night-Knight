@@ -85,8 +85,8 @@ void zk_initializeButtons() {
 
     glo.button[glo.nbuts].btn.width = 240;
     glo.button[glo.nbuts].btn.height = 120;
-    glo.button[glo.nbuts].btn.left = 840;
-    glo.button[glo.nbuts].btn.bot = 750;
+    glo.button[glo.nbuts].btn.left = 200;
+    glo.button[glo.nbuts].btn.bot = 200;
     glo.button[glo.nbuts].btn.right =
 	glo.button[glo.nbuts].btn.left + glo.button[glo.nbuts].btn.width;
     glo.button[glo.nbuts].btn.top =
@@ -302,7 +302,7 @@ bool zk_cState() {
 
 }
 
-bool zk_returnState() {
+bool zk_rState() {
     if(k.x >= glo.button[2].btn.left &&
 	    k.x <= glo.button[2].btn.right &&
 	    k.y >= glo.button[2].btn.bot &&
@@ -315,10 +315,34 @@ bool zk_returnState() {
 void zk_ctext(int x, int y) {
     Rect r;
 
-    r.bot = y - y/3;
+    r.bot = y/2 + 200;
     r.left = x/2;
-    r.center = x/3;
+    
+    ggprint16(&r, 16, 0x00ff0000, "P: Pause");
+
+    r.bot = y/2 + 100;
+    r.left = x/2;
+
+    ggprint16(&r, 16, 0x00ff0000, "R: Round Start");
+    
+    r.bot = y/2;
+    r.left = x/2;
+
+    ggprint16(&r, 16, 0x00ff0000, "C: Credits");
+    
+    r.bot = y/2 - 100;
+    r.left = x/2;
+
+    ggprint16(&r, 16, 0x00ff0000, "LMB: Shoot/Build");
+    
+    r.bot = y/2 - 200;
+    r.left = x/2;
+
+    ggprint16(&r, 16, 0x00ff0000, "WASD: Movement");
+
+
 }
+
 void zk_pausetext(int x, int y) {
     Rect r;
 
@@ -344,22 +368,20 @@ void zk_gameoverimage(int x, int y, GLuint texid) {
     glPopMatrix();
 }
 
-void zk_keyboardimage(int x, int y, GLuint texid) {
-    int wid = 275;
-    int height = 66;
+void zk_keyboardimage(GLuint texid) {
     glColor3ub(255, 255, 255);
 
     //glClear(GL_COLOR_BUFFER_BIT);
-    glPushMatrix();
-    glTranslatef(x/3, y/2, 0);
+    //glPushMatrix();
+    //glTranslatef(x/3, y/2, 0);
     glBindTexture(GL_TEXTURE_2D, texid);
     glBegin(GL_POLYGON);
-    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid, -height);
-    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, height);
-    glTexCoord2f(1.0f, 0.0f); glVertex2i(wid, height);
-    glTexCoord2f(1.0f, 1.0f); glVertex2i(wid, -height);
+    glTexCoord2f(0.0f, 1.0f); glVertex2i(200, 200);
+    glTexCoord2f(0.0f, 0.0f); glVertex2i(200, 575);
+    glTexCoord2f(1.0f, 0.0f); glVertex2i(374, 575);
+    glTexCoord2f(1.0f, 1.0f); glVertex2i(374, 200);
     glEnd();
-    glPopMatrix();
+    //glPopMatrix();
 }
 
 void zk_mouseimage(int x, int y, GLuint texid) {

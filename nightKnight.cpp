@@ -66,16 +66,14 @@ extern void timeCopy(struct timespec *dest, struct timespec *source);
 extern void zw_show_credits(Rect &r);
 extern bool zk_continue();
 extern bool zk_cState();
-extern bool zk_returnState();
+extern bool zk_rState();
 extern void zk_initializeButtons();
 extern void zk_createButtons();
 extern void zk_checkHover();
 extern void zk_controlsmenu(int x, int y);
-extern void zk_ctext();
+extern void zk_ctext(int x, int y);
 extern void zk_show_credits(Rect &r);
 extern void zk_gameoverimage(int x, int y, GLuint texid);
-extern void zk_keyboardimage(int x, int y, GLuint texid);
-extern void zk_mouseimage(int x, int y, GLuint texid);
 extern void zk_gameovertext(int x, int y);
 extern void zk_showhealthtext();
 extern void zk_savemouse(int x, int y);
@@ -194,9 +192,9 @@ class Image {
                 unlink(ppmname);
         }
 };
-Image img[18] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
-    "gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png","vampire.png", "./fence.png",
-    "stone.png", "./wood.jpeg", "./stoneDrop.png", "./keyboard.jpeg", "./mouse.jpeg"};
+Image img[16] = {"./seahorse.jpg", "./duck.jpeg", "./chowder.jpg", "./resize_dog.jpeg", "./grass.jpg", "./knight.png",
+	"gameovertexture.jpg", "./menuscreen.jpg", "./zombie.png", "./orc.jpeg", "NKTitle.png", 
+	"vampire.png", "./fence.png", "stone.png", "./wood.jpeg", "./stoneDrop.png"};
 
 unsigned char *buildAlphaData(Image *img)
 {
@@ -262,8 +260,6 @@ class Global {
         GLuint stoneTexture;
         GLuint woodDropTexture;
         GLuint stoneDropTexture;
-        GLuint keyboardTexture;
-        GLuint mouseTexture;
         Global() {
             //Changed by Zakary Worman: Just made this resolution slightly larger
             xres = 1920;
@@ -762,29 +758,7 @@ void init_opengl()
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
             0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);	
     //-------------------------------------------------------------------------
-    //Keyboard Image - ZK
-    glGenTextures(1, &gl.keyboardTexture);
-    w = img[16].width;
-    h = img[16].height;
 
-    glBindTexture(GL_TEXTURE_2D, gl.keyboardTexture);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-            0, GL_RGB, GL_UNSIGNED_BYTE, img[16].data);
-    //-------------------------------------------------------------------------
-    //Mouse Image - ZK
-    glGenTextures(1, &gl.mouseTexture);
-    w = img[17].width;
-    h = img[17].height;
-
-    glBindTexture(GL_TEXTURE_2D, gl.mouseTexture);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h,
-            0, GL_RGB, GL_UNSIGNED_BYTE, img[17].data);
-
-    //-------------------------------------------------------------------------
     initButtons();
 }
 
@@ -815,22 +789,7 @@ void check_mouse(XEvent *e)
     if (e->type == ButtonRelease)
         return;
     if (e->type == ButtonPress) {
-        if(gl.pause) {
-            if(zk_continue())
-                gl.pause = !gl.pause;
-            if(zk_cState()) {
-                gl.pause = !gl.pause;
-                gl.controls = !gl.controls;
-            }
-            return;
-        }
-        if(gl.controls) {
-            if(zk_returnState()) {
-                gl.controls = !gl.controls;
-                gl.pause = !gl.pause;
-            }
-            return;
-        }
+        
         if (e->xbutton.button==1) {
             if(gl.menuScreen) {
                 checkButtonClick(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
@@ -840,457 +799,470 @@ void check_mouse(XEvent *e)
                 checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
                 return;
             }
-            //a little time between each bullet
-            struct timespec bt;
-            clock_gettime(CLOCK_REALTIME, &bt);
-            double ts = timeDiff(&g.bulletTimer, &bt);
-            double fireRate = 0.7;
-            if (!gl.fireRateBoost) {
-                fireRate = 0.7;
-            } else {
-                fireRate = 0.3;
-            }
-            if (ts > fireRate) {
-                timeCopy(&g.bulletTimer, &bt);
-                //shoot a bullet...
-                if (g.nbullets < MAX_BULLETS) {
+	    if(gl.pause) {
+		    if(zk_continue())
+			    gl.pause = !gl.pause;
+		    if(zk_cState()) {
+			    gl.pause = !gl.pause;
+			    gl.controls = !gl.controls;
+		    }
+		    return;
+	    }
+	    if(gl.controls) {
+		    if(zk_rState()) {
+			    gl.controls = !gl.controls;
+			    gl.pause = !gl.pause;
+		    }
+		    return;
+	    }
+	    //a little time between each bullet
+	    struct timespec bt;
+	    clock_gettime(CLOCK_REALTIME, &bt);
+	    double ts = timeDiff(&g.bulletTimer, &bt);
+	    double fireRate = 0.7;
+	    if (!gl.fireRateBoost) {
+		    fireRate = 0.7;
+	    } else {
+		    fireRate = 0.3;
+	    }
+	    if (ts > fireRate) {
+		    timeCopy(&g.bulletTimer, &bt);
+		    //shoot a bullet...
+		    if (g.nbullets < MAX_BULLETS) {
 
-                    playSound();
-                    //playGameSound();
-                    Bullet *b = &g.barr[g.nbullets];
-                    timeCopy(&b->time, &bt);
-                    b->pos[0] = g.ship.pos[0];
-                    b->pos[1] = g.ship.pos[1];
-                    if (gl.shipSpeedBoost) {
-                        b->vel[0] = g.ship.vel[0];
-                        b->vel[1] = g.ship.vel[1];
-                    }
-                    else {
-                        b->vel[0] = 0.5*g.ship.vel[0];
-                        b->vel[1] = 0.5*g.ship.vel[1];
-                    }
-                    b->angle = g.ship.angle;
-                    //convert ship angle to radians
-                    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-                    //convert angle to a vector
-                    Flt xdir = cos(rad);
-                    Flt ydir = sin(rad);
-                    b->pos[0] += xdir*20.0f;
-                    b->pos[1] += ydir*20.0f;
-                    b->vel[0] += xdir*2;
-                    b->vel[1] += ydir*2;
-                    b->color[0] = 0.0f;
-                    b->color[1] = 0.0f;
-                    b->color[2] = 1.0f;
-                    ++g.nbullets;
-                }
-            }
-        }
-        if (e->xbutton.button==3) {
-            if (g.roundEnd && g.round >= 1) {
-                checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
-                return;
-            }
-        }
+			    playSound();
+			    //playGameSound();
+			    Bullet *b = &g.barr[g.nbullets];
+			    timeCopy(&b->time, &bt);
+			    b->pos[0] = g.ship.pos[0];
+			    b->pos[1] = g.ship.pos[1];
+			    if (gl.shipSpeedBoost) {
+				    b->vel[0] = g.ship.vel[0];
+				    b->vel[1] = g.ship.vel[1];
+			    }
+			    else {
+				    b->vel[0] = 0.5*g.ship.vel[0];
+				    b->vel[1] = 0.5*g.ship.vel[1];
+			    }
+			    b->angle = g.ship.angle;
+			    //convert ship angle to radians
+			    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+			    //convert angle to a vector
+			    Flt xdir = cos(rad);
+			    Flt ydir = sin(rad);
+			    b->pos[0] += xdir*20.0f;
+			    b->pos[1] += ydir*20.0f;
+			    b->vel[0] += xdir*2;
+			    b->vel[1] += ydir*2;
+			    b->color[0] = 0.0f;
+			    b->color[1] = 0.0f;
+			    b->color[2] = 1.0f;
+			    ++g.nbullets;
+		    }
+	    }
+	}
+	if (e->xbutton.button==3) {
+		if (g.roundEnd && g.round >= 1) {
+			checkMouseEvent(e->xbutton.x, gl.yres-e->xbutton.y, e->xbutton.button);
+			return;
+		}
+	}
     }
     if (e->type == MotionNotify) {
-        //Mouse moved
-        //Changed by Zakary Worman: Changed to remove movement from mouse
-        //and allow for aiming with mouse. The rest of this usage is found
-        //in physics
-        int x = e->xbutton.x;           //just to save the x position of mouse
-        int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
-        //X11 and OpenGL start (0,0) in opposite
-        //y positions 
-        zk_savemouse(x, y);
-        zw_save_mouse_pos(x, y);        //save this position to be used
-        checkMouseOver(e->xbutton.x, gl.yres-e->xbutton.y);
+	    //Mouse moved
+	    //Changed by Zakary Worman: Changed to remove movement from mouse
+	    //and allow for aiming with mouse. The rest of this usage is found
+	    //in physics
+	    int x = e->xbutton.x;           //just to save the x position of mouse
+	    int y = gl.yres - e->xbutton.y; //used to save the mouse y postion because
+	    //X11 and OpenGL start (0,0) in opposite
+	    //y positions 
+	    zk_savemouse(x, y);
+	    zw_save_mouse_pos(x, y);        //save this position to be used
+	    checkMouseOver(e->xbutton.x, gl.yres-e->xbutton.y);
     }
 }
 
 int check_keys(XEvent *e)
 {
-    //keyboard input?
-    //static int shift=0;
-    if (e->type != KeyPress && e->type != KeyRelease)
-        return 0;
-    int key = (XLookupKeysym(&e->xkey, 0) & 0x0000ffff);
-    //Log("key: %i\n", key);
-    if (e->type == KeyRelease) {
-        gl.keys[key]=0;
-        return 0;
-    }
-    gl.keys[key]=1;
-    //Changed by Zakary Worman: Not used for anything
-    switch (key) {
-        case XK_Escape:
-            return 1;
-        case XK_Shift_L:
-            g.ship.vel[0] *= 1.5;
-            g.ship.vel[1] *= 1.5;
-            break;
-            //Added by Zakary Worman:
-            //accelerates the unit as if a sprint
-            //------------------------------------
-        case XK_c:
-            if (creditsScreen()) {
-                closeCredits();
-            } else {
-                openCredits();
-            }
-            break;
-        case XK_p:
-            if(controlsScreen()) {
-                closeControls();
-                gl.menuScreen=true;
-                break;
-            }
-            gl.pause = !gl.pause;
-            gl.controls = false;
-            break;
-        case XK_d:
-            break;
-        case XK_equal:
-            break;
-        case XK_minus:
-            break;
-        default:
-            break;
-    }
-    return 0;
+	//keyboard input?
+	//static int shift=0;
+	if (e->type != KeyPress && e->type != KeyRelease)
+		return 0;
+	int key = (XLookupKeysym(&e->xkey, 0) & 0x0000ffff);
+	//Log("key: %i\n", key);
+	if (e->type == KeyRelease) {
+		gl.keys[key]=0;
+		return 0;
+	}
+	gl.keys[key]=1;
+	//Changed by Zakary Worman: Not used for anything
+	switch (key) {
+		case XK_Escape:
+			return 1;
+		case XK_Shift_L:
+			g.ship.vel[0] *= 1.5;
+			g.ship.vel[1] *= 1.5;
+			break;
+			//Added by Zakary Worman:
+			//accelerates the unit as if a sprint
+			//------------------------------------
+		case XK_c:
+			if (creditsScreen()) {
+				closeCredits();
+			} else {
+				openCredits();
+			}
+			break;
+		case XK_p:
+			if(controlsScreen()) {
+				closeControls();
+				gl.menuScreen=true;
+				break;
+			}
+			gl.pause = !gl.pause;
+			gl.controls = false;
+			break;
+		case XK_d:
+			break;
+		case XK_equal:
+			break;
+		case XK_minus:
+			break;
+		default:
+			break;
+	}
+	return 0;
 }
 
 void physics()
 {
-    //playGameSound();
-    //Flt d0,d1,dist;
-    //Check for collision with window edges
-    //Edited by Zachary Kaiser: Forced ship to stay within screen
-    //boundaries
-    if (g.ship.pos[0] <= 0.0) {
-        g.ship.pos[0] = 0; 
-    }
-    else if (g.ship.pos[0] >= (float)gl.xres) {
-        g.ship.pos[0] = (float)gl.xres;
-    }
-    if (g.ship.pos[1] <= 0.0) {
-        g.ship.pos[1] = 0;
-    }
-    else if (g.ship.pos[1] >= (float)gl.yres) {
-        g.ship.pos[1] = (float)gl.yres;
-    }
-    //
-    //Update ship position
-    g.ship.pos[0] += g.ship.vel[0];
-    g.ship.pos[1] += g.ship.vel[1];
-    //Update bullet positions
-    struct timespec bt;
-    clock_gettime(CLOCK_REALTIME, &bt);
-    int i=0;
-    while (i < g.nbullets) {
-        Bullet *b = &g.barr[i];
-        //How long has bullet been alive?
-        //Edited by Zachary Kaiser: decreased amount of time to delete bullet
-        double ts = timeDiff(&b->time, &bt);
-        if (ts > 3.5) {
-            //time to delete the bullet.
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-                    sizeof(Bullet));
-            g.nbullets--;
-            //do not increment i.
-            continue;
-        }
-        if(g.roundEnd) {
-            g.nbullets--;
-        }
-        if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
-            storeDeathPosition(b->pos[0],b->pos[1]);
-            g.killed++;
-            b->vel[0] *= -1;
-            b->vel[1] *= -1;
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-            g.nbullets--;
-            g.enemyCount--;
-            if(g.enemyCount == 0){
-                gl.shipSpeedBoost = false;
-                gl.fireRateBoost = false;
-                resetPowerups();
-                g.roundEnd = true;
-            }
-        } 
-        //move the bullet
-        b->pos[0] += b->vel[0];
-        b->pos[1] += b->vel[1];
-        //Check for collision with window edges
-        //Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
-        if (b->pos[0] < 0.0) {
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-                    sizeof(Bullet));
-        }
-        else if (b->pos[0] > (float)gl.xres) {
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-                    sizeof(Bullet));
-        }
-        else if (b->pos[1] < 0.0) {
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-                    sizeof(Bullet));
-        }
-        else if (b->pos[1] > (float)gl.yres) {
-            memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-                    sizeof(Bullet));
-        }
-        i++;
-    }
-    if(heartCollision(g.ship.pos[0], g.ship.pos[1])) {
-        if(g.ship.health<3) {
-            g.ship.health++;
-        }
-    }
-    if(powerupCollision(g.ship.pos[0], g.ship.pos[1])) {
-        if(checkSpeed()) {
-            gl.shipSpeedBoost = true;
-        }
-        if(checkFireRate()) {
-            gl.fireRateBoost = true;
-        }
-        if(checkShield()) {
-            g.ship.hit_recent += 10;	
-        }
-    }
-    if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
-        if(g.ship.hit_recent == 0) {
-            g.ship.hit_recent = 10;
-            g.ship.health--;
-        }
-        if(g.ship.hit_recent > 0)
-            g.ship.hit_recent--;
-    }
-    //convert ship angle to radians
-    Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-    //convert angle to a vector
-    Flt xdir = cos(rad);
-    Flt ydir = sin(rad);
-    if (gl.keys[XK_a]) {
-        g.ship.vel[0] -= sin(rad)*2;
-        g.ship.vel[1] += cos(rad)*2;
-    }
-    else if (gl.keys[XK_d]) {
-        g.ship.vel[0] += sin(rad)*2;
-        g.ship.vel[1] -= cos(rad)*2;
-    }
-    if (gl.keys[XK_w]) {
-        g.ship.vel[0] += xdir;
-        g.ship.vel[1] += ydir;
-        //Changed by Zakary Worman: changed to simply reduce the speed
-        //to be more characteristic of a human rather than ship
-    }
-    else if (gl.keys[XK_s]) {
-        //Added by Zakary Worman: this allows for backward movement with s
-        g.ship.vel[0] -= xdir;
-        g.ship.vel[1] -= ydir;
-    }
-    else {
-        g.ship.vel[0] *= 0.8;
-        g.ship.vel[1] *= 0.8;
-    }
-    //Changed by Zakary Worman: changed to simply reduce the speed
-    //to be more characteristic of a human rather than ship
-    Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-            g.ship.vel[1]*g.ship.vel[1]);
-    if(!gl.shipSpeedBoost) {
-        if (speed > 2.0f) {
-            speed = 2.0f;
-            normalize2d(g.ship.vel);
-            g.ship.vel[0] *= speed;
-            g.ship.vel[1] *= speed;
-        }
-        if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
-            g.ship.vel[0] *= -1;
-            g.ship.vel[1] *= -1;
-        }
-        //Added by Zakary Worman: this makes the person slow down as you stop moving
-        g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
-    } else{
-        if (speed > 4.0f) {
-            speed = 4.0f;
-            normalize2d(g.ship.vel);
-            g.ship.vel[0] *= speed;
-            g.ship.vel[1] *= speed;
-        }
-        if(zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
-            g.ship.vel[0] *= -1;
-            g.ship.vel[1] *= -1;
-        }
-        g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
-    }
-    if (!g.roundEnd)
-        structureDamage();
+	//playGameSound();
+	//Flt d0,d1,dist;
+	//Check for collision with window edges
+	//Edited by Zachary Kaiser: Forced ship to stay within screen
+	//boundaries
+	if (g.ship.pos[0] <= 0.0) {
+		g.ship.pos[0] = 0; 
+	}
+	else if (g.ship.pos[0] >= (float)gl.xres) {
+		g.ship.pos[0] = (float)gl.xres;
+	}
+	if (g.ship.pos[1] <= 0.0) {
+		g.ship.pos[1] = 0;
+	}
+	else if (g.ship.pos[1] >= (float)gl.yres) {
+		g.ship.pos[1] = (float)gl.yres;
+	}
+	//
+	//Update ship position
+	g.ship.pos[0] += g.ship.vel[0];
+	g.ship.pos[1] += g.ship.vel[1];
+	//Update bullet positions
+	struct timespec bt;
+	clock_gettime(CLOCK_REALTIME, &bt);
+	int i=0;
+	while (i < g.nbullets) {
+		Bullet *b = &g.barr[i];
+		//How long has bullet been alive?
+		//Edited by Zachary Kaiser: decreased amount of time to delete bullet
+		double ts = timeDiff(&b->time, &bt);
+		if (ts > 3.5) {
+			//time to delete the bullet.
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+					sizeof(Bullet));
+			g.nbullets--;
+			//do not increment i.
+			continue;
+		}
+		if(g.roundEnd) {
+			g.nbullets--;
+		}
+		if(zw_check_enemy_hit(g.round, b->pos[0], b->pos[1])) {
+			storeDeathPosition(b->pos[0],b->pos[1]);
+			g.killed++;
+			b->vel[0] *= -1;
+			b->vel[1] *= -1;
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+			g.nbullets--;
+			g.enemyCount--;
+			if(g.enemyCount == 0){
+				gl.shipSpeedBoost = false;
+				gl.fireRateBoost = false;
+				resetPowerups();
+				g.roundEnd = true;
+			}
+		} 
+		//move the bullet
+		b->pos[0] += b->vel[0];
+		b->pos[1] += b->vel[1];
+		//Check for collision with window edges
+		//Edited by Zachary Kaiser: Deleted Bullet when it reaches screen edge
+		if (b->pos[0] < 0.0) {
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+					sizeof(Bullet));
+		}
+		else if (b->pos[0] > (float)gl.xres) {
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+					sizeof(Bullet));
+		}
+		else if (b->pos[1] < 0.0) {
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+					sizeof(Bullet));
+		}
+		else if (b->pos[1] > (float)gl.yres) {
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+					sizeof(Bullet));
+		}
+		i++;
+	}
+	if(heartCollision(g.ship.pos[0], g.ship.pos[1])) {
+		if(g.ship.health<3) {
+			g.ship.health++;
+		}
+	}
+	if(powerupCollision(g.ship.pos[0], g.ship.pos[1])) {
+		if(checkSpeed()) {
+			gl.shipSpeedBoost = true;
+		}
+		if(checkFireRate()) {
+			gl.fireRateBoost = true;
+		}
+		if(checkShield()) {
+			g.ship.hit_recent += 10;	
+		}
+	}
+	if(zw_player_hit(g.round, g.ship.pos[0], g.ship.pos[1])) {
+		if(g.ship.hit_recent == 0) {
+			g.ship.hit_recent = 10;
+			g.ship.health--;
+		}
+		if(g.ship.hit_recent > 0)
+			g.ship.hit_recent--;
+	}
+	//convert ship angle to radians
+	Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+	//convert angle to a vector
+	Flt xdir = cos(rad);
+	Flt ydir = sin(rad);
+	if (gl.keys[XK_a]) {
+		g.ship.vel[0] -= sin(rad)*2;
+		g.ship.vel[1] += cos(rad)*2;
+	}
+	else if (gl.keys[XK_d]) {
+		g.ship.vel[0] += sin(rad)*2;
+		g.ship.vel[1] -= cos(rad)*2;
+	}
+	if (gl.keys[XK_w]) {
+		g.ship.vel[0] += xdir;
+		g.ship.vel[1] += ydir;
+		//Changed by Zakary Worman: changed to simply reduce the speed
+		//to be more characteristic of a human rather than ship
+	}
+	else if (gl.keys[XK_s]) {
+		//Added by Zakary Worman: this allows for backward movement with s
+		g.ship.vel[0] -= xdir;
+		g.ship.vel[1] -= ydir;
+	}
+	else {
+		g.ship.vel[0] *= 0.8;
+		g.ship.vel[1] *= 0.8;
+	}
+	//Changed by Zakary Worman: changed to simply reduce the speed
+	//to be more characteristic of a human rather than ship
+	Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+			g.ship.vel[1]*g.ship.vel[1]);
+	if(!gl.shipSpeedBoost) {
+		if (speed > 2.0f) {
+			speed = 2.0f;
+			normalize2d(g.ship.vel);
+			g.ship.vel[0] *= speed;
+			g.ship.vel[1] *= speed;
+		}
+		if (zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+			g.ship.vel[0] *= -1;
+			g.ship.vel[1] *= -1;
+		}
+		//Added by Zakary Worman: this makes the person slow down as you stop moving
+		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+	} else{
+		if (speed > 4.0f) {
+			speed = 4.0f;
+			normalize2d(g.ship.vel);
+			g.ship.vel[0] *= speed;
+			g.ship.vel[1] *= speed;
+		}
+		if(zw_player_structure_collision(g.ship.pos[0], g.ship.pos[1])) {
+			g.ship.vel[0] *= -1;
+			g.ship.vel[1] *= -1;
+		}
+		g.ship.angle = zw_change_angle(g.ship.pos[0], g.ship.pos[1]);
+	}
+	if (!g.roundEnd)
+		structureDamage();
 }
 
 void render()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
-    if(controlsScreen()) {
-        zk_controlsmenu(gl.xres, gl.yres);
-        zk_keyboardimage(gl.xres, gl.yres, gl.keyboardTexture);
-        zk_mouseimage(gl.xres, gl.yres, gl.mouseTexture);
-        zk_drawCircle();
-        controlsInstructions();	
-        return;
-    }
-    if(creditsScreen()) {
-        Rect n;
-        n.bot = gl.yres - gl.yres/5;
-        n.left = gl.xres/2;
-        n.center = gl.xres/3;
-        zw_show_credits(n);
-        zk_show_credits(n);
-        bb_show_credits(n);
-        jc_show_credits(n);
-        zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
-        zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
-        bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
-        jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
-        ggprint16(&n, 16, 0x00ff0000, "Close this screen by pressing C");
-        return;
-    }
-    if(menuScreen()) {
-        menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
-        printMenuScreen(gl.xres, gl.yres);
-        initButtons();
-        drawButtons();
-        zk_drawCircle();
-        playGameSound();
-        return;
-    } else {
-        gl.menuScreen = false;
-    }
-    if(g.ship.health <= 0) {
-        resetPowerups();
-        gl.shipSpeedBoost = false;
-        gl.fireRateBoost = false;
-        zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
-        zk_gameovertext(gl.xres, gl.yres);
-        if(gl.keys[XK_f]) {
-            gl.menuScreen = true;
-            g.ship.health = 3;
-            g.roundEnd = true;
-            g.round = 0;
-            zw_reset_round();
-            buildReset();
-            g.ship.hit_recent = 0;
-        }	
-        zk_drawCircle();
-        //zw_gameover(gl.yres, gl.xres);
-        return;
-    }
-    glClear(GL_COLOR_BUFFER_BIT);
-    gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture);
-    showMaterials();
-    //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
-    Rect r;
-    playerModel(g.ship.pos, g.ship.angle, gl.playerTexture);
-    if(gl.pause) {
-        zk_pausemenu(gl.xres, gl.yres);
-        zk_pausetext(gl.xres, gl.yres);
-        zk_initializeButtons();
-        zk_createButtons();
-        zk_drawCircle();
-        zk_checkHover();
-        return;
-    }
-    if(gl.controls) {
-        zk_checkHover();
-        zk_controlsmenu(gl.xres, gl.yres);
-        zk_keyboardimage(gl.xres, gl.yres, gl.keyboardTexture);
-        zk_mouseimage(gl.xres, gl.yres, gl.mouseTexture);
-        zk_drawCircle();
-        return;
-    }
-    if (g.roundEnd) {
-        zk_drawCircle();
-        zw_reset_round();
-        if (g.round > 0)
-            renderBoard(gl.xres, gl.yres);
-        //buildPlacement(gl.xres, gl.yres, gl.woodTexture);
-        if (gl.keys[XK_r]) {
-            g.round++;
-            matsChange(g.round);
-            g.roundEnd = false;
-            g.enemyCount = g.round*2;
-            if (g.round > 4)
-                g.enemyCount += (g.round-4)*2*2;
-            if (g.round > 9)
-                g.enemyCount += (g.round-9)*5;
-        }
-        Rect s;
-        s.bot = gl.yres - 28;
-        s.left = gl.xres/2 - 10;
-        s.center = gl.xres/2;
-        zw_spawn_drops(gl.woodDropTexture, gl.stoneDropTexture, g.ship.pos[0], g.ship.pos[1]);
-        ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
-        return;
-    }
-    //Drop Shadow
-    Rect s;
-    s.bot = gl.yres - 28;
-    s.left = 10;
-    s.center = 0;
-    ggprint8b(&s, 16, 0x00000000, "3350 - Night Knight");
-    ggprint8b(&s, 16, 0x00000000, "Arrows: %i", g.nbullets);
-    ggprint8b(&s, 16, 0x00000000, "Enemies: %i", g.enemyCount);
-    ggprint8b(&s, 16, 0x00000000, "Enemies Killed: %i", g.killed);
-    s.bot = gl.yres - 28;
-    s.left = gl.xres/2 - 10;
-    s.center = gl.xres/2;
-    ggprint16(&s, 16, 0xcfcfcfcf, "Round: %i", g.round);
-    //
-    r.bot = gl.yres - 20;
-    r.left = 10;
-    r.center = 0;
-    ggprint8b(&r, 16, 0xaaffaaaa, "3350 - Night Knight");
-    ggprint8b(&r, 16, 0x00ffff00, "Arrows: %i", g.nbullets);
-    ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.enemyCount);
-    ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
-    glEnd();
-    glPopMatrix();
-    //draw shield
-    if (g.ship.hit_recent > 0) {
-        glColor3f(1.0f,1.0f,0.0f);
-        glPushMatrix();
-        glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-        glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-        glBegin(GL_LINE_LOOP);
-        glVertex2f(-30, -40);           
-        glVertex2f(-30, 40);           
-        glVertex2f(30, 40);           
-        glVertex2f(30, -40);           
-        glEnd();
-        glPopMatrix();
-        Rect k;
-        k.bot = gl.yres/1.2;
-        k.left = gl.xres/2 - 10;
-        k.center = gl.xres/2;
-        ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
-    }
-    //Draw the enemies
-    zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.vampireTexture);
-    //Draw the bullets
-    Bullet *b = &g.barr[0];
-    for (int i=0; i<g.nbullets; i++) {
-        zw_drawSword(b->pos[0], b->pos[1], b->angle);
-        ++b;
-    }
-    //gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
-    //Draw Circle over Crosshair, Zachary Kaiser
-    zk_drawCircle();
-    zk_blackbar();
-    renderHealth(g.ship.health);
-    renderStructureHP();
-    zk_showhealthtext();
-    drawHeart();
-    drawPowerups();
-    zw_spawn_drops(gl.woodDropTexture, gl.stoneDropTexture, g.ship.pos[0], g.ship.pos[1]);
+	glClear(GL_COLOR_BUFFER_BIT);
+	if(controlsScreen()) {
+		zk_controlsmenu(gl.xres, gl.yres);
+		zk_drawCircle();
+		controlsInstructions();	
+		return;
+	}
+	if(creditsScreen()) {
+		Rect n;
+		n.bot = gl.yres - gl.yres/5;
+		n.left = gl.xres/2;
+		n.center = gl.xres/3;
+		zw_show_credits(n);
+		zk_show_credits(n);
+		bb_show_credits(n);
+		jc_show_credits(n);
+		zwShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/2.5, gl.seahorseTexture);
+		zkShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/1.3, gl.duckTexture);
+		bbShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.9, gl.chowderTexture);
+		jpcShowPicture(gl.xres - n.left/1.5, gl.yres - n.center/0.675, gl.jpcTexture);
+		ggprint16(&n, 16, 0x00ff0000, "Close this screen by pressing C");
+		return;
+	}
+	if(menuScreen()) {
+		menuScreenImage(gl.xres, gl.yres, gl.menuTexture, gl.NKTitleTexture);
+		printMenuScreen(gl.xres, gl.yres);
+		initButtons();
+		drawButtons();
+		zk_drawCircle();
+		playGameSound();
+		return;
+	} else {
+		gl.menuScreen = false;
+	}
+	if(g.ship.health <= 0) {
+		resetPowerups();
+		gl.shipSpeedBoost = false;
+		gl.fireRateBoost = false;
+		zk_gameoverimage(gl.xres, gl.yres, gl.gameoverTexture);
+		zk_gameovertext(gl.xres, gl.yres);
+		if(gl.keys[XK_f]) {
+			gl.menuScreen = true;
+			g.ship.health = 3;
+			g.roundEnd = true;
+			g.round = 0;
+			zw_reset_round();
+			buildReset();
+			g.ship.hit_recent = 0;
+		}	
+		zk_drawCircle();
+		//zw_gameover(gl.yres, gl.xres);
+		return;
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+	gameBackground(gl.xres, gl.yres, gl.backgroundTexture, gl.woodTexture, gl.stoneTexture);
+	showMaterials();
+	//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
+	Rect r;
+	playerModel(g.ship.pos, g.ship.angle, gl.playerTexture);
+	if(gl.pause) {
+		zk_pausemenu(gl.xres, gl.yres);
+		zk_pausetext(gl.xres, gl.yres);
+		zk_initializeButtons();
+		zk_createButtons();
+		zk_drawCircle();
+		zk_checkHover();
+		return;
+	}
+	if(gl.controls) {
+		zk_checkHover();
+		zk_controlsmenu(gl.xres, gl.yres);
+		zk_ctext(gl.xres, gl.yres);
+		zk_drawCircle();
+		return;
+	}
+	if (g.roundEnd) {
+		zk_drawCircle();
+		zw_reset_round();
+		if (g.round > 0)
+			renderBoard(gl.xres, gl.yres);
+		//buildPlacement(gl.xres, gl.yres, gl.woodTexture);
+		if (gl.keys[XK_r]) {
+			g.round++;
+			matsChange(g.round);
+			g.roundEnd = false;
+			g.enemyCount = g.round*2;
+			if (g.round > 4)
+				g.enemyCount += (g.round-4)*2*2;
+			if (g.round > 9)
+				g.enemyCount += (g.round-9)*5;
+		}
+		Rect s;
+		s.bot = gl.yres - 28;
+		s.left = gl.xres/2 - 10;
+		s.center = gl.xres/2;
+		zw_spawn_drops(gl.woodDropTexture, gl.stoneDropTexture, g.ship.pos[0], g.ship.pos[1]);
+		ggprint16(&s, 15, 0xcfcfcfcf, "Press r to start next round");
+		return;
+	}
+	//Drop Shadow
+	Rect s;
+	s.bot = gl.yres - 28;
+	s.left = 10;
+	s.center = 0;
+	ggprint8b(&s, 16, 0x00000000, "3350 - Night Knight");
+	ggprint8b(&s, 16, 0x00000000, "Arrows: %i", g.nbullets);
+	ggprint8b(&s, 16, 0x00000000, "Enemies: %i", g.enemyCount);
+	ggprint8b(&s, 16, 0x00000000, "Enemies Killed: %i", g.killed);
+	s.bot = gl.yres - 28;
+	s.left = gl.xres/2 - 10;
+	s.center = gl.xres/2;
+	ggprint16(&s, 16, 0xcfcfcfcf, "Round: %i", g.round);
+	//
+	r.bot = gl.yres - 20;
+	r.left = 10;
+	r.center = 0;
+	ggprint8b(&r, 16, 0xaaffaaaa, "3350 - Night Knight");
+	ggprint8b(&r, 16, 0x00ffff00, "Arrows: %i", g.nbullets);
+	ggprint8b(&r, 16, 0xabababab, "Enemies: %i", g.enemyCount);
+	ggprint8b(&r, 16, 0xaaaaaa22, "Enemies Killed: %i", g.killed);
+	glBegin(GL_POINTS);
+	glVertex2f(0.0f, 0.0f);
+	glEnd();
+	glPopMatrix();
+	//draw shield
+	if (g.ship.hit_recent > 0) {
+		glColor3f(1.0f,1.0f,0.0f);
+		glPushMatrix();
+		glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+		glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+		glBegin(GL_LINE_LOOP);
+		glVertex2f(-30, -40);           
+		glVertex2f(-30, 40);           
+		glVertex2f(30, 40);           
+		glVertex2f(30, -40);           
+		glEnd();
+		glPopMatrix();
+		Rect k;
+		k.bot = gl.yres/1.2;
+		k.left = gl.xres/2 - 10;
+		k.center = gl.xres/2;
+		ggprint16(&k, 16, 0xffffff00, "SHIELDED %i", g.ship.hit_recent);
+	}
+	//Draw the enemies
+	zw_spawn_enemies(g.round, g.ship.pos[0], g.ship.pos[1], gl.zombieTexture, gl.orcTexture, gl.vampireTexture);
+	//Draw the bullets
+	Bullet *b = &g.barr[0];
+	for (int i=0; i<g.nbullets; i++) {
+		zw_drawSword(b->pos[0], b->pos[1], b->angle);
+		++b;
+	}
+	//gameBackground(gl.xres, gl.yres, gl.backgroundTexture);
+	//Draw Circle over Crosshair, Zachary Kaiser
+	zk_drawCircle();
+	zk_blackbar();
+	renderHealth(g.ship.health);
+	renderStructureHP();
+	zk_showhealthtext();
+	drawHeart();
+	drawPowerups();
+	zw_spawn_drops(gl.woodDropTexture, gl.stoneDropTexture, g.ship.pos[0], g.ship.pos[1]);
 }

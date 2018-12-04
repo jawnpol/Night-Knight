@@ -153,11 +153,6 @@ void playSound()
 void playGameSound()
 {
 	alSourcePlay(gameSong);
-	/*for (int i = 0; i < 42; i++) {
-	  cout << "Plays the song!";
-	  alSourcePlay(gameSong);
-	  usleep(1000000);
-	  }*/
 }
 
 
@@ -256,13 +251,7 @@ void checkMouseEvent(int x, int y, int click)
 
 void renderBoard(int xres, int yres)
 {
-	/*Rect r;
-	  r.bot = boardDimY - 20;
-	  r.left = boardDimX - 50;
-	  r.center = boardDimX/2;
-	  ggprint8b(&r, 16, 0x00000000, "Materials");
-	  ggprint8b(&r, 16, 0x00000000, "Wood: %i", woodMats);
-	  ggprint8b(&r, 16, 0x00000000, "Stone: %i", stoneMats);*/
+    showMaterials();
 	//cout << "Does it get into renderBoard?" << endl;
 	int tileSize = 120;
 	glEnable(GL_BLEND);
@@ -393,8 +382,8 @@ void gameBackground(int xres, int yres, GLuint texid, GLuint wood, GLuint stone)
 	glColor4ub(255,255,255,255);
 	//glBindTexture(GL_TEXTURE_2D, 0);
 
-	for (int i = 0; i < xres; i+=tileSize) {
-		for (int j = 0; j < yres; j +=tileSize) {
+	for (int i = 0; i < xres; i+= tileSize) {
+		for (int j = 0; j < yres; j += tileSize) {
 			if (woodStore[i/tileSize][j/tileSize].dead)
 				continue;
 			else 
@@ -455,7 +444,7 @@ void renderStructureHP()
 	int x, y;
 	for (int i = 0; i < XDIM; i++) {
 		for (int j = 0; j < YDIM; j++) {
-			if (!woodStore[i][j].dead) {
+			if (!woodStore[i][j].dead && woodStore[i][j].health != 100) {
 				health = woodStore[i][j].health / 5;
 				x = i * 120;
 				y = j * 120;
@@ -475,8 +464,7 @@ void renderStructureHP()
 				glEnd();
 
 			}
-			if (!stoneStore[i][j].dead) {
-
+			if (!stoneStore[i][j].dead && stoneStore[i][j].health != 200) {
 				health = stoneStore[i][j].health / 10;
 				x = i * 120;
 				y = j * 120;
@@ -499,8 +487,6 @@ void renderStructureHP()
 		}
 	}
 }
-
-
 
 void playerModel(GLfloat pos[3], float angle, GLuint texture)
 {	
